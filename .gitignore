@@ -1,1 +1,3 @@
-data
+important.py
+*.pyc
+*__pycache__

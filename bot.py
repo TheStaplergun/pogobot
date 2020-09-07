@@ -1,32 +1,51 @@
 import discord
 from discord.ext import commands
-from data import *
+import data
+from important import OWNERID,TOKEN
+import raid_cog
+from raid_cog import *
 import xml.etree.ElementTree as ET
 import string
-import wget
 import os
-import dict_digger
 
 description = '''TheStaplergun's Bot in Python'''
-bot = commands.Bot(command_prefix='$', description=description)
+
+"""Set command_prefix to any character here."""
+COMMAND_PREFIX = '$'
+"""Change this string to change the 'playing' status of the bot."""
+CUSTOM_STATUS = "WIP"
+
+bot = commands.Bot(COMMAND_PREFIX, description=description)
+game = discord.Game(CUSTOM_STATUS)
 
 @bot.event
 async def on_ready():
 	print('Logged in as')
 	print(bot.user.name)
 	print('------')
-	await bot.change_presence(game=discord.Game(name='Work in Progress'))
+	await bot.change_presence(activity=game)
 
 @bot.command(pass_context=True)
-async def whostheboss(ctx):
-  if ctx.message.author.id == OWNERID:
-    await bot.say("You're the boss")
+async def test(ctx):
+  if ctx.author.id == int(OWNERID):
+    await ctx.send("Success")
   else:
-    await bot.say("You ain't the boss")
+    await ctx.send(ctx.author.id)
 
 @bot.command()
-async def ping():
+async def ping(ctx):
     """Check if alive"""
-    await bot.say("pong")
+    await ctx.send("pong")
 
+@bot.command()
+@commands.has_role("Mods")
+async def reset_bot_raid_cog(ctx):
+  await ctx.send("Removing cog [RaidPost]")
+  bot.remove_cog('RaidPost')
+  importlib.reload(raid_cog)
+  await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
+  bot.add_cog(RaidPost(bot))
+  await ctx.send("Cog [RaidPost] added and reset.")
+
+bot.add_cog(RaidPost(bot))
 bot.run(TOKEN)
