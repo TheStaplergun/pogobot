@@ -25,7 +25,7 @@ async def on_ready():
 	print('------')
 	await bot.change_presence(activity=game)
 
-@bot.command(pass_context=True)
+@bot.command()
 async def test(ctx):
   if ctx.author.id == int(OWNERID):
     await ctx.send("Success")

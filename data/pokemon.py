@@ -900,12 +900,75 @@ NATIONAL_DEX =\
 
 MEGA_DEX =\
 {
-
+  3:"Venusaur",
+  6:"Charizard-X",
+  6:"Charizard-Y",
+  9:"Blastoise",
+  #65:"Alakazam",
+  #94:"Gengar",
+  #115:"Kangaskhan",
+  #127:"Pinsir",
+  #130:"Gyarados",
+  #142:"Aerodactyl",
+  #150:"Mewtwo-X",
+  #150:"Mewtwo-Y",
+  #181:"Ampharos",
+  #212:"Scizor",
+  #214:"Heracross",
+  #229:"Houndoom",
+  #248:"Tyranitar",
+  #257:"Blaziken",
+  #282:"Gardevoir",
+  #303:"Mawile",
+  #306:"Aggron",
+  #308:"Medicham",
+  #310:"Manectric",
+  #359:"Absol",
+  #380:"Latias",
+  #381:"Latios",
+  #445:"Garchomp",
+  #448:"Lucario",
+  #460:"Abomasnow",
+  15:"Beedrill",
+  #18:"Pidgeot",
+  #80:"Slowbro",
+  #208:"Steelix",
+  #254:"Sceptile",
+  #260:"Swampert",
+  #302:"Sableye",
+  #319:"Sharpedo",
+  #323:"Camerupt",
+  #334:"Altaria",
+  #362:"Glalie",
+  #373:"Salamence",
+  #376:"Metagross",
+  #384:"Rayquaza",
+  #428:"Lopunny",
+  #475:"Gallade",
+  #531:"Audino",
+  #719:"Diancie"
 }
 
 ALOLAN_DEX =\
 {
-
+  19:"Rattata-Alolan",
+  20:"Raticate-Alolan",
+  26:"Raichu-Alolan",
+  27:"Sandshrew-Alolan",
+  28:"Sandslash-Alolan",
+  37:"Vulpix-Alolan",
+  38:"Ninetales-Alolan",
+  50:"Diglett-Alolan",
+  51:"Dugtrio-Alolan",
+  52:"Meowth-Alolan",
+  53:"Persian-Alolan",
+  74:"Geodude-Alolan",
+  75:"Graveler-Alolan",
+  76:"Golem-Alolan",
+  88:"Grimer-Alolan",
+  89:"Muk-Alolan",
+  103:"Exeggutor-Alolan",
+  105:"Marowak-Alolan"
 }
 
 GALARIAN_DEX =\
