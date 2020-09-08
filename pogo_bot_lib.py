@@ -1,25 +1,9 @@
 import discord
 from discord.ext import commands
-import fuzzysearch
-from fuzzysearch import find_near_matches
+from fuzzywuzzy import fuzz
+from fuzzywuzzy import process
 from data.formats import *
 from data.pokemon import *
-
-# A macro to set a default fuzzy search limit
-def fuzzy_search(search_for, search_in, limit):
-  match = find_near_matches(search_for,
-                            search_in,
-                            max_deletions=limit,
-                            max_insertions=limit,
-                            max_substitutions=limit,
-                            max_l_dist=limit)
-
-  try:
-    data_to_return = (True, match.pop().matched)
-  except IndexError:
-    data_to_return = (False, "")
-
-  return data_to_return
 
 def validate_and_format_message(ctx,
                                 tier,
@@ -32,51 +16,88 @@ def validate_and_format_message(ctx,
   # Format raid post
   raid_post_valid = True
   author_dm = "**From:** r/pokemongo raid hosting bot\n"
-
+  corrected_argument_guesses = {}
   """----------------------------------------------------------------"""
   is_valid, response = validate_tier(tier)
   if is_valid:
-    embed_tier = response
+    embed_tier = response.title()
   else:
     raid_post_valid = False
     author_dm += response
   """----------------------------------------------------------------"""
-  pokemon_name = pokemon_name.title()
-  """----------------------------------------------------------------"""
-  is_valid, response = validate_gym_argument(gym_color)
+  is_valid, response, suggestion = validate_pokemon(pokemon_name)
   if is_valid:
-    embed_gym = response
+    embed_pokemon = response.title()
   else:
     raid_post_valid = False
+    corrected_argument_guesses.update({"pokemon_name" : suggestion})
     author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response = validate_weather_argument(weather)
+  is_valid, response, suggestion = validate_gym_argument(gym_color)
   if is_valid:
-    embed_weather = response
+    embed_gym = response.title()
   else:
     raid_post_valid = False
+    corrected_argument_guesses.update({"gym_color" : suggestion})
     author_dm += response
   """----------------------------------------------------------------"""
-  """is_valid, response = validate_invites_argument(invite_slots)
+  is_valid, response, suggestion = validate_weather_argument(weather)
+  if is_valid:
+    embed_weather = response.title()
+  else:
+    raid_post_valid = False
+    corrected_argument_guesses.update({"weather" : suggestion})
+    author_dm += response
+  """----------------------------------------------------------------"""
+  is_valid, response = validate_invites_argument(invite_slots)
   if is_valid:
     embed_invites = response
   else:
     raid_post_valid = False
-    author_dm += response"""
-
+    author_dm += response
+  """----------------------------------------------------------------"""
+  is_valid, response = validate_tts_argument(time_to_start)
+  if is_valid:
+    embed_tts = str(response)
+  else:
+    raid_post_valid = False
+    author_dm += response
+  """----------------------------------------------------------------"""
+  is_valid, response = validate_tte_argument(time_to_expire)
+  if is_valid:
+    embed_tte = str(response)
+  else:
+    raid_post_valid = False
+    author_dm += response
+  """----------------------------------------------------------------"""
+  if is_valid:
+    is_valid, response = check_tts_tte(time_to_start, time_to_expire)
+    if not is_valid:
+      raid_post_valid = False
+      author_dm += response
 
   if raid_post_valid:
     embed = discord.Embed(title='Test', description='Test embed', color=get_embed_color(gym_color))
     embed.add_field(name="Tier", value=embed_tier, inline=False)
-    embed.add_field(name="Pokemon", value=pokemon_name, inline=False)
+    embed.add_field(name="Pokemon", value=embed_pokemon, inline=False)
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=False)
-    """embed.add_field(name="Invites Available", value=embed_invites, inline=False)"""
+    embed.add_field(name="Invites Available", value=embed_invites, inline=False)
+    embed.add_field(name="Time until start", value=embed_tts, inline=False)
+    embed.add_field(name="Time until expiration", value=embed_tte, inline=False)
     embed.set_footer(text="TheStaplergun")
     """Send Message"""
-    return (raid_post_valid, embed)
+    return (raid_post_valid, embed, int(time_to_expire), "")
   else:
-    return (raid_post_valid, author_dm)
+    suggested_command_format = format_command_suggestion(tier,
+                                                         pokemon_name,
+                                                         gym_color,
+                                                         weather,
+                                                         invite_slots,
+                                                         time_to_start,
+                                                         time_to_expire,
+                                                         corrected_argument_guesses)
+    return (raid_post_valid, author_dm, 0, suggested_command_format)
 
 """----------------------------------------------------------------"""
 """TIER"""
@@ -95,66 +116,133 @@ def validate_tier(tier):
   return(is_valid, response)
 
 def format_invalid_tier_message(tier):
-  author_dm = "You gave an invalid **Tier** of [`" + tier + "`]. Valid tiers are: "
+  response = "You gave an invalid **Tier** of " + backtick_and_bracket(tier) + ". Valid tiers are: "
 
   for index, item in enumerate(TIERS):
-    author_dm += item.title()
+    response += item.title()
     if index < len(TIERS) - 1:
-      author_dm += ", "
+      response += ", "
 
-  author_dm += "\n"
-  return author_dm
+  response += "\n"
+  return response
+"""----------------------------------------------------------------"""
+"""POKEMON NAME"""
+def validate_pokemon(pokemon_name):
+  pokemon_name = pokemon_name.lower()
+  is_valid = False
+  suggestion = ""
+  for name in NATIONAL_DEX.values():
+    if pokemon_name == name.lower():
+      response = name.title()
+      is_valid = True
+      break
+
+  if not is_valid:
+    for name in GALARIAN_DEX.values():
+      if pokemon_name == name.lower():
+        response = name.title()
+        is_valid = True
+        break
+
+  if not is_valid:
+    for name in ALTERNATE_FORME_DEX.values():
+      if pokemon_name == name.lower():
+        response = name.title()
+        is_valid = True
+        break
+
+  if not is_valid:
+    response, suggestion = format_invalid_pokemon_message(pokemon_name)
+
+  return (is_valid, response, suggestion)
+
+def format_invalid_pokemon_message(pokemon_name):
+  response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."
+  best_ratio = 0
+  suggestion = ""
+  for name in NATIONAL_DEX.values():
+    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = name.lower()
+
+  for name in GALARIAN_DEX.values():
+    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = name.lower()
+
+  for name in ALTERNATE_FORME_DEX.values():
+    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+    if fuzz_ratio > best_ratio or fuzz_ratio == best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = name.lower()
+
+  response += "\n"
+
+  if best_ratio > 75:
+    response += "Did you mean " + backtick_and_bracket(suggestion.title()) + "?"
+  else:
+    response += "Could not find a reliable close match based on given parameter " + backtick_and_bracket(pokemon_name)
+    suggestion = pokemon_name
+
+  response += "\n"
+  return response, suggestion
+
 """----------------------------------------------------------------"""
 """GYM COLOR"""
 def validate_gym_argument(gym_color):
   gym_color = gym_color.lower()
   is_valid = False
-  response = ""
-
+  suggestion = ""
   for key, value in GYM_COLOR_TO_CONTROL_TEAM.items():
     if gym_color == key:
-      gym_control = GYM_COLOR_TO_CONTROL_TEAM.get(gym_color)
+      gym_control = value
       is_valid = True
+      break
     elif gym_color == value:
       gym_control = value
       is_valid = True
+      break
 
   if is_valid:
+    gym_control = gym_control.title()
     response = gym_control + " <:gym" + gym_control.lower() + ":" + GYM_CONTROL_EMOJI_ID.get(gym_control) + ">"
   else:
-    response = format_invalid_gym_message(gym_color)
+    response, suggestion = format_invalid_gym_message(gym_color)
 
-  return (is_valid, response)
+  return (is_valid, response, suggestion)
 
 # Iterates over the GYM_COLOR_TO_CONTROL_TEAM dictionary and appends all keys with values to the string.
 def format_invalid_gym_message(gym_color):
-  response = "You gave an invalid **Gym Color** of [`" + gym_color + "`]. Valid gym colors are: "
-  fuzzy_match_found = False
+  response = "You gave an invalid **Gym Color** of " + backtick_and_bracket(gym_color) + ". Valid gym colors are: "
+  best_ratio = 0
   suggestion = ""
   for index, (color, team) in enumerate(GYM_COLOR_TO_CONTROL_TEAM.items()):
     response += color.title() + " or " + team.title()
     if index < len(GYM_COLOR_TO_CONTROL_TEAM) - 1:
       response += ", "
 
-    if not fuzzy_match_found:
-      fuzzy_match_found, match = fuzzy_search(gym_color, color.lower(), 1)
-      if fuzzy_match_found:
-        suggestion = color.lower()
+    fuzz_ratio = fuzz.ratio(gym_color, color.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = color.lower()
 
-    if not fuzzy_match_found:
-      fuzzy_match_found, match = fuzzy_search(gym_color, team.lower(), 2)
-      if fuzzy_match_found:
-        suggestion = team.lower()
+    fuzz_ratio = fuzz.ratio(gym_color, team.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = team.lower()
 
   response += "\n"
 
-  if fuzzy_match_found:
+  if best_ratio > 75:
     response += "Did you mean [`" + suggestion.title() + "`]?"
   else:
-    response += "Could not find a close match based on given parameter [`" + gym_color + "`]"
+    response += "Could not find a reliable close match based on given parameter " + backtick_and_bracket(gym_color)
+    suggestion = gym_color
 
   response += "\n"
-  return response
+  return (response, suggestion)
 
 
 def get_embed_color(gym_color):
@@ -163,11 +251,11 @@ def get_embed_color(gym_color):
 
   for key, value in GYM_COLOR_TO_CONTROL_TEAM.items():
     if gym_color == key:
-      gym_control = GYM_COLOR_TO_CONTROL_TEAM.get(gym_color)
+      gym_control = value
     elif gym_color == value:
       gym_control = value
 
-  response = GYM_CONTROL_COLOR_HEX.get(gym_control)
+  response = GYM_CONTROL_COLOR_HEX.get(gym_control.title())
   return response
 """----------------------------------------------------------------"""
 """WEATHER"""
@@ -175,35 +263,167 @@ def get_embed_color(gym_color):
 def validate_weather_argument(weather):
   weather = weather.lower()
   is_valid = False
+  suggestion = ""
   # Search for valid weather type (dictionary keys)
   if weather in WEATHER_TO_OUTPUT.keys():
     response = WEATHER_TO_OUTPUT.get(weather) + " " + WEATHER_TO_EMOJI.get(weather)
     is_valid = True
   else:
-    response = format_invalid_weather_message(weather)
-  return (is_valid, response)
+    response, suggestion = format_invalid_weather_message(weather)
+  return (is_valid, response, suggestion)
 
 
 def format_invalid_weather_message(weather):
-  response = "You gave an invalid **Weather Condition** of [`" + weather + "`]. Valid weather conditions are: "
-  fuzzy_match_found = False
+  response = "You gave an invalid **Weather Condition** of " + backtick_and_bracket(weather) + ". Valid weather conditions are: "
+  best_ratio = 0
   suggestion = ""
   for index, (key, _) in enumerate(WEATHER_TO_OUTPUT.items()):
     response += key.title()
     if index < len(WEATHER_TO_OUTPUT) - 1:
       response += ", "
 
-    if not fuzzy_match_found:
-      fuzzy_match_found, match = fuzzy_search(weather, key.lower(), 1)
-      if fuzzy_match_found:
-        suggestion = key.lower()
+    fuzz_ratio = fuzz.ratio(weather, key.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = key.lower()
 
   response += "\n"
 
-  if fuzzy_match_found:
-    response += "Did you mean [`" + suggestion.title() + "`]?"
+  if best_ratio > 75:
+    response += "Did you mean " + backtick_and_bracket(suggestion.title()) + "?"
   else:
-    response += "Could not find a close match based on given parameter [`" + weather + "`]"
+    response += "Could not find a reliable close match based on given parameter " + backtick_and_bracket(weather)
+    suggestion = weather
 
   response += "\n"
+
+  return (response, suggestion)
+
+"""----------------------------------------------------------------"""
+"""INVITE COUNT"""
+def validate_invites_argument(invite_slots):
+  is_valid = False
+  response = ""
+  try:
+    invite_slots = int(invite_slots)
+    if invite_slots > 0:
+      is_valid = True
+      response = str(invite_slots) + " slots"
+  except ValueError:
+    response = backtick_and_bracket(invite_slots) + " is not a valid number."
+    response += "\n"
+
+
+  if not is_valid:
+    response += format_invalid_invites_message()
+    response += "\n"
+
+  return (is_valid, response)
+
+def format_invalid_invites_message():
+  return "**Invite slots** must be greater than " + backtick_and_bracket("0") + "."
+
+"""----------------------------------------------------------------"""
+"""TIME TO START"""
+def validate_tts_argument(tts):
+  is_valid = False
+  response = ""
+  try:
+    tts = int(tts)
+    if tts >= 0 and tts <= 45:
+      is_valid = True
+  except ValueError:
+    response = backtick_and_bracket(tts) + " is not a valid number."
+    response += "\n"
+
+
+  if is_valid:
+    if tts == 0:
+      response = "As soon as possible."
+    else:
+      response = str(tts) + " minutes"
+  else:
+    response += format_invalid_tts_message()
+    response += "\n"
+
+  return (is_valid, response)
+
+def format_invalid_tts_message():
+  return "**Time to start** must be greater than or equal to " + backtick_and_bracket("0") + "."
+
+"""----------------------------------------------------------------"""
+"""TIME TO EXPIRE"""
+def validate_tte_argument(tte):
+  is_valid = False
+  response = ""
+  try:
+    tte = int(tte)
+    if tte >= 10 and tte <= 45:
+      is_valid = True
+      response = str(tte) + " minutes"
+  except ValueError:
+    response = backtick_and_bracket(tte) + " is not a valid number."
+    response += "\n"
+
+  if not is_valid:
+    response += format_invalid_tte_message()
+    response += "\n"
+
+  return (is_valid, response)
+
+def format_invalid_tte_message():
+  return "**Time to expire** must be between " + backtick_and_bracket("10") + " minutes and " + backtick_and_bracket("45") + " minutes"
+
+
+"""----------------------------------------------------------------"""
+"""TTS VS TTE"""
+def check_tts_tte(tts, tte):
+  tts = int(tts)
+  tte = int(tte)
+  is_valid = False
+  response = ""
+  if tts <= (tte - 10):
+    is_valid = True
+  else:
+    response = format_invalid_tts_tte_message()
+    response += "\n"
+
+  return (is_valid, response)
+
+def format_invalid_tts_tte_message():
+  return "**Time to start** cannot be less than ten minutes from the time the raid expires."
+
+"""----------------------------------------------------------------"""
+"""MISC"""
+# Add a bracket and backtick around a string
+def backtick_and_bracket(string):
+  return "[`" + string + "`]"
+
+# Append a space to the end of the string
+def sp(string):
+  return string + " "
+
+def format_command_suggestion(tier,
+                              pokemon_name,
+                              gym_color,
+                              weather,
+                              invite_slots,
+                              time_to_start,
+                              time_to_expire,
+                              corrected_argument_guesses):
+
+  if "pokemon_name" in corrected_argument_guesses:
+    pokemon_name = corrected_argument_guesses.get("pokemon_name")
+  if "gym_color" in corrected_argument_guesses:
+    gym_color = corrected_argument_guesses.get("gym_color")
+  if "weather" in corrected_argument_guesses:
+    weather = corrected_argument_guesses.get("weather")
+
+  response = sp(tier) +\
+             sp(pokemon_name) +\
+             sp(gym_color) +\
+             sp(weather) +\
+             sp(invite_slots) +\
+             sp(time_to_start) +\
+             sp(time_to_expire)
   return response

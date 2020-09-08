@@ -489,7 +489,7 @@ NATIONAL_DEX =\
   484:"Palkia",
   485:"Heatran",
   486:"Regigigas",
-  487:"Giratina",
+  #487:"Giratina",
   488:"Cresselia",
   489:"Phione",
   490:"Manaphy",
@@ -928,4 +928,10 @@ GALARIAN_DEX =\
   555:"Darmanitan-Galarian",
   562:"Yamask-Galarian",
   618:"Stunfisk-Galarian"
+}
+
+ALTERNATE_FORME_DEX =\
+{
+  487:"Giratina-Origin",
+  487:"Giratina-Altered"
 }
