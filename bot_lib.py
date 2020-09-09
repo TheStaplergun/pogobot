@@ -16,17 +16,30 @@ async def perform_message_cleanup(bot):
   with open(data_filepath, "r") as f:
     file_data = f.readlines()
 
-  for line_number, line_data in enumerate(file_data):
+  file_data_copy = [x for x in file_data]
+  for line_number, line_data in enumerate(file_data_copy):
     message_data = line_data.split(":")
     time_to_remove = message_data.pop()
-    if float(time_to_remove) < time.time():
-      channel_id = int(message_data.pop())
-      message_id = int(message_data.pop())
+    channel_id = int(message_data.pop())
+    message_id = int(message_data.pop())
+    try:
       channel = await bot.fetch_channel(channel_id)
+    except discord.errors.NotFound:
+      file_data.pop(line_number)
+      continue
+    try:
       message = await channel.fetch_message(message_id)
-      print(message.content)
+    except discord.errors.NotFound:
+      file_data.pop(line_number)
+      continue
+    print(message.content)
+    if float(time_to_remove) < time.time():
       await message.delete()
       file_data.pop(line_number)
+    else:
+      delay_time = int(float(time_to_remove) - time.time())
+      print("Message will delete in " + str(delay_time) + " seconds")
+      await message.delete(delay=delay_time)
 
   overwrite_raid_tracker(file_data)
 

@@ -77,14 +77,15 @@ def validate_and_format_message(ctx,
       author_dm += response
 
   if raid_post_valid:
-    embed = discord.Embed(title='Raid', description="Hosted by " + ctx.author.mention, color=get_embed_color(gym_color))
-    embed.add_field(name="Tier", value=embed_tier, inline=True)
-    embed.add_field(name="Pokemon", value=embed_pokemon, inline=True)
+    title = embed_pokemon
+    description = "Hosted by " + ctx.author.mention + "\n"
+    embed = discord.Embed(title=title, description=description, color=get_embed_color(gym_color))
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=True)
     embed.add_field(name="Invites Available", value=embed_invites, inline=False)
     embed.add_field(name="Time until start", value=embed_tts, inline=True)
     embed.add_field(name="Time until expiration", value=embed_tte, inline=True)
+    embed.set_footer(text="To join this raid, DM the host above.")
     """Send Message"""
     return (raid_post_valid, embed, int(time_to_expire), "")
   else:
