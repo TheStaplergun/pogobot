@@ -77,15 +77,14 @@ def validate_and_format_message(ctx,
       author_dm += response
 
   if raid_post_valid:
-    embed = discord.Embed(title='Test', description='Test embed', color=get_embed_color(gym_color))
-    embed.add_field(name="Tier", value=embed_tier, inline=False)
-    embed.add_field(name="Pokemon", value=embed_pokemon, inline=False)
+    embed = discord.Embed(title='Raid', description="Hosted by " + ctx.author.mention, color=get_embed_color(gym_color))
+    embed.add_field(name="Tier", value=embed_tier, inline=True)
+    embed.add_field(name="Pokemon", value=embed_pokemon, inline=True)
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
-    embed.add_field(name="Weather", value=embed_weather, inline=False)
+    embed.add_field(name="Weather", value=embed_weather, inline=True)
     embed.add_field(name="Invites Available", value=embed_invites, inline=False)
-    embed.add_field(name="Time until start", value=embed_tts, inline=False)
-    embed.add_field(name="Time until expiration", value=embed_tte, inline=False)
-    embed.set_footer(text="TheStaplergun")
+    embed.add_field(name="Time until start", value=embed_tts, inline=True)
+    embed.add_field(name="Time until expiration", value=embed_tte, inline=True)
     """Send Message"""
     return (raid_post_valid, embed, int(time_to_expire), "")
   else:

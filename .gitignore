@@ -1,3 +1,5 @@
 important.py
 *.pyc
 *__pycache__
+/data/storage
+/data/storage_backup

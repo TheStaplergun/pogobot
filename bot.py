@@ -4,6 +4,7 @@ import data
 from important import OWNERID,TOKEN
 import raid_cog
 from raid_cog import *
+from bot_lib import *
 import xml.etree.ElementTree as ET
 import string
 import os
@@ -20,10 +21,11 @@ game = discord.Game(CUSTOM_STATUS)
 
 @bot.event
 async def on_ready():
-	print('Logged in as')
-	print(bot.user.name)
-	print('------')
-	await bot.change_presence(activity=game)
+  print('Logged in as')
+  print(bot.user.name)
+  print('------')
+  await bot.change_presence(activity=game)
+  await perform_message_cleanup(bot)
 
 @bot.command()
 async def test(ctx):
@@ -46,6 +48,11 @@ async def reset_bot_raid_cog(ctx):
   await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
   bot.add_cog(RaidPost(bot))
   await ctx.send("Cog [RaidPost] added and reset.")
+
+@bot.command()
+@commands.has_role("Mods")
+async def restore_backup_data(ctx):
+  restore_backup()
 
 bot.add_cog(RaidPost(bot))
 bot.run(TOKEN)
