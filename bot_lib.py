@@ -8,7 +8,7 @@ from important import data_filepath, data_backup_filepath
 
 async def perform_message_cleanup(bot):
   if not path.exists(data_filepath):
-    if not path.exists(data_backup_filepath):
+    if path.exists(data_backup_filepath):
       restore_backup()
     else:
       init_storage()
