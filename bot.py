@@ -26,6 +26,14 @@ guild_info_dictionary = {
 bot = commands.Bot(COMMAND_PREFIX, description=description)
 game = discord.Game(CUSTOM_STATUS)
 
+async def temp_acquire_pool_connection():
+  connection = await bot.pool.acquire()
+  return connection
+
+async def temp_release_pool_connection(connection):
+  if connection:
+    await bot.pool.release(connection)
+
 async def init_pool():
   pool = await asyncpg.create_pool(database=database,
                                    port=port,
@@ -35,13 +43,7 @@ async def init_pool():
 
   return pool
 
-async def temp_acquire_pool_connection():
-  connection = await bot.pool.acquire()
-  return connection
 
-async def temp_release_pool_connection(connection):
-  if connection:
-    await bot.pool.release(connection)
 
 @bot.event
 async def on_ready():
@@ -51,7 +53,7 @@ async def on_ready():
   await bot.change_presence(activity=game)
   bot.pool = await init_pool()
   bot.guild_info_dictionary = guild_info_dictionary
-  await spin_up_message_deletions()
+  await spin_up_message_deletions(bot)
 
 @bot.event
 async def on_raw_reaction_add(ctx):
@@ -178,11 +180,6 @@ async def reset_bot_raid_cog(ctx):
   await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
   bot.add_cog(RaidPost(bot))
   await ctx.send("Cog [RaidPost] added and reset.")
-
-#@bot.command()
-#@commands.has_role("Mods")
-#async def restore_backup_data(ctx):
-#  restore_backup()
 
 #@bot.event
 #async def on_command_error(ctx,error):

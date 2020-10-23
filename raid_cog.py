@@ -23,8 +23,8 @@ class RaidPost(commands.Cog):
   #@commands.before_invoke(acquire_pool_connection)
   #@commands.after_invoke(release_pool_connection)
   #@commands.has_role("Mods")
-  #async def recreate_main_raid_table(self, ctx):
-  #  await recreate_raid_table(ctx)
+  #async def recreate_raid_table(self, ctx):
+  #  await drop_and_make(ctx)
 
   @commands.command()
   @commands.before_invoke(acquire_pool_connection)
@@ -76,8 +76,11 @@ class RaidPost(commands.Cog):
     if ctx.channel.id not in self.bot.guild_info_dictionary[ctx.guild.id].get("allowed_raid_channels"):
       return
 
-    print(ctx.guild)
     await ctx.message.delete()
+    if await check_if_in_raid(ctx, ctx.author.id):
+      await ctx.author.send(wrap_bot_dm(ctx.guild.name, "You are already in a raid."))
+      return
+    
     async with ctx.channel.typing():
       raid_is_valid, response, remove_after, suggestion = validate_and_format_message(ctx,
                                                                                       tier,
@@ -92,13 +95,14 @@ class RaidPost(commands.Cog):
         message = await ctx.send(embed=response, delete_after = remove_after_seconds)
         no_emoji = self.bot.get_emoji(743179437054361720)
         await message.add_reaction(no_emoji)
-        print("Raid successfully listed.\n")
         time_to_delete = datetime.now() + timedelta(seconds = remove_after_seconds)
-        await add_raid_to_table(ctx, message.id, ctx.guild.id, message.channel.id, time_to_delete)
+        await add_raid_to_table(ctx, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
+        print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.id))
+
       else:
         response += "---------\n"
         response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"
         await ctx.author.send(response)
         correction_suggestion = ctx.prefix + "post_raid " + suggestion
         await ctx.author.send(correction_suggestion)
-        print("Raid failed to list. Sent user errors and suggestions.\n")
+        print("[!] [ {} ] [ {} ] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.id))
