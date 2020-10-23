@@ -4,6 +4,9 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from data.formats import *
 from data.pokemon import *
+from bot_lib import wrap_bot_dm
+import re
+
 
 def validate_and_format_message(ctx,
                                 tier,
@@ -15,7 +18,7 @@ def validate_and_format_message(ctx,
                                 time_to_expire):
   # Format raid post
   raid_post_valid = True
-  author_dm = "**From:** r/pokemongo raid hosting bot\n"
+  author_dm = wrap_bot_dm(ctx.guild.name, "")
   corrected_argument_guesses = {}
   """----------------------------------------------------------------"""
   is_valid, response = validate_tier(tier)
@@ -427,3 +430,35 @@ def format_command_suggestion(tier,
              sp(time_to_start) +\
              sp(time_to_expire)
   return response
+
+"""----------------------------------------------------------------"""
+"""USER MANAGEMENT"""
+def validate_level(level):
+  is_valid = True
+  try:
+    level = int(level)
+    response = str(level)
+    if level <= 0 or level > 40:
+      is_valid = False
+      response = backtick_and_bracket(response)
+      response += " is not a valid level. Level must be from " + backtick_and_bracket("1") + " to " + backtick_and_bracket("40")
+    else:
+      response = str(level)
+  except ValueError:
+    is_valid = False
+    response = backtick_and_bracket(str(level)) + " is not a valid number"
+
+  return (is_valid, response)
+
+def validate_friend_code_format(friend_code, friend_code_middle, friend_code_end):
+  is_valid = True
+  friend_code = friend_code + friend_code_middle + friend_code_end
+  friend_code_regex = re.compile('^\\d{12}$')
+
+  fc = friend_code_regex.match(friend_code)
+  if fc and fc.end() == 12:
+    response = fc.group()
+  else:
+    response = "No friend code detected in given input: " + backtick_and_bracket(friend_code)
+
+  return (is_valid, response)
