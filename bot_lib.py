@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 import asyncpg
-from important import *
+#from important import *
 from pogo_raid_lib import *
 import time
 from datetime import datetime
@@ -39,9 +39,9 @@ async def insert_new_player(ctx,
 async def remove_player(ctx, user_id):
   results = await ctx.connection.execute(player_table_remove_player, int(user_id))
   return results
-  
-  
-  
+
+
+
 async def check_for_player(ctx, user_id):
   results = await ctx.connection.fetchrow(player_table_query, int(user_id))
   message = ""
@@ -50,13 +50,13 @@ async def check_for_player(ctx, user_id):
     match_found = True
     for index, item in enumerate(results):
       message += str(column_names[index]) + ": " + str(item) + "\n"
-  
+
   return (match_found, message)
 
 def wrap_bot_dm(guild_name, message):
   return "**From:** {} raid hosting bot\n{}".format(guild_name, message)
-      
-  
+
+
 """
   user_id BIGINT PRIMARY KEY,
   friend_code CHAR(12) NOT NULL,
@@ -72,7 +72,7 @@ async def register_user(ctx,
                         friend_code_middle,
                         friend_code_end):
 
-  guild = ctx.guild
+  #guild = ctx.guild
   author = ctx.author
   registration_valid = True
   message_to_send = ""
@@ -83,13 +83,11 @@ async def register_user(ctx,
     message_to_send += "\n"
   else:
     registration_valid = False
-    message_to_dm += response
     message_to_dm += "\n"
 
   is_valid, friend_code = validate_friend_code_format(friend_code, friend_code_middle, friend_code_end)
   if not is_valid:
     registration_valid = False
-    message_to_dm += response
 
   if registration_valid:
     await insert_new_player(ctx,
@@ -124,16 +122,16 @@ raid_columns = ["Time registered", "Message ID", "Channel ID", "Time to Remove"]
 get_all_raids = """
   SELECT * FROM raids
 """
-async def get_raids_to_delete(ctx):
-  cur_time = datetime.now()
+async def get_all_raids_in_db(ctx):
+
   results = await ctx.connection.fetch(get_all_raids)
-  
+
   if not results:
     print("No raids found.")
     return
   else:
     message = "RAIDS\n"
-    for index, item in enumerate(results):
+    for _, item in enumerate(results):
       message += "-----------------\n"
       for column, value in item.items():
         message += str(column) + ": " + str(value) + "\n"
@@ -148,16 +146,16 @@ async def remove_raid_from_table(connection, message_id):
   results = await connection.execute(raid_table_remove_raid, int(message_id))
   print(results)
 
-recreate_raid_table_string = """
-  DROP TABLE IF EXISTS raids CASCADE;
-  CREATE TABLE raids (
-  message_id BIGINT PRIMARY KEY,
-  time_registered TIMESTAMP NOT NULL,
-  guild_id BIGINT NOT NULL,
-  channel_id BIGINT NOT NULL,
-  time_to_remove TIMESTAMP NOT NULL
-  );
-"""
+#recreate_raid_table_string = """
+#  DROP TABLE IF EXISTS raids CASCADE;
+#  CREATE TABLE raids (
+#  message_id BIGINT PRIMARY KEY,
+#  time_registered TIMESTAMP NOT NULL,
+#  guild_id BIGINT NOT NULL,
+#  channel_id BIGINT NOT NULL,
+#  time_to_remove TIMESTAMP NOT NULL
+#  );
+#"""
 
-async def recreate_raid_table(ctx):
-  print(await ctx.connection.execute(recreate_raid_table_string))
+#async def recreate_raid_table(ctx):
+#  print(await ctx.connection.execute(recreate_raid_table_string))

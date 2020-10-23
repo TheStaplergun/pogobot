@@ -1,14 +1,14 @@
 import discord
 from discord.ext import commands
 import data
-from important import OWNERID,TOKEN
+from important import *
 import raid_cog
 from raid_cog import *
 from bot_lib import *
 import xml.etree.ElementTree as ET
 import string
 import os
-import re 
+import re
 
 description = '''TheStaplergun's Bot in Python'''
 
@@ -42,7 +42,7 @@ async def temp_acquire_pool_connection():
 async def temp_release_pool_connection(connection):
   if connection:
     await bot.pool.release(connection)
-    
+
 @bot.event
 async def on_ready():
   print('Logged in as')
@@ -52,19 +52,19 @@ async def on_ready():
   bot.pool = await init_pool()
   bot.guild_info_dictionary = guild_info_dictionary
   await spin_up_message_deletions()
-  
+
 @bot.event
 async def on_raw_reaction_add(ctx):
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
-  
+
   if ctx.channel_id not in bot.guild_info_dictionary[ctx.guild_id].get("allowed_raid_channels"):
     return
 
   """Bot ignores itself adding emojis"""
   if ctx.user_id == bot.user.id:
     return
-    
+
   channel = bot.get_channel(ctx.channel_id)
   message = await channel.fetch_message(ctx.message_id)
 
@@ -80,7 +80,7 @@ async def on_raw_reaction_add(ctx):
 
   if not len(user_id) == 3:
     return
-      
+
   if int(user_id[1]) != ctx.user_id:
     dm = "You are not the host. You cannot delete this raid!"
   else:
@@ -96,15 +96,15 @@ async def on_raw_reaction_add(ctx):
 async def on_raw_message_delete(ctx):
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
-  
+
   if ctx.channel_id not in bot.guild_info_dictionary[ctx.guild_id].get("allowed_raid_channels"):
     return
 
   conn = await temp_acquire_pool_connection()
   await remove_raid_from_table(conn, ctx.message_id)
   await temp_release_pool_connection(conn)
-    
-    
+
+
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)
 #@commands.after_invoke(release_pool_connection)
@@ -124,16 +124,16 @@ async def check_registration(ctx, user_id = ""):
     await ctx.send(results)
   else:
     await ctx.send("No entry found for that User ID")
-    
+
 #@check_registration.error
-async def remove_registration_error(ctx, error):
+async def check_registration_error(ctx, error):
   if isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
     await ctx.author.send("This command cannot be executed via DM")
   elif isinstance(error, discord.ext.commands.errors.MissingRole):
     await ctx.author.send("You do not have permission to execute this command")
   else:
     await ctx.author.send(error)
-    
+
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)
 #@commands.after_invoke(release_pool_connection)
@@ -148,9 +148,9 @@ async def remove_registration(ctx, user_id= ""):
   except ValueError:
     await ctx.send("Invalid parameter provided [`" + str(user_id) + "`]. Must be discord user ID.")
     return
-  entry_found, results = await check_for_player(ctx, user_id)
+  entry_found, _ = await check_for_player(ctx, user_id)
   if entry_found:
-    results = await remove_player(ctx, user_id)
+    await remove_player(ctx, user_id)
     await ctx.send("Removed entry for given ID")
   else:
     await ctx.send("No entry found for that user ID")
@@ -191,4 +191,3 @@ async def reset_bot_raid_cog(ctx):
 
 bot.add_cog(RaidPost(bot))
 bot.run(TOKEN)
-
