@@ -52,15 +52,12 @@ async def on_ready():
   print('Logged in as')
   print(bot.user.name)
   print('------')
-  bot.pool = await init_pool()
-  bot.guild_info_dictionary = guild_info_dictionary
-  await spin_up_message_deletions(bot)
 
 @bot.event
 async def on_raw_reaction_add(ctx):
   if not bot.raids_enabled:
     return
-    
+
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
 
@@ -82,8 +79,8 @@ async def on_raw_reaction_add(ctx):
 
   if not len(message.mentions) == 1:
     return
-    
-  user_id = message.mentions[0].id 
+
+  user_id = message.mentions[0].id
 
   if int(user_id) != ctx.user_id:
     dm = "You are not the host. You cannot delete this raid!"
@@ -100,7 +97,7 @@ async def on_raw_reaction_add(ctx):
 async def on_raw_message_delete(ctx):
   if not bot.raids_enabled:
     return
-    
+
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
 
@@ -201,4 +198,11 @@ async def ping(ctx):
 
 bot.add_cog(RaidPost(bot))
 
+async def startup_process():
+  await bot.wait_until_ready()
+  bot.pool = await init_pool()
+  bot.guild_info_dictionary = guild_info_dictionary
+  await spin_up_message_deletions(bot)
+
+bot.loop.create_task(startup_process())
 bot.run(TOKEN)
