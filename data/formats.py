@@ -51,3 +51,11 @@ WEATHER_TO_OUTPUT =\
   "snow":"Snow",
   "fog":"Fog"
 }
+
+TIER_TO_ICON =\
+{
+  "T1":"https://cdn.discordapp.com/emojis/743178158693548164.png?v=1",
+  "T3":"https://cdn.discordapp.com/emojis/743178172178104422.png?v=1",
+  "T5":"https://cdn.discordapp.com/emojis/743178185918906531.png?v=1",
+  "Mega":"https://cdn.discordapp.com/emojis/750008692211974404.png?v=1",
+}

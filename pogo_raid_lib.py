@@ -83,6 +83,7 @@ def validate_and_format_message(ctx,
     title = embed_pokemon
     description = "Hosted by " + ctx.author.mention + "\n"
     embed = discord.Embed(title=title, description=description, color=get_embed_color(gym_color))
+    embed.set_thumbnail(url=TIER_TO_ICON.get(embed_tier))
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=True)
     embed.add_field(name="Invites Available", value=embed_invites, inline=False)
