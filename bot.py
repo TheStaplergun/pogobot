@@ -13,7 +13,7 @@ import re
 description = '''TheStaplergun's Bot in Python'''
 
 """Set command_prefix to any character here."""
-COMMAND_PREFIX = '$'
+COMMAND_PREFIX = '-'
 """Change this string to change the 'playing' status of the bot."""
 CUSTOM_STATUS = "WIP"
 
@@ -22,9 +22,11 @@ guild_info_dictionary = {
     "allowed_raid_channels":[737736358801571901, 750078168496472176]
   }
 }
-
-bot = commands.Bot(COMMAND_PREFIX, description=description)
 game = discord.Game(CUSTOM_STATUS)
+bot = commands.Bot(COMMAND_PREFIX, description=description, activity=game)
+
+bot.raids_enabled = True
+bot.is_ready_to_process = False
 
 async def temp_acquire_pool_connection():
   connection = await bot.pool.acquire()
@@ -50,13 +52,15 @@ async def on_ready():
   print('Logged in as')
   print(bot.user.name)
   print('------')
-  await bot.change_presence(activity=game)
   bot.pool = await init_pool()
   bot.guild_info_dictionary = guild_info_dictionary
   await spin_up_message_deletions(bot)
 
 @bot.event
 async def on_raw_reaction_add(ctx):
+  if not bot.raids_enabled:
+    return
+    
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
 
@@ -76,14 +80,12 @@ async def on_raw_reaction_add(ctx):
   if not len(message.embeds) == 1:
     return
 
-  embed = message.embeds[0]
-  description = embed.description
-  user_id = re.split('@|>', description)
-
-  if not len(user_id) == 3:
+  if not len(message.mentions) == 1:
     return
+    
+  user_id = message.mentions[0].id 
 
-  if int(user_id[1]) != ctx.user_id:
+  if int(user_id) != ctx.user_id:
     dm = "You are not the host. You cannot delete this raid!"
   else:
     dm = "Your raid has been successfuly deleted."
@@ -96,6 +98,9 @@ async def on_raw_reaction_add(ctx):
 
 @bot.event
 async def on_raw_message_delete(ctx):
+  if not bot.raids_enabled:
+    return
+    
   if ctx.guild_id not in bot.guild_info_dictionary:
     return
 
@@ -106,6 +111,14 @@ async def on_raw_message_delete(ctx):
   await remove_raid_from_table(conn, ctx.message_id)
   await temp_release_pool_connection(conn)
 
+@bot.command()
+#@commands.before_invoke(acquire_pool_connection)
+#@commands.after_invoke(release_pool_connection)
+@commands.has_role("Mods")
+async def toggle_raid_module(ctx):
+  bot.raids_enabled = not (bot.raids_enabled)
+  print("[!] Raid module enabled status [ {} ]".format(bot.raids_enabled))
+  await ctx.channel.send("Raid module has been {}.".format(bot.raids_enabled and "enabled" or "disabled"))
 
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)
@@ -171,15 +184,15 @@ async def ping(ctx):
     """Check if alive"""
     await ctx.send("pong")
 
-@bot.command()
-@commands.has_role("Mods")
-async def reset_bot_raid_cog(ctx):
-  await ctx.send("Removing cog [RaidPost]")
-  bot.remove_cog('RaidPost')
-  importlib.reload(raid_cog)
-  await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
-  bot.add_cog(RaidPost(bot))
-  await ctx.send("Cog [RaidPost] added and reset.")
+#@bot.command()
+#@commands.has_role("Mods")
+#async def reset_bot_raid_cog(ctx):
+#  await ctx.send("Removing cog [RaidPost]")
+#  bot.remove_cog('RaidPost')
+#  importlib.reload(raid_cog)
+#  await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
+#  bot.add_cog(RaidPost(bot))
+#  await ctx.send("Cog [RaidPost] added and reset.")
 
 #@bot.event
 #async def on_command_error(ctx,error):
@@ -187,4 +200,5 @@ async def reset_bot_raid_cog(ctx):
 #    print("User tried to use guild only command")
 
 bot.add_cog(RaidPost(bot))
+
 bot.run(TOKEN)
