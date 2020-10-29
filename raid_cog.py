@@ -69,8 +69,8 @@ class RaidPost(commands.Cog):
                       time_to_expire = "`No time to expire provided`"):
 
     if not self.bot.raids_enabled:
-      return 
-      
+      return
+
     if ctx.guild.id not in self.bot.guild_info_dictionary:
       return
 
@@ -83,7 +83,7 @@ class RaidPost(commands.Cog):
     if await check_if_in_raid(ctx, ctx.author.id):
       await ctx.author.send(wrap_bot_dm(ctx.guild.name, "You are already in a raid."))
       return
-    
+
     async with ctx.channel.typing():
       raid_is_valid, response, remove_after, suggestion = validate_and_format_message(ctx,
                                                                                       tier,
@@ -94,7 +94,7 @@ class RaidPost(commands.Cog):
                                                                                       time_to_start,
                                                                                       time_to_expire)
       if raid_is_valid:
-        remove_after_seconds = int(remove_after) * 60    
+        remove_after_seconds = int(remove_after) * 60
         channel_message_body = "Raid hosted by {}\n".format(ctx.author.mention)
         message = await ctx.send(channel_message_body, embed=response, delete_after = remove_after_seconds)
         no_emoji = self.bot.get_emoji(743179437054361720)
@@ -104,7 +104,10 @@ class RaidPost(commands.Cog):
         message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire`.\nPress the red X emoji to remove it at any time."
         await ctx.author.send(wrap_bot_dm(ctx.guild.name, message_to_dm))
         print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.id))
-
+        try:
+          await toggle_raid_sticky(self.bot , int(ctx.channel_id), int(ctx.guild_id))
+        except Exception:
+          pass
       else:
         response += "---------\n"
         response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"

@@ -90,6 +90,10 @@ async def on_raw_reaction_add(ctx):
     await remove_raid_from_table(conn, message.id)
     await temp_release_pool_connection(conn)
     await message.delete()
+    try:
+      await toggle_raid_sticky(bot, int(ctx.channel_id), int(ctx.guild_id))
+    except Exception:
+      pass
 
   await ctx.member.send(wrap_bot_dm(channel.guild.name, dm))
 
@@ -109,13 +113,22 @@ async def on_raw_message_delete(ctx):
   await temp_release_pool_connection(conn)
 
 @bot.command()
-#@commands.before_invoke(acquire_pool_connection)
-#@commands.after_invoke(release_pool_connection)
 @commands.has_role("Mods")
 async def toggle_raid_module(ctx):
   bot.raids_enabled = not (bot.raids_enabled)
   print("[!] Raid module enabled status [ {} ]".format(bot.raids_enabled))
   await ctx.channel.send("Raid module has been {}.".format(bot.raids_enabled and "enabled" or "disabled"))
+
+@bot.command()
+@commands.has_role("Mods")
+async def register_raid_channel(ctx):
+  channel_id = ctx.channel.id
+  guild_id = ctx.guild.id
+  try:
+    await ctx.message.delete()
+  except:
+    pass
+  await database_register_raid_channel(bot, ctx, channel_id, guild_id)
 
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)

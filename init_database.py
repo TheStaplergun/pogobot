@@ -38,26 +38,30 @@ CREATE TABLE IF NOT EXISTS tracker (
     REFERENCES raids (raid_message_id)
 );
 """
+
+placeholder_database = """
+CREATE TABLE IF NOT EXISTS raid_placeholder_stickies (
+  channel_id BIGINT PRIMARY KEY,
+  message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL
+);
+"""
+
+valid_raid_channels = """
+CREATE TABLE IF NOT EXISTS valid_raid_channels (
+  channel_id BIGINT PRIMARY KEY,
+  guild_id BIGINT NOT NULL
+)
+"""
 async def main():
-  
+
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
                                host='localhost',
                                user='pi',
                                password=password)
-    
-  await conn.execute(player_table_create)
-  
-  await conn.execute(raid_table_create)
 
-  await conn.execute(raid_anonymous_tracker)
-  
+  await conn.execute(placeholder_database)
+  await conn.execute(valid_raid_channels)
+
 asyncio.get_event_loop().run_until_complete(main())
-
-
-
-
-
-
-
-
