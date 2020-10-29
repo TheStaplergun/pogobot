@@ -4,7 +4,6 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from data.formats import *
 from data.pokemon import *
-from bot_lib import wrap_bot_dm
 import re
 
 

@@ -25,8 +25,10 @@ guild_info_dictionary = {
 game = discord.Game(CUSTOM_STATUS)
 bot = commands.Bot(COMMAND_PREFIX, description=description, activity=game)
 
+bot.pool = None
 bot.raids_enabled = True
-bot.is_ready_to_process = False
+bot.guild_info_dictionary = guild_info_dictionary
+bot.bot_ready_to_process = False
 
 async def temp_acquire_pool_connection():
   connection = await bot.pool.acquire()
@@ -55,6 +57,9 @@ async def on_ready():
 
 @bot.event
 async def on_raw_reaction_add(ctx):
+  if not bot.bot_ready_to_process:
+    return
+
   if not bot.raids_enabled:
     return
 
@@ -99,6 +104,9 @@ async def on_raw_reaction_add(ctx):
 
 @bot.event
 async def on_raw_message_delete(ctx):
+  if not bot.bot_ready_to_process:
+    return
+
   if not bot.raids_enabled:
     return
 
@@ -122,6 +130,9 @@ async def toggle_raid_module(ctx):
 @bot.command()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
+  if not bot.bot_ready_to_process:
+    return
+
   channel_id = ctx.channel.id
   guild_id = ctx.guild.id
   try:
@@ -209,11 +220,11 @@ async def ping(ctx):
 #  if isinstance(error, commands.errors.NoPrivateMessage):
 #    print("User tried to use guild only command")
 
-bot.add_cog(RaidPost(bot))
 
 async def startup_process():
   await bot.wait_until_ready()
   bot.pool = await init_pool()
+  bot.add_cog(RaidPost(bot))
   bot.guild_info_dictionary = guild_info_dictionary
   await spin_up_message_deletions(bot)
 
