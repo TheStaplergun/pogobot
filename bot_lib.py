@@ -200,15 +200,19 @@ async def remove_old_sticky_message_from_table(connection, channel_id):
 
 def make_new_no_raids_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
-  message_body = "No raids are currently running at the moment.\n**If you want to host a raid, check out the post above!**"
-  message = await ctx.send(message_body)
+  title = "No raids available."
+  description = "Check back any time to see if one has been listed."
+  embed = format_sticky_embed(title, description)
+  message = await ctx.send(embed=embed)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
 def make_new_raids_remaining_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
-  message_body = "All currently running raids are below.\n**If you want to host a raid, check out the post above!**"
-  message = await ctx.send(message_body)
+  title = "Raids available!"
+  description = "All available raids are listed below."
+  embed = format_sticky_embed(title, description)
+  message = await ctx.send(embed=embed)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
