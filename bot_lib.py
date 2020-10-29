@@ -198,17 +198,17 @@ async def remove_old_sticky_message_from_table(connection, channel_id):
   results = await connection.execute(delete_placeholder_sticky_message, int(channel_id))
   print("[*] Table operation results [ {} ]".format(results))
 
-def make_new_no_raids_placeholder_message(bot, channel_id):
+def make_new_no_raids_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
   message_body = "No raids are currently running at the moment.\n**If you want to host a raid, check out the post above!**"
-  message = await channel.send(message_body)
+  message = await ctx.send(message_body)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
-def make_new_raids_remaining_placeholder_message(bot, channel_id):
+def make_new_raids_remaining_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
   message_body = "All currently running raids are below.\n**If you want to host a raid, check out the post above!**"
-  message = await channel.send(message_body)
+  message = await ctx.send(message_body)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
@@ -230,7 +230,7 @@ def edit_to_raids_remaining_placeholder(bot, channel_id, message):
   embed = format_sticky_embed(title, description)
   await message.edit(embed=embed)
 
-async def toggle_raid_sticky(bot, channel_id, guild_id):
+async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):
   if not check_if_valid_raid_channel(bot, channel_id):
     return
 
@@ -250,10 +250,10 @@ async def toggle_raid_sticky(bot, channel_id, guild_id):
       remove_old_sticky_message_from_table(bot, channel_id)
 
     if not raids_remaining:
-      make_new_no_raids_placeholder_message(bot, channel_id)
+      make_new_no_raids_placeholder_message(bot, ctx, channel_id)
       return
 
-    make_new_raids_remaining_placeholder_message(bot, channel_id)
+    make_new_raids_remaining_placeholder_message(bot, ctx, channel_id)
     return
 
   except Exception as e:

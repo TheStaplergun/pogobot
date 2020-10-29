@@ -91,7 +91,7 @@ async def on_raw_reaction_add(ctx):
     await temp_release_pool_connection(conn)
     await message.delete()
     try:
-      await toggle_raid_sticky(bot, int(ctx.channel_id), int(ctx.guild_id))
+      await toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
     except Exception:
       pass
 

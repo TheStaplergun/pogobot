@@ -105,7 +105,7 @@ class RaidPost(commands.Cog):
         await ctx.author.send(wrap_bot_dm(ctx.guild.name, message_to_dm))
         print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.id))
         try:
-          await toggle_raid_sticky(self.bot , int(ctx.channel_id), int(ctx.guild_id))
+          await toggle_raid_sticky(self.bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except Exception:
           pass
       else:
