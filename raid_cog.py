@@ -105,9 +105,9 @@ class RaidPost(commands.Cog):
         await ctx.author.send(wrap_bot_dm(ctx.guild.name, message_to_dm))
         print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.id))
         try:
-          await toggle_raid_sticky(self.bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-        except Exception:
-          pass
+          await toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
+        except Exception as e:
+          print("[!] Exception occurred during togle of raid sticky. [{}]".format(e))
       else:
         response += "---------\n"
         response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"

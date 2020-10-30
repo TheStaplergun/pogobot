@@ -4,8 +4,13 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from data.formats import *
 from data.pokemon import *
+from bot_lib import wrap_bot_dm
 import re
 
+
+def build_image_link(num)
+  num = str(num).zfill(3)
+  return "https://www.serebii.net/swordshield/pokemon/{}.png".format(num)
 
 def validate_and_format_message(ctx,
                                 tier,
@@ -27,9 +32,10 @@ def validate_and_format_message(ctx,
     raid_post_valid = False
     author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response, suggestion = validate_pokemon(pokemon_name)
+  is_valid, response, suggestion, number = validate_pokemon(pokemon_name)
   if is_valid:
-    embed_pokemon = response.title()
+    embed_pokemon   = response.title()
+    embed_thumbnail = build_image_link(number) 
   else:
     raid_post_valid = False
     corrected_argument_guesses.update({"pokemon_name" : suggestion})
@@ -81,7 +87,7 @@ def validate_and_format_message(ctx,
   if raid_post_valid:
     title = embed_pokemon
     embed = discord.Embed(title=title, description="", color=get_embed_color(gym_color))
-    embed.set_thumbnail(url=TIER_TO_ICON.get(embed_tier))
+    embed.set_thumbnail(url=embed_thumbnail)
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=True)
     embed.add_field(name="Invites Available", value=embed_invites, inline=False)
@@ -133,30 +139,34 @@ def validate_pokemon(pokemon_name):
   pokemon_name = pokemon_name.lower()
   is_valid = False
   suggestion = ""
-  for name in NATIONAL_DEX.values():
+  dex_num = 0
+  for number, name in NATIONAL_DEX.items():
     if pokemon_name == name.lower():
       response = name.title()
+      dex_num = number
       is_valid = True
       break
 
   if not is_valid:
-    for name in GALARIAN_DEX.values():
+    for number, name in GALARIAN_DEX.items():
       if pokemon_name == name.lower():
         response = name.title()
+        dex_num = number
         is_valid = True
         break
 
   if not is_valid:
-    for name in ALTERNATE_FORME_DEX.values():
+    for number, name in ALTERNATE_FORME_DEX.items():
       if pokemon_name == name.lower():
         response = name.title()
+        dex_num = number
         is_valid = True
         break
 
   if not is_valid:
     response, suggestion = format_invalid_pokemon_message(pokemon_name)
 
-  return (is_valid, response, suggestion)
+  return (is_valid, response, suggestion, dex_num)
 
 def format_invalid_pokemon_message(pokemon_name):
   response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."

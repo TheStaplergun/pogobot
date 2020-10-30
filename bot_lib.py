@@ -122,7 +122,7 @@ async def spin_up_message_deletions(bot):
 
 
 check_valid_raid_channel = """
- SELECT * FROM valid_raid_channel where (channel_id = $1)
+ SELECT * FROM valid_raid_channels where (channel_id = $1)
 """
 
 async def check_if_valid_raid_channel(bot, channel_id):
@@ -140,7 +140,7 @@ VALUES($1, $2)
 async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
   connection = await bot.pool.acquire()
   try:
-    results = await connection.execute(raid_placeholder_sticky_select,
+    results = await connection.execute(add_raid_channel,
                                        int(channel_id),
                                        int(guild_id))
   except Exception:
@@ -172,7 +172,12 @@ async def get_sticky_message(bot, channel_id):
 
   message_id = int(record.get("message_id"))
   channel = bot.get_channel(channel_id)
-  message = await channel.fetch_message(message_id)
+  try:
+    message = await channel.fetch_message(message_id)
+  except Exception as e:
+    print(e)
+    return (True, None)
+  
   if not message:
     return (True, None)
 
@@ -184,7 +189,7 @@ VALUES($1, $2, $3)
 """
 async def update_placeholder_database(bot, channel_id, message_id, guild_id):
   connection = await bot.pool.acquire()
-  await connection.execute(raid_placeholder_sticky_select,
+  await connection.execute(add_placeholder_sticky_message,
                            int(channel_id),
                            int(message_id),
                            int(guild_id))
@@ -194,25 +199,27 @@ delete_placeholder_sticky_message = """
 DELETE FROM raid_placeholder_stickies WHERE (channel_id = $1)
 RETURNING channel_id
 """
-async def remove_old_sticky_message_from_table(connection, channel_id):
+async def remove_old_sticky_message_from_table(bot, channel_id):
+  connection = await bot.pool.acquire()
   results = await connection.execute(delete_placeholder_sticky_message, int(channel_id))
+  await bot.pool.release(connection)
   print("[*] Table operation results [ {} ]".format(results))
 
-def make_new_no_raids_placeholder_message(bot, ctx, channel_id):
+async def make_new_no_raids_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
   title = "No raids available."
   description = "Check back any time to see if one has been listed."
   embed = format_sticky_embed(title, description)
-  message = await ctx.send(embed=embed)
+  message = await channel.send(embed=embed)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
-def make_new_raids_remaining_placeholder_message(bot, ctx, channel_id):
+async def make_new_raids_remaining_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
   title = "Raids available!"
   description = "All available raids are listed below."
   embed = format_sticky_embed(title, description)
-  message = await ctx.send(embed=embed)
+  message = await channel.send(embed=embed)
 
   await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
@@ -222,42 +229,42 @@ def format_sticky_embed(title, description):
   embed.add_field(name="Want to host a raid?", value=embed_host_raid_msg, inline=False)
   return embed
 
-def edit_to_no_raids_remaining_placeholder(bot, channel_id, message):
+async def edit_to_no_raids_remaining_placeholder(bot, channel_id, message):
   title = "No raids available."
   description = "Check back any time to see if one has been listed."
   embed = format_sticky_embed(title, description)
   await message.edit(embed=embed)
 
-def edit_to_raids_remaining_placeholder(bot, channel_id, message):
+async def edit_to_raids_remaining_placeholder(bot, channel_id, message):
   title = "Raids available!"
   description = "All available raids are listed below."
   embed = format_sticky_embed(title, description)
   await message.edit(embed=embed)
 
 async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):
-  if not check_if_valid_raid_channel(bot, channel_id):
+  if not await check_if_valid_raid_channel(bot, channel_id):
     return
-
-  raids_remaining = check_if_raids_remaining_in_channel(bot, channel_id)
-
-  message_exists_in_table, message = get_sticky_message(bot, channel_id)
   try:
+
+    raids_remaining = await check_if_raids_remaining_in_channel(bot, channel_id)
+
+    message_exists_in_table, message = await get_sticky_message(bot, channel_id)
     if message:
       if not raids_remaining:
-        edit_to_no_raids_remaining_placeholder(bot, channel_id, message)
+        await edit_to_no_raids_remaining_placeholder(bot, channel_id, message)
         return
 
-      edit_to_raids_remaining_placeholder(bot, channel_id, message)
+      await edit_to_raids_remaining_placeholder(bot, channel_id, message)
       return
 
     if message_exists_in_table:
-      remove_old_sticky_message_from_table(bot, channel_id)
+      await remove_old_sticky_message_from_table(bot, channel_id)
 
     if not raids_remaining:
-      make_new_no_raids_placeholder_message(bot, ctx, channel_id)
+      await make_new_no_raids_placeholder_message(bot, ctx, channel_id)
       return
 
-    make_new_raids_remaining_placeholder_message(bot, ctx, channel_id)
+    await make_new_raids_remaining_placeholder_message(bot, ctx, channel_id)
     return
 
   except Exception as e:

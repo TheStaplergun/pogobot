@@ -57,9 +57,6 @@ async def on_ready():
 
 @bot.event
 async def on_raw_reaction_add(ctx):
-  if not bot.bot_ready_to_process:
-    return
-
   if not bot.raids_enabled:
     return
 
@@ -97,16 +94,12 @@ async def on_raw_reaction_add(ctx):
     await message.delete()
     try:
       await toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-    except Exception:
-      pass
-
+    except Exception as e:
+      print("[!] An error occurred [{}]".format(e))
   await ctx.member.send(wrap_bot_dm(channel.guild.name, dm))
 
 @bot.event
 async def on_raw_message_delete(ctx):
-  if not bot.bot_ready_to_process:
-    return
-
   if not bot.raids_enabled:
     return
 
@@ -119,6 +112,10 @@ async def on_raw_message_delete(ctx):
   conn = await temp_acquire_pool_connection()
   await remove_raid_from_table(conn, ctx.message_id)
   await temp_release_pool_connection(conn)
+  try:
+    await toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
+  except Exception as e:
+    print("[!] An error occurred [{}]".format(e))
 
 @bot.command()
 @commands.has_role("Mods")
@@ -130,8 +127,6 @@ async def toggle_raid_module(ctx):
 @bot.command()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
-  if not bot.bot_ready_to_process:
-    return
 
   channel_id = ctx.channel.id
   guild_id = ctx.guild.id
@@ -140,6 +135,11 @@ async def register_raid_channel(ctx):
   except:
     pass
   await database_register_raid_channel(bot, ctx, channel_id, guild_id)
+  try:
+    await toggle_raid_sticky(bot, ctx, channel_id, guild_id)
+  except Exception as e:
+    print("[!] An error occurred [{}]".format(e))
+  
 
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)
