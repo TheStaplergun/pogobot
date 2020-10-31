@@ -86,6 +86,13 @@ async def on_raw_reaction_add(ctx):
 
   if int(user_id) != ctx.user_id:
     dm = "You are not the host. You cannot delete this raid!"
+    for reaction in message.reactions:
+      async for user in reaction.users():
+        if user.id == ctx.user_id:
+          try:
+            await reaction.remove(user)
+          except Exception as e:
+            print("[*] Error removing reaction [{}]".format(e))
   else:
     dm = "Your raid has been successfuly deleted."
     conn = await temp_acquire_pool_connection()

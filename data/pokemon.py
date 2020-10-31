@@ -951,50 +951,50 @@ MEGA_DEX =\
 
 ALOLAN_DEX =\
 {
-  19:"Rattata-Alolan",
-  20:"Raticate-Alolan",
-  26:"Raichu-Alolan",
-  27:"Sandshrew-Alolan",
-  28:"Sandslash-Alolan",
-  37:"Vulpix-Alolan",
-  38:"Ninetales-Alolan",
-  50:"Diglett-Alolan",
-  51:"Dugtrio-Alolan",
-  52:"Meowth-Alolan",
-  53:"Persian-Alolan",
-  74:"Geodude-Alolan",
-  75:"Graveler-Alolan",
-  76:"Golem-Alolan",
-  88:"Grimer-Alolan",
-  89:"Muk-Alolan",
-  103:"Exeggutor-Alolan",
-  105:"Marowak-Alolan"
+  "019-a":"Alolan-Rattata",
+  "020-a":"Alolan-Raticate",
+  "026-a":"Alolan-Raichu",
+  "027-a":"Alolan-Sandshrew",
+  "028-a":"Alolan-Sandslash",
+  "037-a":"Alolan-Vulpix",
+  "038-a":"Alolan-Ninetales",
+  "050-a":"Alolan-Diglett",
+  "051-a":"Alolan-Dugtrio",
+  "052-a":"Alolan-Meowth",
+  "053-a":"Alolan-Persian",
+  "074-a":"Alolan-Geodude",
+  "075-a":"Alolan-Graveler",
+  "076-a":"Alolan-Golem",
+  "088-a":"Alolan-Grimer",
+  "089-a":"Alolan-Muk",
+  "103-a":"Alolan-Exeggutor",
+  "105-a":"Alolan-Marowak"
 }
 
 GALARIAN_DEX =\
 {
-  52:"Meowth-Galarian",
-  77:"Ponyta-Galarian",
-  78:"Rapidash-Galarian",
-  79:"Slowpoke-Galarian",
-  80:"Slowbro-Galarian",
-  83:"Farfetch'd-Galarian",
-  110:"Weezing-Galarian",
-  122:"Mr-Mime-Galarian",
-  144:"Articuno-Galarian",
-  145:"Zapdos-Galarian",
-  146:"Moltres-Galarian",
-  222:"Corsola-Galarian",
-  263:"Zigzagoon-Galarian",
-  264:"Linoone-Galarian",
-  554:"Darumaka-Galarian",
-  555:"Darmanitan-Galarian",
-  562:"Yamask-Galarian",
-  618:"Stunfisk-Galarian"
+  "052-g":"Meowth-Galarian",
+  "077-g":"Ponyta-Galarian",
+  "078-g":"Rapidash-Galarian",
+  "079-g":"Slowpoke-Galarian",
+  "080-g":"Slowbro-Galarian",
+  "083-g":"Farfetch'd-Galarian",
+  "110-g":"Weezing-Galarian",
+  "122-g":"Mr-Mime-Galarian",
+  "144-g":"Articuno-Galarian",
+  "145-g":"Zapdos-Galarian",
+  "146-g":"Moltres-Galarian",
+  "222-g":"Corsola-Galarian",
+  "263-g":"Zigzagoon-Galarian",
+  "264-g":"Linoone-Galarian",
+  "554-g":"Darumaka-Galarian",
+  "555-g":"Darmanitan-Galarian",
+  "562-g":"Yamask-Galarian",
+  "618-g":"Stunfisk-Galarian"
 }
 
 ALTERNATE_FORME_DEX =\
 {
-  487:"Giratina-Origin",
+  "487-o":"Giratina-Origin",
   487:"Giratina-Altered"
 }

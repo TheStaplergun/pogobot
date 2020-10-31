@@ -8,7 +8,7 @@ from bot_lib import wrap_bot_dm
 import re
 
 
-def build_image_link(num)
+def build_image_link(num):
   num = str(num).zfill(3)
   return "https://www.serebii.net/swordshield/pokemon/{}.png".format(num)
 
@@ -156,6 +156,14 @@ def validate_pokemon(pokemon_name):
         break
 
   if not is_valid:
+    for number, name in ALOLAN_DEX.items():
+      if pokemon_name == name.lower():
+        response = name.title()
+        dex_num = number
+        is_valid = True
+        break
+  
+  if not is_valid:
     for number, name in ALTERNATE_FORME_DEX.items():
       if pokemon_name == name.lower():
         response = name.title()
@@ -184,6 +192,12 @@ def format_invalid_pokemon_message(pokemon_name):
       best_ratio = fuzz_ratio
       suggestion = name.lower()
 
+  for name in ALOLAN_DEX.values():
+    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+    if fuzz_ratio > best_ratio:
+      best_ratio = fuzz_ratio
+      suggestion = name.lower()
+    
   for name in ALTERNATE_FORME_DEX.values():
     fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
     if fuzz_ratio > best_ratio or fuzz_ratio == best_ratio:
