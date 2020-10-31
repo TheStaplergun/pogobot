@@ -8,9 +8,12 @@ from bot_lib import wrap_bot_dm
 import re
 
 
-def build_image_link(num):
+def build_image_link_serebii(num):
   num = str(num).zfill(3)
   return "https://www.serebii.net/swordshield/pokemon/{}.png".format(num)
+
+def build_image_link_github(num):
+  return "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{}.png".format(num)
 
 def validate_and_format_message(ctx,
                                 tier,
@@ -32,10 +35,13 @@ def validate_and_format_message(ctx,
     raid_post_valid = False
     author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response, suggestion, number = validate_pokemon(pokemon_name)
+  is_valid, response, suggestion, number = validate_pokemon(pokemon_name, tier)
   if is_valid:
     embed_pokemon   = response.title()
-    embed_thumbnail = build_image_link(number) 
+    if "Mega" in embed_tier:
+      embed_thumbnail = build_image_link_github(number)
+    else:
+      embed_thumbnail = build_image_link_serebii(number)
   else:
     raid_post_valid = False
     corrected_argument_guesses.update({"pokemon_name" : suggestion})
@@ -135,74 +141,91 @@ def format_invalid_tier_message(tier):
   return response
 """----------------------------------------------------------------"""
 """POKEMON NAME"""
-def validate_pokemon(pokemon_name):
+def validate_pokemon(pokemon_name, tier):
   pokemon_name = pokemon_name.lower()
   is_valid = False
   suggestion = ""
   dex_num = 0
-  for number, name in NATIONAL_DEX.items():
-    if pokemon_name == name.lower():
-      response = name.title()
-      dex_num = number
-      is_valid = True
-      break
 
-  if not is_valid:
-    for number, name in GALARIAN_DEX.items():
+  if "Mega" in tier:
+    for number,name in MEGA_DEX.items():
+      if pokemon_name == name.lower():
+        response = name.title()
+        dex_num = number
+        is_valid = True
+        break
+  else:
+    for number, name in NATIONAL_DEX.items():
       if pokemon_name == name.lower():
         response = name.title()
         dex_num = number
         is_valid = True
         break
 
-  if not is_valid:
-    for number, name in ALOLAN_DEX.items():
-      if pokemon_name == name.lower():
-        response = name.title()
-        dex_num = number
-        is_valid = True
-        break
-  
-  if not is_valid:
-    for number, name in ALTERNATE_FORME_DEX.items():
-      if pokemon_name == name.lower():
-        response = name.title()
-        dex_num = number
-        is_valid = True
-        break
+    if not is_valid:
+      for number, name in GALARIAN_DEX.items():
+        if pokemon_name == name.lower():
+          response = name.title()
+          dex_num = number
+          is_valid = True
+          break
+
+    if not is_valid:
+      for number, name in ALOLAN_DEX.items():
+        if pokemon_name == name.lower():
+          response = name.title()
+          dex_num = number
+          is_valid = True
+          break
+
+    if not is_valid:
+      for number, name in ALTERNATE_FORME_DEX.items():
+        if pokemon_name == name.lower():
+          response = name.title()
+          dex_num = number
+          is_valid = True
+          break
 
   if not is_valid:
-    response, suggestion = format_invalid_pokemon_message(pokemon_name)
+    response, suggestion = format_invalid_pokemon_message(pokemon_name, tier)
 
   return (is_valid, response, suggestion, dex_num)
 
-def format_invalid_pokemon_message(pokemon_name):
+def format_invalid_pokemon_message(pokemon_name, tier):
   response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."
   best_ratio = 0
   suggestion = ""
-  for name in NATIONAL_DEX.values():
-    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
-    if fuzz_ratio > best_ratio:
-      best_ratio = fuzz_ratio
-      suggestion = name.lower()
 
-  for name in GALARIAN_DEX.values():
-    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
-    if fuzz_ratio > best_ratio:
-      best_ratio = fuzz_ratio
-      suggestion = name.lower()
+  if "Mega" in tier:
+    for name in MEGA_DEX.values():
+      fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+      if fuzz_ratio > best_ratio:
+        best_ratio = fuzz_ratio
+        suggestion = name.lower()
+  else:
+    for name in NATIONAL_DEX.values():
+      fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+      if fuzz_ratio > best_ratio:
+        best_ratio = fuzz_ratio
+        suggestion = name.lower()
 
-  for name in ALOLAN_DEX.values():
-    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
-    if fuzz_ratio > best_ratio:
-      best_ratio = fuzz_ratio
-      suggestion = name.lower()
-    
-  for name in ALTERNATE_FORME_DEX.values():
-    fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
-    if fuzz_ratio > best_ratio or fuzz_ratio == best_ratio:
-      best_ratio = fuzz_ratio
-      suggestion = name.lower()
+    for name in GALARIAN_DEX.values():
+      fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+      if fuzz_ratio > best_ratio:
+        best_ratio = fuzz_ratio
+        suggestion = name.lower()
+
+    for name in ALOLAN_DEX.values():
+      fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+      if fuzz_ratio > best_ratio:
+        best_ratio = fuzz_ratio
+        suggestion = name.lower()
+
+    for name in ALTERNATE_FORME_DEX.values():
+      fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
+      if fuzz_ratio > best_ratio or fuzz_ratio == best_ratio:
+        best_ratio = fuzz_ratio
+        suggestion = name.lower()
 
   response += "\n"
 
