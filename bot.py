@@ -71,7 +71,10 @@ async def on_raw_reaction_add(ctx):
     return
 
   channel = bot.get_channel(ctx.channel_id)
-  message = await channel.fetch_message(ctx.message_id)
+  try:
+    message = await channel.fetch_message(ctx.message_id)
+  except:
+    return
 
   if not message.author.id == bot.user.id:
     return
@@ -134,7 +137,6 @@ async def toggle_raid_module(ctx):
 @bot.command()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
-
   channel_id = ctx.channel.id
   guild_id = ctx.guild.id
   try:
@@ -147,6 +149,14 @@ async def register_raid_channel(ctx):
   except Exception as e:
     print("[!] An error occurred [{}]".format(e))
   
+@bot.command()
+@commands.has_role("Mods")
+async def raid_count(ctx):
+  try:
+    await ctx.message.delete()
+  except Exception as e:
+    print("[!] Message already gone. [{}]".format(e))
+  await get_raid_count(bot, ctx)
 
 #@bot.command()
 #@commands.before_invoke(acquire_pool_connection)

@@ -13,7 +13,7 @@ def build_image_link_serebii(num):
   return "https://www.serebii.net/swordshield/pokemon/{}.png".format(num)
 
 def build_image_link_github(num):
-  return "https://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{}.png".format(num)
+  return "http://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{}.png".format(str(num))
 
 def validate_and_format_message(ctx,
                                 tier,
@@ -25,6 +25,7 @@ def validate_and_format_message(ctx,
                                 time_to_expire):
   # Format raid post
   raid_post_valid = True
+  form = normal
   author_dm = wrap_bot_dm(ctx.guild.name, "")
   corrected_argument_guesses = {}
   """----------------------------------------------------------------"""
@@ -93,6 +94,9 @@ def validate_and_format_message(ctx,
   if raid_post_valid:
     title = embed_pokemon
     embed = discord.Embed(title=title, description="", color=get_embed_color(gym_color))
+    if embed_pokemon in POKEBATTLER_LINK:
+      embed.url = POKEBATTLER_LINK.get(embed_pokemon)
+      embed.description = "Click the Pokemon name above for more in depth counter information."
     embed.set_thumbnail(url=embed_thumbnail)
     embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=True)
@@ -100,6 +104,8 @@ def validate_and_format_message(ctx,
     embed.add_field(name="Time until start", value=embed_tts, inline=True)
     embed.add_field(name="Time until expiration", value=embed_tte, inline=True)
     embed.set_footer(text="To join this raid, DM the host above.")
+    if embed_pokemon in RAID_COUNTER_GUIDE:
+      embed.set_image(url=RAID_COUNTER_GUIDE.get(embed_pokemon))
     """Send Message"""
     return (raid_post_valid, embed, int(time_to_expire), "")
   else:
@@ -147,8 +153,8 @@ def validate_pokemon(pokemon_name, tier):
   suggestion = ""
   dex_num = 0
 
-  if "Mega" in tier:
-    for number,name in MEGA_DEX.items():
+  if "mega" in tier.lower():
+    for number, name in MEGA_DEX.items():
       if pokemon_name == name.lower():
         response = name.title()
         dex_num = number
@@ -189,14 +195,14 @@ def validate_pokemon(pokemon_name, tier):
   if not is_valid:
     response, suggestion = format_invalid_pokemon_message(pokemon_name, tier)
 
-  return (is_valid, response, suggestion, dex_num)
+  return (is_valid, response, suggestion, dex_num, form)
 
 def format_invalid_pokemon_message(pokemon_name, tier):
   response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."
   best_ratio = 0
   suggestion = ""
 
-  if "Mega" in tier:
+  if "mega" in tier.lower():
     for name in MEGA_DEX.values():
       fuzz_ratio = fuzz.ratio(pokemon_name, name.lower())
       if fuzz_ratio > best_ratio:

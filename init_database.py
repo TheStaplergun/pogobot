@@ -51,8 +51,16 @@ valid_raid_channels = """
 CREATE TABLE IF NOT EXISTS valid_raid_channels (
   channel_id BIGINT PRIMARY KEY,
   guild_id BIGINT NOT NULL
-)
+);
 """
+raid_counter_table = """
+DROP TABLE IF EXISTS guild_raid_counters;
+CREATE TABLE IF NOT EXISTS guild_raid_counters (
+  guild_id BIGINT PRIMARY KEY,
+  raid_counter BIGINT DEFAULT 0
+);
+"""
+
 async def main():
 
   conn = await asyncpg.connect(database='pogo_raid_bot',
@@ -61,7 +69,6 @@ async def main():
                                user='pi',
                                password=password)
 
-  await conn.execute(placeholder_database)
-  await conn.execute(valid_raid_channels)
+  await conn.execute(raid_counter_table)
 
 asyncio.get_event_loop().run_until_complete(main())

@@ -30,7 +30,7 @@ class RaidPost(commands.Cog):
   @commands.after_invoke(release_pool_connection)
   @commands.has_role("Mods")
   async def get_raids(self, ctx):
-    await get_all_raids_in_db(ctx)
+    await get_all_raids_for_guild(ctx)
 
   #@commands.command()
   #@commands.before_invoke(acquire_pool_connection)
@@ -103,11 +103,15 @@ class RaidPost(commands.Cog):
         await add_raid_to_table(ctx, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
         message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire`.\nPress the red X emoji to remove it at any time."
         await ctx.author.send(wrap_bot_dm(ctx.guild.name, message_to_dm))
-        print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.id))
+        print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
         try:
           await toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
         except Exception as e:
           print("[!] Exception occurred during togle of raid sticky. [{}]".format(e))
+        try:
+          await increment_raid_counter(ctx, int(ctx.guild.id))
+        except Exception as e:
+          print("[!] Exception occured during increment of raid counter. [{}]".format(e))
       else:
         response += "---------\n"
         response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"

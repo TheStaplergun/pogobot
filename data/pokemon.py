@@ -998,3 +998,13 @@ ALTERNATE_FORME_DEX =\
   "487-o":"Giratina-Origin",
   487:"Giratina-Altered"
 }
+
+RAID_COUNTER_GUIDE =\
+{
+  "Lugia":"https://cdn.discordapp.com/attachments/773944383765741578/773944587567628338/Screenshot_2031.png"
+}
+
+POKEBATTLER_LINK =\
+{
+  "Lugia":"https://www.pokebattler.com/raids/LUGIA"
+}

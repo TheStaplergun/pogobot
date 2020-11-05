@@ -26,11 +26,40 @@ async def add_raid_to_table(ctx, message_id, guild_id, channel_id, user_id, time
                                int(user_id),
                                time_to_remove)
 
-get_all_raids = """
-  SELECT * FROM raids
+increment_raid_update_statement = """
+UPDATE guild_raid_counters
+SET raid_counter = raid_counter + 1
+WHERE (guild_id = $1);
 """
-async def get_all_raids_in_db(ctx):
-  results = await ctx.connection.fetch(get_all_raids)
+async def increment_raid_counter(ctx, guild_id):
+  results = await ctx.connection.execute(increment_raid_update_statement, guild_id)
+
+get_raid_count_statement = """
+  SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
+"""
+async def get_raid_count(bot, ctx):
+  connection = await bot.pool.acquire()
+  try:
+    count = await connection.fetchrow(get_raid_count_statement,
+                                      int(ctx.guild.id))
+  except Exception as e:
+    print("[!] Error obtaining raid count for guild. [{}]".format(e))
+    return
+  finally:
+    await bot.pool.release(connection)
+  num = count.get("raid_counter")
+  msg = "Total raids sent within this server [`{}`]".format(num)
+  try:
+    await ctx.channel.send(msg)
+  except Exception as e:
+    print("[!] Error sending raid count to channel. [{}]".format(e))
+  
+
+get_all_raids_for_guild = """
+  SELECT * FROM raids WHERE (guild_id = $1);
+"""
+async def get_all_raids_for_guild(ctx):
+  results = await ctx.connection.fetch(get_all_raids_for_guild)
   if not results:
     message = "No raids currently running."
     return
@@ -70,7 +99,9 @@ async def delete_after_delay(bot, channel_id, message_id, delay):
   #await remove_raid_from_table(connection, message_id)
   #await bot.pool.release(connection)
 
-
+get_all_raids = """
+  SELECT * FROM raids;
+"""
 async def spin_up_message_deletions(bot):
   connection = await bot.pool.acquire()
   results = await connection.fetch(get_all_raids)
@@ -134,17 +165,28 @@ async def check_if_valid_raid_channel(bot, channel_id):
   return True
 
 add_raid_channel = """
-INSERT INTO valid_raid_channels(channel_id, guild_id)
-VALUES($1, $2)
+INSERT INTO valid_raid_channels (channel_id, guild_id)
+VALUES ($1, $2);
+"""
+
+init_raid_counter = """
+INSERT INTO guild_raid_counters (guild_id)
+VALUES ($1);
 """
 async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
   connection = await bot.pool.acquire()
+  results = None
   try:
     results = await connection.execute(add_raid_channel,
                                        int(channel_id),
                                        int(guild_id))
-  except Exception:
-    pass
+  except Exception as e:
+    print("[!] Error occured registering raid channel. [{}]".format(e))
+  try:
+    result2 = await connection.execute(init_raid_counter,
+                                       int(guild_id))
+  except Exception as e:
+    print("[!] Error occured registering raid counter. [{}]".format(e))
   await bot.pool.release(connection)
   if results:
     print("[*] [ {} ] [ {} ] New raid channel registered.".format(ctx.guild.name, channel_id))
