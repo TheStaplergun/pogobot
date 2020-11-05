@@ -15,6 +15,7 @@ def build_image_link_serebii(num):
 def build_image_link_github(num):
   return "http://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{}.png".format(str(num))
 
+
 def validate_and_format_message(ctx,
                                 tier,
                                 pokemon_name,
@@ -25,7 +26,6 @@ def validate_and_format_message(ctx,
                                 time_to_expire):
   # Format raid post
   raid_post_valid = True
-  form = normal
   author_dm = wrap_bot_dm(ctx.guild.name, "")
   corrected_argument_guesses = {}
   """----------------------------------------------------------------"""
@@ -39,10 +39,7 @@ def validate_and_format_message(ctx,
   is_valid, response, suggestion, number = validate_pokemon(pokemon_name, tier)
   if is_valid:
     embed_pokemon   = response.title()
-    if "Mega" in embed_tier:
-      embed_thumbnail = build_image_link_github(number)
-    else:
-      embed_thumbnail = build_image_link_serebii(number)
+    embed_thumbnail = build_image_link_github(number)
   else:
     raid_post_valid = False
     corrected_argument_guesses.update({"pokemon_name" : suggestion})
@@ -195,7 +192,7 @@ def validate_pokemon(pokemon_name, tier):
   if not is_valid:
     response, suggestion = format_invalid_pokemon_message(pokemon_name, tier)
 
-  return (is_valid, response, suggestion, dex_num, form)
+  return (is_valid, response, suggestion, dex_num)
 
 def format_invalid_pokemon_message(pokemon_name, tier):
   response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."
