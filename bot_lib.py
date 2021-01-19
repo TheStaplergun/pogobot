@@ -55,11 +55,11 @@ async def get_raid_count(bot, ctx):
     print("[!] Error sending raid count to channel. [{}]".format(e))
   
 
-get_all_raids_for_guild = """
+get_raids_for_guild = """
   SELECT * FROM raids WHERE (guild_id = $1);
 """
 async def get_all_raids_for_guild(ctx):
-  results = await ctx.connection.fetch(get_all_raids_for_guild)
+  results = await ctx.connection.fetch(get_raids_for_guild, ctx.guild.id)
   if not results:
     message = "No raids currently running."
     return
@@ -85,15 +85,14 @@ RETURNING message_id
 """
 async def remove_raid_from_table(connection, message_id):
   results = await connection.execute(raid_table_remove_raid, int(message_id))
-  print("[*] Table operation results [ {} ]".format(results))
 
 async def delete_after_delay(bot, channel_id, message_id, delay):
-  print("[*] Sleeping for [ {} ] for next message deletion.".format(delay))
+  print("[*] Sleeping for [{}] for next message deletion.".format(delay))
   await asyncio.sleep(delay)
   try:
     await bot.http.delete_message(channel_id, message_id)
   except Exception as e:
-    print("[!] Message did not exist on server. [ {} ]".format(e))
+    print("[!] Message did not exist on server. [{}]".format(e))
     return
   #connection = await bot.pool.acquire()
   #await remove_raid_from_table(connection, message_id)
@@ -134,7 +133,7 @@ async def spin_up_message_deletions(bot):
       delete_snowflakes = [discord.Object(msg_id) for msg_id in message_ids]
       await bot.get_channel(channel_id).delete_messages(delete_snowflakes)
     except Exception as e:
-      print("[!] Message(s) did not exist on server. [ {} ]".format(e))
+      print("[!] Message(s) did not exist on server. [{}]".format(e))
 
   await bot.pool.release(connection)
 
@@ -189,7 +188,7 @@ async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
     print("[!] Error occured registering raid counter. [{}]".format(e))
   await bot.pool.release(connection)
   if results:
-    print("[*] [ {} ] [ {} ] New raid channel registered.".format(ctx.guild.name, channel_id))
+    print("[*] [{}] [{}] New raid channel registered.".format(ctx.guild.name, channel_id))
 
 check_for_raids_in_guild_channel = """
  SELECT * FROM raids where (channel_id = $1)
@@ -245,7 +244,7 @@ async def remove_old_sticky_message_from_table(bot, channel_id):
   connection = await bot.pool.acquire()
   results = await connection.execute(delete_placeholder_sticky_message, int(channel_id))
   await bot.pool.release(connection)
-  print("[*] Table operation results [ {} ]".format(results))
+  print("[*] Table operation results [{}]".format(results))
 
 async def make_new_no_raids_placeholder_message(bot, ctx, channel_id):
   channel = bot.get_channel(channel_id)
@@ -310,7 +309,7 @@ async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):
     return
 
   except Exception as e:
-    print("[!] An exception occured while creating a placeholder. [ {} ]".format(e))
+    print("[!] An exception occured while creating a placeholder. [{}]".format(e))
 
 
 #recreate_raid_table_string = """

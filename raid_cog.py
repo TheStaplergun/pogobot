@@ -58,14 +58,14 @@ class RaidPost(commands.Cog):
   @commands.before_invoke(acquire_pool_connection)
   @commands.after_invoke(release_pool_connection)
   @commands.guild_only()
-  async def post_raid(self,
+  async def raid(self,
                       ctx,
                       tier = "`No tier provided`",
                       pokemon_name = "`No Pokemon Name provided`",
-                      gym_color = "`No gym color provided`",
+                      #gym_color = "`No gym color provided`",
                       weather = "`No weather condition provided`",
-                      invite_slots = "`No invite slot count provided`",
-                      time_to_start = "`No time to start provided`",
+                      #invite_slots = "`No invite slot count provided`",
+                      #time_to_start = "`No time to start provided`",
                       time_to_expire = "`No time to expire provided`"):
 
     if not self.bot.raids_enabled:
@@ -88,10 +88,10 @@ class RaidPost(commands.Cog):
       raid_is_valid, response, remove_after, suggestion = validate_and_format_message(ctx,
                                                                                       tier,
                                                                                       pokemon_name,
-                                                                                      gym_color,
+                                                                                      #gym_color,
                                                                                       weather,
-                                                                                      invite_slots,
-                                                                                      time_to_start,
+                                                                                      #invite_slots,
+                                                                                      #time_to_start,
                                                                                       time_to_expire)
       if raid_is_valid:
         remove_after_seconds = int(remove_after) * 60
@@ -103,7 +103,7 @@ class RaidPost(commands.Cog):
         await add_raid_to_table(ctx, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
         message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire`.\nPress the red X emoji to remove it at any time."
         await ctx.author.send(wrap_bot_dm(ctx.guild.name, message_to_dm))
-        print("[*] [ {} ] [ {} ] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
+        print("[*] [{}] [{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
         try:
           await toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
         except Exception as e:
@@ -116,6 +116,6 @@ class RaidPost(commands.Cog):
         response += "---------\n"
         response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"
         await ctx.author.send(response)
-        correction_suggestion = ctx.prefix + "post_raid " + suggestion
+        correction_suggestion = ctx.prefix + "raid " + suggestion
         await ctx.author.send(correction_suggestion)
-        print("[!] [ {} ] [ {} ] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.id))
+        print("[!] [{}] [{}] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.name))

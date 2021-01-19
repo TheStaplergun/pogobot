@@ -19,10 +19,10 @@ def build_image_link_github(num):
 def validate_and_format_message(ctx,
                                 tier,
                                 pokemon_name,
-                                gym_color,
+                                #gym_color,
                                 weather,
-                                invite_slots,
-                                time_to_start,
+                                #invite_slots,
+                                #time_to_start,
                                 time_to_expire):
   # Format raid post
   raid_post_valid = True
@@ -45,13 +45,13 @@ def validate_and_format_message(ctx,
     corrected_argument_guesses.update({"pokemon_name" : suggestion})
     author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response, suggestion = validate_gym_argument(gym_color)
-  if is_valid:
-    embed_gym = response.title()
-  else:
-    raid_post_valid = False
-    corrected_argument_guesses.update({"gym_color" : suggestion})
-    author_dm += response
+  #is_valid, response, suggestion = validate_gym_argument(gym_color)
+  #if is_valid:
+  #  embed_gym = response.title()
+  #else:
+  #  raid_post_valid = False
+  #  corrected_argument_guesses.update({"gym_color" : suggestion})
+  #  author_dm += response
   """----------------------------------------------------------------"""
   is_valid, response, suggestion = validate_weather_argument(weather)
   if is_valid:
@@ -61,19 +61,19 @@ def validate_and_format_message(ctx,
     corrected_argument_guesses.update({"weather" : suggestion})
     author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response = validate_invites_argument(invite_slots)
-  if is_valid:
-    embed_invites = response
-  else:
-    raid_post_valid = False
-    author_dm += response
+  #is_valid, response = validate_invites_argument(invite_slots)
+  #if is_valid:
+  #  embed_invites = response
+  #else:
+  #  raid_post_valid = False
+  #  author_dm += response
   """----------------------------------------------------------------"""
-  is_valid, response = validate_tts_argument(time_to_start)
-  if is_valid:
-    embed_tts = str(response)
-  else:
-    raid_post_valid = False
-    author_dm += response
+  #is_valid, response = validate_tts_argument(time_to_start)
+  #if is_valid:
+  #  embed_tts = str(response)
+  #else:
+  #  raid_post_valid = False
+  #  author_dm += response
   """----------------------------------------------------------------"""
   is_valid, response = validate_tte_argument(time_to_expire)
   if is_valid:
@@ -82,24 +82,24 @@ def validate_and_format_message(ctx,
     raid_post_valid = False
     author_dm += response
   """----------------------------------------------------------------"""
-  if is_valid:
-    is_valid, response = check_tts_tte(time_to_start, time_to_expire)
-    if not is_valid:
-      raid_post_valid = False
-      author_dm += response
+  #if is_valid:
+  #  is_valid, response = check_tts_tte(time_to_start, time_to_expire)
+  #  if not is_valid:
+  #    raid_post_valid = False
+  #    author_dm += response
 
   if raid_post_valid:
     title = embed_pokemon
-    embed = discord.Embed(title=title, description="", color=get_embed_color(gym_color))
+    embed = discord.Embed(title=title, description="", color=0xff8c00)#get_embed_color(gym_color))
     if embed_pokemon in POKEBATTLER_LINK:
       embed.url = POKEBATTLER_LINK.get(embed_pokemon)
       embed.description = "Click the Pokemon name above for more in depth counter information."
     embed.set_thumbnail(url=embed_thumbnail)
-    embed.add_field(name="Gym Control", value=embed_gym, inline=False)
+    #embed.add_field(name="Gym Control", value=embed_gym, inline=False)
     embed.add_field(name="Weather", value=embed_weather, inline=True)
-    embed.add_field(name="Invites Available", value=embed_invites, inline=False)
-    embed.add_field(name="Time until start", value=embed_tts, inline=True)
-    embed.add_field(name="Time until expiration", value=embed_tte, inline=True)
+    #embed.add_field(name="Invites Available", value=embed_invites, inline=False)
+    #embed.add_field(name="Time until start", value=embed_tts, inline=True)
+    embed.add_field(name="Time until expiration", value=embed_tte, inline=False)
     embed.set_footer(text="To join this raid, DM the host above.")
     if embed_pokemon in RAID_COUNTER_GUIDE:
       embed.set_image(url=RAID_COUNTER_GUIDE.get(embed_pokemon))
@@ -108,10 +108,10 @@ def validate_and_format_message(ctx,
   else:
     suggested_command_format = format_command_suggestion(tier,
                                                          pokemon_name,
-                                                         gym_color,
+                                                         #gym_color,
                                                          weather,
-                                                         invite_slots,
-                                                         time_to_start,
+                                                         #invite_slots,
+                                                         #time_to_start,
                                                          time_to_expire,
                                                          corrected_argument_guesses)
     return (raid_post_valid, author_dm, 0, suggested_command_format)
@@ -358,7 +358,7 @@ def validate_invites_argument(invite_slots):
   response = ""
   try:
     invite_slots = int(invite_slots)
-    if invite_slots > 0:
+    if invite_slots > 0 and invite_slots <= 10:
       is_valid = True
       response = str(invite_slots) + " slots"
   except ValueError:
@@ -457,26 +457,23 @@ def sp(string):
 
 def format_command_suggestion(tier,
                               pokemon_name,
-                              gym_color,
+                              #gym_color,
                               weather,
-                              invite_slots,
-                              time_to_start,
+                              #invite_slots,
+                              #time_to_start,
                               time_to_expire,
                               corrected_argument_guesses):
 
   if "pokemon_name" in corrected_argument_guesses:
     pokemon_name = corrected_argument_guesses.get("pokemon_name")
-  if "gym_color" in corrected_argument_guesses:
-    gym_color = corrected_argument_guesses.get("gym_color")
+  #if "gym_color" in corrected_argument_guesses:
+  #  gym_color = corrected_argument_guesses.get("gym_color")
   if "weather" in corrected_argument_guesses:
     weather = corrected_argument_guesses.get("weather")
 
   response = sp(tier) +\
              sp(pokemon_name) +\
-             sp(gym_color) +\
              sp(weather) +\
-             sp(invite_slots) +\
-             sp(time_to_start) +\
              sp(time_to_expire)
   return response
 

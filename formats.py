@@ -1,5 +1,5 @@
 """TIER"""
-TIERS = ("t1","t3","t5","mega")
+TIERS = ("t1","t3","t5","1","3","5","mega")
 
 """Creates the error message string for the author providing an invalid tier in the post_raid command"""
 def format_invalid_tier_message(tier):

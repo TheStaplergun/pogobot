@@ -131,7 +131,7 @@ async def on_raw_message_delete(ctx):
 @commands.has_role("Mods")
 async def toggle_raid_module(ctx):
   bot.raids_enabled = not (bot.raids_enabled)
-  print("[!] Raid module enabled status [ {} ]".format(bot.raids_enabled))
+  print("[!] Raid module enabled status [{}]".format(bot.raids_enabled))
   await ctx.channel.send("Raid module has been {}.".format(bot.raids_enabled and "enabled" or "disabled"))
 
 @bot.command()
@@ -219,8 +219,11 @@ async def remove_registration_error(ctx, error):
 
 @bot.command()
 async def ping(ctx):
-    """Check if alive"""
-    await ctx.send("pong")
+  """Check if alive"""
+  create_time = ctx.message.created_at
+  cur_time = datetime.now()
+  time_dif = cur_time - create_time
+  await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
 
 #@bot.command()
 #@commands.has_role("Mods")
