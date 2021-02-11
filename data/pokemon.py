@@ -1,5 +1,5 @@
 """https://www.dragonflycave.com/resources/pokemon-list-generator"""
-"""  %[national_dex]%:"%[name]%","""
+
 
 NATIONAL_DEX =\
 {
@@ -489,7 +489,7 @@ NATIONAL_DEX =\
   "484_00":"Palkia",
   "485_00":"Heatran",
   "486_00":"Regigigas",
-  "#487_00":"Giratina",
+  #"487_00":"Giratina",
   "488_00":"Cresselia",
   "489_00":"Phione",
   "490_00":"Manaphy",

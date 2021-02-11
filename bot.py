@@ -1,252 +1,128 @@
+"""Main bot set up and command set up"""
+
+from datetime import datetime
 import discord
 from discord.ext import commands
-import data
-from important import *
+import asyncpg
+import important
 import raid_cog
-from raid_cog import *
-from bot_lib import *
-import xml.etree.ElementTree as ET
-import string
-import os
-import re
+import handlers.event_handlers as EH
+import handlers.raid_handler as RH
+import handlers.registration_handler as REGH
+import handlers.request_handler as REQH
+import handlers.startup_handler as SH
 
-description = '''TheStaplergun's Bot in Python'''
+DESCRIPTION = '''TheStaplergun's Bot in Python'''
 
-"""Set command_prefix to any character here."""
+#Set command_prefix to any character here.
 COMMAND_PREFIX = '-'
-"""Change this string to change the 'playing' status of the bot."""
-CUSTOM_STATUS = "WIP"
+#Change this string to change the 'playing' status of the bot.
+CUSTOM_STATUS = ""
 
-guild_info_dictionary = {
-  652487145193209856:{
-    "allowed_raid_channels":[737736358801571901, 750078168496472176]
-  }
-}
-game = discord.Game(CUSTOM_STATUS)
-bot = commands.Bot(COMMAND_PREFIX, description=description, activity=game)
+GAME = discord.Game(CUSTOM_STATUS)
+BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME)
 
-bot.pool = None
-bot.raids_enabled = True
-bot.guild_info_dictionary = guild_info_dictionary
-bot.bot_ready_to_process = False
+BOT.pool = None
+BOT.raids_enabled = True
+BOT.bot_ready_to_process = False
 
-async def temp_acquire_pool_connection():
-  connection = await bot.pool.acquire()
-  return connection
+async def acquire_pool_connection():
+    """Asyncpg pool connection acquisition wrapper"""
+    connection = await BOT.pool.acquire()
+    return connection
 
-async def temp_release_pool_connection(connection):
-  if connection:
-    await bot.pool.release(connection)
+async def release_pool_connection(connection):
+    """Asyncpg pool connection release wrapper"""
+    if connection:
+        await BOT.pool.release(connection)
+
+BOT.acquire = acquire_pool_connection
+BOT.release = release_pool_connection
 
 async def init_pool():
-  pool = await asyncpg.create_pool(database=database,
-                                   port=port,
-                                   host=host,
-                                   user=user,
-                                   password=password)
+    """Set up asyncpg connection pool"""
+    pool = await asyncpg.create_pool(database=important.DATABASE,
+                                     port=important.PORT,
+                                     host=important.HOST,
+                                     user=important.DB_USER,
+                                     password=important.PASSWORD)
 
-  return pool
+    return pool
 
-
-
-@bot.event
+@BOT.event
 async def on_ready():
-  print('Logged in as')
-  print(bot.user.name)
-  print('------')
+    """Built in event"""
+    print('Logged in as')
+    print(BOT.user.name)
+    print('------------------')
 
-@bot.event
+@BOT.event
 async def on_raw_reaction_add(ctx):
-  if not bot.raids_enabled:
-    return
+    """Built in event"""
+    await EH.raw_reaction_add_handle(ctx, BOT)
 
-  if ctx.guild_id not in bot.guild_info_dictionary:
-    return
-
-  if ctx.channel_id not in bot.guild_info_dictionary[ctx.guild_id].get("allowed_raid_channels"):
-    return
-
-  """Bot ignores itself adding emojis"""
-  if ctx.user_id == bot.user.id:
-    return
-
-  channel = bot.get_channel(ctx.channel_id)
-  try:
-    message = await channel.fetch_message(ctx.message_id)
-  except:
-    return
-
-  if not message.author.id == bot.user.id:
-    return
-
-  if not len(message.embeds) == 1:
-    return
-
-  if not len(message.mentions) == 1:
-    return
-
-  user_id = message.mentions[0].id
-
-  if int(user_id) != ctx.user_id:
-    dm = "You are not the host. You cannot delete this raid!"
-    for reaction in message.reactions:
-      async for user in reaction.users():
-        if user.id == ctx.user_id:
-          try:
-            await reaction.remove(user)
-          except Exception as e:
-            print("[*] Error removing reaction [{}]".format(e))
-  else:
-    dm = "Your raid has been successfuly deleted."
-    conn = await temp_acquire_pool_connection()
-    await remove_raid_from_table(conn, message.id)
-    await temp_release_pool_connection(conn)
-    await message.delete()
-    try:
-      await toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-    except Exception as e:
-      print("[!] An error occurred [{}]".format(e))
-  await ctx.member.send(wrap_bot_dm(channel.guild.name, dm))
-
-@bot.event
+@BOT.event
 async def on_raw_message_delete(ctx):
-  if not bot.raids_enabled:
-    return
+    """Built in event"""
+    await EH.raw_message_delete_handle(ctx, BOT)
 
-  if ctx.guild_id not in bot.guild_info_dictionary:
-    return
+@BOT.event
+async def on_message(message):
+    """Built in event"""
+    handled = await EH.on_message_handle(message, BOT)
+    if handled:
+        return
+    await BOT.process_commands(message)
 
-  if ctx.channel_id not in bot.guild_info_dictionary[ctx.guild_id].get("allowed_raid_channels"):
-    return
+@BOT.command()
+@commands.guild_only()
+async def request(ctx, tier, pokemon_name):
+    """Processes a users pokemon request"""
+    await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
 
-  conn = await temp_acquire_pool_connection()
-  await remove_raid_from_table(conn, ctx.message_id)
-  await temp_release_pool_connection(conn)
-  try:
-    await toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-  except Exception as e:
-    print("[!] An error occurred [{}]".format(e))
-
-@bot.command()
+@BOT.command()
+@commands.guild_only()
 @commands.has_role("Mods")
-async def toggle_raid_module(ctx):
-  bot.raids_enabled = not (bot.raids_enabled)
-  print("[!] Raid module enabled status [{}]".format(bot.raids_enabled))
-  await ctx.channel.send("Raid module has been {}.".format(bot.raids_enabled and "enabled" or "disabled"))
+async def register_request_channel(ctx):
+    """Mod only - Sets up channel to allow Pokemon requests"""
+    await REGH.register_request_channel_handle(ctx, BOT)
 
-@bot.command()
+@BOT.command()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
-  channel_id = ctx.channel.id
-  guild_id = ctx.guild.id
-  try:
-    await ctx.message.delete()
-  except:
-    pass
-  await database_register_raid_channel(bot, ctx, channel_id, guild_id)
-  try:
-    await toggle_raid_sticky(bot, ctx, channel_id, guild_id)
-  except Exception as e:
-    print("[!] An error occurred [{}]".format(e))
-  
-@bot.command()
+    """Mod only - Sets up channel to allow hosting raids"""
+    await REGH.register_raid_channel_handle(ctx, BOT)
+
+@BOT.command()
 @commands.has_role("Mods")
 async def raid_count(ctx):
-  try:
-    await ctx.message.delete()
-  except Exception as e:
-    print("[!] Message already gone. [{}]".format(e))
-  await get_raid_count(bot, ctx)
+    """Mod only - Show total raids hosted in this server"""
+    try:
+        await ctx.message.delete()
+    except discord.NotFound as error:
+        print("[!] Message already gone. [{}]".format(error))
+    await RH.get_raid_count(BOT, ctx)
 
-#@bot.command()
-#@commands.before_invoke(acquire_pool_connection)
-#@commands.after_invoke(release_pool_connection)
-#@commands.has_role("Mods")
-#@commands.guild_only()
-async def check_registration(ctx, user_id = ""):
-  if not user_id:
-    await ctx.send("No ID provided.")
-    return
-  try:
-    int(user_id)
-  except ValueError:
-    await ctx.send("Invalid parameter provided [`" + str(user_id) + "`]. Must be discord user ID.")
-    return
-  entry_found, results = await check_for_player(ctx, user_id)
-  if entry_found:
-    await ctx.send(results)
-  else:
-    await ctx.send("No entry found for that User ID")
-
-#@check_registration.error
-async def check_registration_error(ctx, error):
-  if isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
-    await ctx.author.send("This command cannot be executed via DM")
-  elif isinstance(error, discord.ext.commands.errors.MissingRole):
-    await ctx.author.send("You do not have permission to execute this command")
-  else:
-    await ctx.author.send(error)
-
-#@bot.command()
-#@commands.before_invoke(acquire_pool_connection)
-#@commands.after_invoke(release_pool_connection)
-#@commands.has_role("Mods")
-#@commands.guild_only()
-async def remove_registration(ctx, user_id= ""):
-  if not user_id:
-    await ctx.send("No ID provided.")
-    return
-  try:
-    int(user_id)
-  except ValueError:
-    await ctx.send("Invalid parameter provided [`" + str(user_id) + "`]. Must be discord user ID.")
-    return
-  entry_found, _ = await check_for_player(ctx, user_id)
-  if entry_found:
-    await remove_player(ctx, user_id)
-    await ctx.send("Removed entry for given ID")
-  else:
-    await ctx.send("No entry found for that user ID")
-
-#@remove_registration.error
-async def remove_registration_error(ctx, error):
-  if isinstance(error, discord.ext.commands.errors.NoPrivateMessage):
-    await ctx.author.send("This command cannot be executed via DM")
-  elif isinstance(error, discord.ext.commands.errors.MissingRole):
-    await ctx.author.send("You do not have permission to execute this command")
-  else:
-    await ctx.author.send(error)
-
-@bot.command()
+@BOT.command()
 async def ping(ctx):
-  """Check if alive"""
-  create_time = ctx.message.created_at
-  cur_time = datetime.now()
-  time_dif = cur_time - create_time
-  await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
-
-#@bot.command()
-#@commands.has_role("Mods")
-#async def reset_bot_raid_cog(ctx):
-#  await ctx.send("Removing cog [RaidPost]")
-#  bot.remove_cog('RaidPost')
-#  importlib.reload(raid_cog)
-#  await ctx.send("Cog [RaidPost] Removed.\nRe-adding cog.")
-#  bot.add_cog(RaidPost(bot))
-#  await ctx.send("Cog [RaidPost] added and reset.")
-
-#@bot.event
-#async def on_command_error(ctx,error):
-#  if isinstance(error, commands.errors.NoPrivateMessage):
-#    print("User tried to use guild only command")
-
+    """Check if alive"""
+    create_time = ctx.message.created_at
+    cur_time = datetime.now()
+    time_dif = cur_time - create_time
+    await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
 
 async def startup_process():
-  await bot.wait_until_ready()
-  bot.pool = await init_pool()
-  bot.add_cog(RaidPost(bot))
-  bot.guild_info_dictionary = guild_info_dictionary
-  await spin_up_message_deletions(bot)
+    """Startup process. Linear process."""
+    await BOT.wait_until_ready()
+    BOT.pool = await init_pool()
+    BOT.add_cog(raid_cog.RaidPost(BOT))
+    await SH.spin_up_message_deletions(BOT)
 
-bot.loop.create_task(startup_process())
-bot.run(TOKEN)
+async def status_update_loop():
+    """Updates status continually every ten minutes."""
+    await BOT.wait_until_ready()
+    await SH.start_status_update_loop(BOT)
+
+BOT.loop.create_task(startup_process())
+BOT.loop.create_task(status_update_loop())
+BOT.run(important.TOKEN)

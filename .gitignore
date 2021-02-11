@@ -1,4 +1,5 @@
 important.py
+init_database.py
 *.pyc
 *__pycache__
 /data/storage

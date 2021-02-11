@@ -61,6 +61,25 @@ CREATE TABLE IF NOT EXISTS guild_raid_counters (
 );
 """
 
+request_table = """
+DROP TABLE IF EXISTS valid_request_channels;
+CREATE TABLE IF NOT EXISTS valid_request_channels (
+  channel_id BIGINT PRIMARY KEY,
+  guild_id BIGINT NOT NULL
+)
+"""
+request_role_to_id_map = """
+CREATE TABLE IF NOT EXISTS request_role_id_map (
+  role_id BIGINT PRIMARY KEY,
+  message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL,
+  role_name VARCHAR(24)
+)
+"""
+
+
+
+
 async def main():
 
   conn = await asyncpg.connect(database='pogo_raid_bot',
