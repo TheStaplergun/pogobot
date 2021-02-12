@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS valid_request_channels (
   guild_id BIGINT NOT NULL
 )
 """
+
 request_role_to_id_map = """
 CREATE TABLE IF NOT EXISTS request_role_id_map (
   role_id BIGINT PRIMARY KEY,
@@ -88,6 +89,7 @@ async def main():
                                user='pi',
                                password=password)
 
-  await conn.execute(raid_counter_table)
+  await conn.execute(request_table)
+  await conn.execute(request_role_to_id_map)
 
 asyncio.get_event_loop().run_until_complete(main())
