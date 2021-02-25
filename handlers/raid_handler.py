@@ -93,6 +93,11 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
     member = guild.get_member(user_id)
     if not member:
+        try:
+            member = await guild.fetch_member(user_id)
+        except discord.DiscordException as error:
+            pass
+    if not member:
         await ctx.send("That user doesn't exist on this server.", delete_after=5)
         return
     results = check_if_in_raid(ctx, bot, user_id)
