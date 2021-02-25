@@ -63,9 +63,9 @@ class RaidPost(commands.Cog):
                 no_emoji = self.bot.get_emoji(743179437054361720)
                 await message.add_reaction(no_emoji)
                 time_to_delete = datetime.now() + timedelta(seconds = remove_after_seconds)
-                await RH.add_raid_to_table(ctx, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
+                await RH.add_raid_to_table(ctx, self.bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
 
-                print("[*] [{}] [{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
+                print("[*][{}][{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
                 try:
                     await SH.toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
                 except discord.DiscordException as error:
@@ -80,4 +80,4 @@ class RaidPost(commands.Cog):
                 await ctx.author.send(response)
                 correction_suggestion = ctx.prefix + "raid " + suggestion
                 await ctx.author.send(correction_suggestion)
-                print("[!] [{}] [{}] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.name))
+                print("[!][{}][{}] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.name))

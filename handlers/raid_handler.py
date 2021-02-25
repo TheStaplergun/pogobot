@@ -7,16 +7,18 @@ NEW_RAID_INSERT = """
 INSERT INTO raids(message_id, time_registered, guild_id, channel_id, user_id, time_to_remove)
 VALUES($1, $2, $3, $4, $5, $6)
 """
-async def add_raid_to_table(ctx, message_id, guild_id, channel_id, user_id, time_to_remove):
+async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    await ctx.connection.execute(NEW_RAID_INSERT,
+    connection = bot.acquire()
+    await connection.execute(NEW_RAID_INSERT,
                                  int(message_id),
                                  cur_time,
                                  int(guild_id),
                                  int(channel_id),
                                  int(user_id),
                                  time_to_remove)
+    await bot.release(connection)
 
 INCREMENT_RAID_UPDATE_STATEMENT = """
 UPDATE guild_raid_counters
