@@ -57,6 +57,7 @@ async def on_ready():
     """Built in event"""
     print('Logged in as')
     print(BOT.user.name)
+    print(BOT.intents)
     print('------------------')
 
 @BOT.event
