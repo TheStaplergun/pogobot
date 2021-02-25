@@ -77,6 +77,12 @@ async def on_message(message):
 @BOT.command()
 @commands.guild_only()
 @commands.has_role("Mods")
+async def clear_raid(ctx, user_id):
+    await RH.handle_clear_user_from_raid(ctx, BOT, user_id)
+
+@BOT.command()
+@commands.guild_only()
+@commands.has_role("Mods")
 async def request(ctx, tier, pokemon_name):
     """Processes a users pokemon request"""
     await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)

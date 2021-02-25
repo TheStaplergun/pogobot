@@ -89,6 +89,27 @@ async def remove_raid_from_table(connection, message_id):
     """Removes a raid from the table."""
     await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
 
+async def handle_clear_user_from_raid(ctx, bot, user_id):
+    member = ctx.guild.get_member(user_id)
+    if not member:
+        await ctx.send("That user doesn't exist on this server.", delete_after_delay=5)
+        return
+    results = check_if_in_raid(ctx, bot, user_id)
+    if not results:
+        ctx.send("That user is not in a raid.", delete_after_delay=5)
+        return
+    message_id = results.get("message_id")
+    channel_id = results.get("channel_id")
+    guild_id = results.get("guild_id")
+    guild = bot.get_guild(guild_id)
+    channel = guild.get_channel(channel_id)
+    try:
+        message = await channel.fetch_message(message_id)
+        await message.delete()
+    except discord.DiscordException as error:
+        print("[!] An error occurred trying to remove a user from their raid manually. [{}]".format(error))
+        return
+
 CHECK_VALID_RAID_CHANNEL = """
  SELECT * FROM valid_raid_channels where (channel_id = $1)
 """
