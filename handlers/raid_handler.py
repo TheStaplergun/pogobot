@@ -92,11 +92,11 @@ async def remove_raid_from_table(connection, message_id):
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     member = ctx.guild.get_member(user_id)
     if not member:
-        await ctx.send("That user doesn't exist on this server.", delete_after_delay=5)
+        await ctx.send("That user doesn't exist on this server.", delete_after=5)
         return
     results = check_if_in_raid(ctx, bot, user_id)
     if not results:
-        ctx.send("That user is not in a raid.", delete_after_delay=5)
+        ctx.send("That user is not in a raid.", delete_after=5)
         return
     message_id = results.get("message_id")
     channel_id = results.get("channel_id")
