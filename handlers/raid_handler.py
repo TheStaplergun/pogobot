@@ -100,7 +100,7 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
     if not member:
         await ctx.send("That user doesn't exist on this server.", delete_after=5)
         return
-    results = check_if_in_raid(ctx, bot, user_id)
+    results = await check_if_in_raid(ctx, bot, user_id)
     if not results:
         ctx.send("That user is not in a raid.", delete_after=5)
         return
