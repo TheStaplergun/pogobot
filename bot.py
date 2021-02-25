@@ -43,9 +43,9 @@ async def init_pool():
     """Set up asyncpg connection pool"""
     pool = await asyncpg.create_pool(database=important.DATABASE,
                                      port=important.PORT,
-                                     host=important.HOST)
-                                     #user=important.DB_USER,
-                                     #password=important.PASSWORD)
+                                     host=important.HOST,
+                                     user=important.DB_USER,
+                                     password=important.PASSWORD)
 
     return pool
 
