@@ -19,8 +19,11 @@ COMMAND_PREFIX = '-'
 #Change this string to change the 'playing' status of the bot.
 CUSTOM_STATUS = ""
 
+intent = discord.Intents().default()
+intent.members = True
+
 GAME = discord.Game(CUSTOM_STATUS)
-BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME)
+BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
 
 BOT.pool = None
 #BOT.raids_enabled = True
