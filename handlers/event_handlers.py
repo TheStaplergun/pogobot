@@ -2,6 +2,7 @@
 import discord
 import handlers.helpers as H
 import handlers.raid_handler as RH
+import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
 
 async def handle_reaction_remove_raid(bot, ctx, message, emoji):
