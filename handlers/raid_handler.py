@@ -10,7 +10,7 @@ VALUES($1, $2, $3, $4, $5, $6)
 async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    connection = bot.acquire()
+    connection = await bot.acquire()
     await connection.execute(NEW_RAID_INSERT,
                                  int(message_id),
                                  cur_time,
@@ -25,9 +25,11 @@ UPDATE guild_raid_counters
 SET raid_counter = raid_counter + 1
 WHERE (guild_id = $1);
 """
-async def increment_raid_counter(ctx, guild_id):
+async def increment_raid_counter(ctx, bot, guild_id):
     """Increments raid counter for a server for statistics tracking."""
-    await ctx.connection.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
+    connection = bot.acquire()
+    await connection.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
+    await bot.release(connection)
 
 GET_RAID_COUNT_STATEMENT = """
     SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
@@ -56,7 +58,7 @@ GET_RAIDS_FOR_GUILD = """
 async def get_all_raids_for_guild(bot, ctx):
     """Admin command. Gets all raids for a guild and all pertaining data."""
     connection = await bot.acquire()
-    results = await ctx.connection.fetch(GET_RAIDS_FOR_GUILD, ctx.guild.id)
+    results = await connection.fetch(GET_RAIDS_FOR_GUILD, ctx.guild.id)
     await bot.release(connection)
     if not results:
         message = "No raids currently running."
@@ -72,9 +74,11 @@ async def get_all_raids_for_guild(bot, ctx):
 GET_RAID_FOR_USER = """
  SELECT * FROM raids where (user_id = $1)
 """
-async def check_if_in_raid(ctx, user_id):
+async def check_if_in_raid(ctx, bot, user_id):
     """Checks if a user is already in a raid. Prevents double listing."""
-    results = await ctx.connection.fetchrow(GET_RAID_FOR_USER, int(user_id))
+    connection = await bot.acquire()
+    results = await connection.fetchrow(GET_RAID_FOR_USER, int(user_id))
+    await bot.release(connection)
     return results
 
 RAID_TABLE_REMOVE_RAID = """

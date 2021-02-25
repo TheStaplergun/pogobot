@@ -37,7 +37,7 @@ class RaidPost(commands.Cog):
             await ctx.message.delete()
         except:
             pass
-        if await RH.check_if_in_raid(ctx, ctx.author.id):
+        if await RH.check_if_in_raid(ctx, self.bot, ctx.author.id):
             await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
             return
 
@@ -71,7 +71,7 @@ class RaidPost(commands.Cog):
                 except discord.DiscordException as error:
                     print("[!] Exception occurred during togle of raid sticky. [{}]".format(error))
                 try:
-                    await RH.increment_raid_counter(ctx, int(ctx.guild.id))
+                    await RH.increment_raid_counter(ctx, self.bot, int(ctx.guild.id))
                 except discord.DiscordException as error:
                     print("[!] Exception occured during increment of raid counter. [{}]".format(error))
             else:
