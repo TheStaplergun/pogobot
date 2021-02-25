@@ -30,11 +30,9 @@ class RaidPost(commands.Cog):
 
         """Post a raid"""
 
-        if ctx.guild.id not in self.bot.guild_info_dictionary:
+        if not await RH.check_if_valid_raid_channel(bot, ctx.channel.id):
             return
 
-        if ctx.channel.id not in self.bot.guild_info_dictionary[ctx.guild.id].get("allowed_raid_channels"):
-            return
         try:
             await ctx.message.delete()
         except:
