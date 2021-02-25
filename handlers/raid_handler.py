@@ -90,7 +90,8 @@ async def remove_raid_from_table(connection, message_id):
     await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
-    member = ctx.guild.get_member(user_id)
+    guild = ctx.guild
+    member = guild.get_member(user_id)
     if not member:
         await ctx.send("That user doesn't exist on this server.", delete_after=5)
         return
