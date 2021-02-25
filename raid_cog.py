@@ -30,7 +30,7 @@ class RaidPost(commands.Cog):
 
         """Post a raid"""
 
-        if not await RH.check_if_valid_raid_channel(bot, ctx.channel.id):
+        if not await RH.check_if_valid_raid_channel(self.bot, ctx.channel.id):
             return
 
         try:
