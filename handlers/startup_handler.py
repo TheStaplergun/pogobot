@@ -50,7 +50,10 @@ async def spin_up_message_deletions(bot):
     for channel_id, message_ids in to_delete.items():
         try:
             delete_snowflakes = [discord.Object(msg_id) for msg_id in message_ids]
-            await bot.get_channel(channel_id).delete_messages(delete_snowflakes)
+            channel = bot.get_channel(channel_id)
+            if not channel:
+                continue
+            await channel.delete_messages(delete_snowflakes)
         except discord.NotFound as error:
             print("[!] Message(s) did not exist on server. [{}]".format(error))
 
