@@ -27,7 +27,7 @@ WHERE (guild_id = $1);
 """
 async def increment_raid_counter(ctx, bot, guild_id):
     """Increments raid counter for a server for statistics tracking."""
-    connection = bot.acquire()
+    connection = await bot.acquire()
     await connection.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
     await bot.release(connection)
 
