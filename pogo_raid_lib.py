@@ -4,7 +4,8 @@ from fuzzywuzzy import fuzz
 from fuzzywuzzy import process
 from data.formats import *
 from data.pokemon import *
-from bot_lib import wrap_bot_dm
+import handlers.helpers as H
+#from bot_lib import wrap_bot_dm
 import re
 
 
@@ -26,7 +27,7 @@ def validate_and_format_message(ctx,
                                 time_to_expire):
   # Format raid post
   raid_post_valid = True
-  author_dm = wrap_bot_dm(ctx.guild.name, "")
+  author_dm = H.guild_member_dm(ctx.guild.name, "")
   corrected_argument_guesses = {}
   """----------------------------------------------------------------"""
   is_valid, response = validate_tier(tier)
@@ -90,6 +91,8 @@ def validate_and_format_message(ctx,
 
   if raid_post_valid:
     title = embed_pokemon
+    if tier.lower() == "mega":
+      title = "Mega " + embed_pokemon
     embed = discord.Embed(title=title, description="", color=0xff8c00)#get_embed_color(gym_color))
     if embed_pokemon in POKEBATTLER_LINK:
       embed.url = POKEBATTLER_LINK.get(embed_pokemon)

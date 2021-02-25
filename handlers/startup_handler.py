@@ -4,7 +4,7 @@ import asyncio
 from datetime import datetime
 import time
 import discord
-from raid_handler import remove_raid_from_table
+from handlers.raid_handler import remove_raid_from_table
 
 async def delete_after_delay(bot, channel_id, message_id, delay):
     """Delete after timed delay helper function. For use when bot goes down."""
@@ -87,12 +87,15 @@ async def set_new_presence(bot, old_count):
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:
-        pass
+        return
     return new_count
 
 async def start_status_update_loop(bot):
     """Permanently running loop while bot is up."""
     count = 0
+    while not bot.pool:
+        await asyncio.sleep(1)
+
     while True:
         count = await set_new_presence(bot, count)
-        time.sleep(10*60)
+        await asyncio.sleep(10*60)

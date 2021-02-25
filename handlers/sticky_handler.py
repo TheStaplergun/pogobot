@@ -1,6 +1,6 @@
 """Sticky message handler"""
 import discord
-import raid_handler as RH
+import handlers.raid_handler as RH
 
 CHECK_FOR_RAIDS_IN_GUILD_CHANNEL = """
  SELECT * FROM raids where (channel_id = $1);

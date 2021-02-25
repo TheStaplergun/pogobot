@@ -23,8 +23,8 @@ GAME = discord.Game(CUSTOM_STATUS)
 BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME)
 
 BOT.pool = None
-BOT.raids_enabled = True
-BOT.bot_ready_to_process = False
+#BOT.raids_enabled = True
+#BOT.bot_ready_to_process = False
 
 async def acquire_pool_connection():
     """Asyncpg pool connection acquisition wrapper"""
@@ -43,9 +43,9 @@ async def init_pool():
     """Set up asyncpg connection pool"""
     pool = await asyncpg.create_pool(database=important.DATABASE,
                                      port=important.PORT,
-                                     host=important.HOST,
-                                     user=important.DB_USER,
-                                     password=important.PASSWORD)
+                                     host=important.HOST)
+                                     #user=important.DB_USER,
+                                     #password=important.PASSWORD)
 
     return pool
 
@@ -76,6 +76,7 @@ async def on_message(message):
 
 @BOT.command()
 @commands.guild_only()
+@commands.has_role("Mods")
 async def request(ctx, tier, pokemon_name):
     """Processes a users pokemon request"""
     await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
