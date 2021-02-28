@@ -78,6 +78,10 @@ async def raid_delete_handle(ctx, bot):
 
 async def request_delete_handle(ctx, bot):
     does_exist, channel_id, message_id, role_id = await REQH.get_request_by_message_id(bot, ctx.message_id)
+    if ctx.guild:
+        guild = ctx.guild
+    elif ctx.guild_id:
+        guild = bot.get_guild(ctx.guild_id)
     if not does_exist:
         return
     role = discord.utils.get(guild.roles, id=role_id)
@@ -86,7 +90,7 @@ async def request_delete_handle(ctx, bot):
         message = await channel.fetch_message(message_id)
     except discord.DiscordException:
         pass
-    await delete_request_role_and_post(ctx, bot, guild, channel, message, role)
+    await REQH.delete_request_role_and_post(ctx, bot, guild, channel, message, role)
 
 async def raw_message_delete_handle(ctx, bot):
     if await RH.check_if_valid_raid_channel(bot, ctx.channel_id):

@@ -7,6 +7,7 @@ import asyncpg
 import important
 import raid_cog
 import handlers.event_handlers as EH
+import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
