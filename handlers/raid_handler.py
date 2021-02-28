@@ -81,6 +81,17 @@ async def check_if_in_raid(ctx, bot, user_id):
     await bot.release(connection)
     return results
 
+CHECK_IF_MESSAGE_IS_RAID = """
+  SELECT * FROM raids WHERE (message_id = $1)
+"""
+async def message_is_raid(ctx, bot, message_id):
+    connection = await bot.acquire()
+    result = await connection.execute(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    await bot.release(connection)
+    if result:
+        return True
+    return False
+
 RAID_TABLE_REMOVE_RAID = """
 DELETE FROM raids WHERE (message_id = $1)
 RETURNING message_id
@@ -112,18 +123,23 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
     try:
         message = await channel.fetch_message(message_id)
         await message.delete()
+    except discord.NotFound:
+        connection = await bot.acquire()
+        await remove_raid_from_table(connection, message_id)
+        await bot.release(connection)
     except discord.DiscordException as error:
         print("[!] An error occurred trying to remove a user from their raid manually. [{}]".format(error))
         return
+    ctx.send("User was successfully removed from raid.", delete_after=5)
 
 CHECK_VALID_RAID_CHANNEL = """
  SELECT * FROM valid_raid_channels where (channel_id = $1)
 """
 async def check_if_valid_raid_channel(bot, channel_id):
     """Checks if the channel is registered as a valid raid channel."""
-    connection = await bot.pool.acquire()
+    connection = await bot.acquire()
     results = await connection.fetchrow(CHECK_VALID_RAID_CHANNEL, int(channel_id))
-    await bot.pool.release(connection)
+    await bot.release(connection)
     if not results:
         return False
     return True

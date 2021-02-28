@@ -11,7 +11,7 @@ async def handle_reaction_remove_raid(bot, ctx, message, emoji):
     if int(user_id) != ctx.user_id:
         message_to_send = "You are not the host. You cannot delete this raid!"
         try:
-            await message.remove_reaction(emoji, ctx.guild.get_member(ctx.user_id))
+            await message.remove_reaction(emoji, (bot.get_guild(ctx.guild_id)).get_member(ctx.user_id))
         except discord.DiscordException as error:
             print("[*] Error removing reaction [{}]".format(error))
     else:
@@ -24,7 +24,7 @@ async def handle_reaction_remove_raid(bot, ctx, message, emoji):
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
             print("[!] An error occurred [{}]".format(error))
-    await ctx.member.send(H.guild_member_dm(channel.guild.name, message_to_send))
+    await ctx.member.send(H.guild_member_dm(bot.get_guild(ctx.guild_id).name, message_to_send))
 
 
 async def raw_reaction_add_handle(ctx, bot):
@@ -49,28 +49,26 @@ async def raw_reaction_add_handle(ctx, bot):
     if not len(message.embeds) == 1:
         return
 
-    if request_channel:
-        if ctx.emoji == "📬":
-            await REQH.add_request_role_to_user_from_request(bot, ctx, message)
-            return
-        elif ctx.emoji == "📪":
-            await REQH.remove_request_role_from_user_from_request(bot, ctx, message)
-            return
+    if raid_channel or request_channel :
+        await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
-    if raid_channel and len(message.mentions) == 1:
-        if ctx.emoji == "📬":
-            await REQH.add_request_role_to_user_from_raid(bot, ctx, message)
+        if ctx.emoji.name == "📬":
+            await REQH.add_request_role_to_user(bot, ctx, message)
             return
-        elif ctx.emoji == "📪":
-            await REQH.remove_request_role_from_user_from_raid(bot, ctx, message)
+        elif ctx.emoji.name == "📪":
+            await REQH.remove_request_role_from_user(bot, ctx, message)
             return
-        no_emoji = bot.get_emoji(743179437054361720)
-        if ctx.emoji == no_emoji:
-            await handle_reaction_remove_raid(bot, ctx, message, no_emoji)
-            return
+        elif len(message.mentions) == 1:
+            no_emoji = bot.get_emoji(743179437054361720)
+            if ctx.emoji == no_emoji:
+                await handle_reaction_remove_raid(bot, ctx, message, no_emoji)
+                return
 
 async def raid_delete_handle(ctx, bot):
     conn = await bot.acquire()
+    if not await RH.message_is_raid(ctx, bot, ctx.message_id):
+        return
+  
     await RH.remove_raid_from_table(conn, ctx.message_id)
     await bot.release(conn)
     try:
@@ -79,34 +77,34 @@ async def raid_delete_handle(ctx, bot):
         print("[!] An error occurred [{}]".format(error))
 
 async def request_delete_handle(ctx, bot):
-    pass
-
-def has_role(roles, role_name):
-    for role in roles:
-        if role_name == role.name:
-            return True
-
-    return False
+    does_exist, channel_id, message_id, role_id = await REQH.get_request_by_message_id(bot, ctx.message_id)
+    if not does_exist:
+        return
+    role = discord.utils.get(guild.roles, id=role_id)
+    channel = bot.get_channel(channel_id)
+    try:
+        message = await channel.fetch_message(message_id)
+    except discord.DiscordException:
+        pass
+    await delete_request_role_and_post(ctx, bot, guild, channel, message, role)
 
 async def raw_message_delete_handle(ctx, bot):
     if await RH.check_if_valid_raid_channel(bot, ctx.channel_id):
         await raid_delete_handle(ctx, bot)
-        return
 
-    #if await check_if_valid_request_channel(bot, ctx.channel_id):
-    #    await request_delete_handle(ctx, bot)
+    if await REQH.check_if_valid_request_channel(bot, ctx.channel_id):
+        await request_delete_handle(ctx, bot)
 
 async def on_message_handle(message, bot):
-    if not await RH.check_if_valid_raid_channel(bot, message.channel.id):
+    raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
+    request_channel = await REQH.check_if_valid_request_channel(bot, message.channel.id)
+    if not raid_channel and not request_channel:
         return False
-
-    #if not await check_if_valid_request_channel(bot, message.channel.id):
-    #    return False
 
     if message.author.id == bot.user.id:
         return False
 
-    if has_role(message.author.roles, "Mods"):
+    if discord.utils.get(message.author.roles, name="Mods"):
         return False
 
     if not message.content.startswith(bot.command_prefix, 0, 1):

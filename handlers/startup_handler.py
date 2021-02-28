@@ -75,18 +75,18 @@ async def spin_up_message_deletions(bot):
 GET_TOTAL_COUNT = """
   SELECT SUM(raid_counter) AS total
   FROM guild_raid_counters
-  WHERE raid_counter > 0
-  RETURNING total;
+  WHERE (raid_counter > 0);
 """
 async def set_new_presence(bot, old_count):
     """Gets total and sets presence to this new total."""
     connection = await bot.acquire()
-    new_count = await connection.fetch(GET_ALL_RAIDS)
+    new_count = await connection.fetch(GET_TOTAL_COUNT)
     await bot.release(connection)
-    if new_count == old_count:
+    total = (new_count.pop()).get("total")
+    if total == old_count:
         return old_count
 
-    game = discord.Game("Total raids hosted: {}".format(new_count))
+    game = discord.Game("Total raids hosted: {}".format(total))
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:

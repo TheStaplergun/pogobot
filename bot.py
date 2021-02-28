@@ -57,7 +57,6 @@ async def on_ready():
     """Built in event"""
     print('Logged in as')
     print(BOT.user.name)
-    print(BOT.intents)
     print('------------------')
 
 @BOT.event
@@ -87,9 +86,23 @@ async def clear_raid(ctx, user_id):
 @BOT.command()
 @commands.guild_only()
 @commands.has_role("Mods")
-async def request(ctx, tier, pokemon_name):
+async def clear_requests(ctx):
+    await REQH.handle_clear_all_requests_for_guild(ctx, BOT)
+    
+@BOT.command()
+@commands.guild_only()
+async def request(ctx, tier=None, pokemon_name=None):
     """Processes a users pokemon request"""
+    if not await REQH.check_if_valid_request_channel(BOT, ctx.channel.id):
+        ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
+        return
     await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
+
+@BOT.command()
+@commands.guild_only()
+@commands.has_role("Mods")
+async def get_requests(ctx):
+    await REQH.handle_get_all_requests(ctx, BOT)
 
 @BOT.command()
 @commands.guild_only()
@@ -127,7 +140,7 @@ async def startup_process():
     await BOT.wait_until_ready()
     BOT.pool = await init_pool()
     BOT.add_cog(raid_cog.RaidPost(BOT))
-    await SH.spin_up_message_deletions(BOT)
+    #await SH.spin_up_message_deletions(BOT)
 
 async def status_update_loop():
     """Updates status continually every ten minutes."""

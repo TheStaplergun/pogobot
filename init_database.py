@@ -1,6 +1,6 @@
 import asyncio
 import asyncpg
-from important import password
+from important import PASSWORD
 
 player_table_create = """
 CREATE TABLE IF NOT EXISTS players (
@@ -64,17 +64,18 @@ CREATE TABLE IF NOT EXISTS guild_raid_counters (
 request_channel_table = """
 DROP TABLE IF EXISTS valid_request_channels;
 CREATE TABLE IF NOT EXISTS valid_request_channels (
-  channel_id BIGINT PRIMARY KEY,
-  guild_id BIGINT NOT NULL
-)
+  guild_id BIGINT PRIMARY KEY,
+  channel_id BIGINT NOT NULL
+);
 """
 
 request_role_to_id_map = """
+DROP TABLE IF EXISTS request_role_id_map;
 CREATE TABLE IF NOT EXISTS request_role_id_map (
   role_id BIGINT PRIMARY KEY,
   message_id BIGINT NOT NULL,
   guild_id BIGINT NOT NULL,
-  role_name VARCHAR(24)
+  role_name VARCHAR(32)
 )
 """
 
@@ -86,9 +87,9 @@ async def main():
                                port=5432,
                                host='localhost',
                                user='pi',
-                               password=password)
+                               password=PASSWORD)
 
-  await conn.execute(request_table)
-  await conn.execute(request_role_to_id_map)
+  #await conn.execute(request_channel_table)
+  #await conn.execute(request_role_to_id_map)
 
 asyncio.get_event_loop().run_until_complete(main())

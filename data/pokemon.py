@@ -647,7 +647,7 @@ NATIONAL_DEX =\
   "642_00":"Thundurus",
   "643_00":"Reshiram",
   "644_00":"Zekrom",
-  "645_00":"Landorus",
+  #"645_00":"Landorus",
   "646_11":"Kyurem",
   "647_00":"Keldeo",
   "648_00":"Meloetta",
@@ -996,7 +996,9 @@ GALARIAN_DEX =\
 ALTERNATE_FORME_DEX =\
 {
   "487_12":"Giratina-Origin",
-  "487_11":"Giratina-Altered"
+  "487_11":"Giratina-Altered",
+  "645_11":"Landorus-Incarnate",
+  "645_12":"Landorus-Therian"
 }
 
 RAID_COUNTER_GUIDE =\
@@ -1009,7 +1011,8 @@ RAID_COUNTER_GUIDE =\
   "Regirock":"https://media.discordapp.net/attachments/773944383765741578/786995722720509981/20201211_113941.png",
   "Registeel":"https://media.discordapp.net/attachments/773944383765741578/789523556329193482/20201218_110403.png",
   "Ho-Oh":"https://media.discordapp.net/attachments/773944383765741578/794608585916022794/20210101_115014.png",
-  "Heatran":"https://media.discordapp.net/attachments/773944383765741578/798418704475357184/20210112_000440.png"
+  "Heatran":"https://media.discordapp.net/attachments/773944383765741578/798418704475357184/20210112_000440.png",
+  "Landorus-Incarnate":"https://cdn.discordapp.com/attachments/773944383765741578/815658935955750962/20210228_135615.png"
 }
 
 POKEBATTLER_LINK =\
