@@ -54,7 +54,7 @@ async def spin_up_message_deletions(bot):
             if not channel:
                 continue
             await channel.delete_messages(delete_snowflakes)
-        except discord.NotFound as error:
+        except discord.DiscordException as error:
             print("[!] Message(s) did not exist on server. [{}]".format(error))
 
     await bot.pool.release(connection)
@@ -90,15 +90,16 @@ async def set_new_presence(bot, old_count):
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:
-        return
+        return old_count
     return new_count
 
 async def start_status_update_loop(bot):
     """Permanently running loop while bot is up."""
-    count = 0
     while not bot.pool:
         await asyncio.sleep(1)
-
+    count = 0
     while True:
+        print("[*] Updating counter status.")
         count = await set_new_presence(bot, count)
+        print("[*] Completed status update. Sleeping")
         await asyncio.sleep(10*60)

@@ -997,8 +997,8 @@ ALTERNATE_FORME_DEX =\
 {
   "487_12":"Giratina-Origin",
   "487_11":"Giratina-Altered",
-  "645_11":"Landorus-Incarnate",
-  "645_12":"Landorus-Therian"
+  "645_11":"Landorus-Incarnate"
+  #"645_12":"Landorus-Therian"
 }
 
 RAID_COUNTER_GUIDE =\

@@ -22,8 +22,8 @@ GET_ALL_REQUESTS_FOR_GUILD = """
 async def handle_get_all_requests(ctx, bot):
     connection = await bot.acquire()
     results = await connection.fetch(GET_ALL_REQUESTS_FOR_GUILD, int(ctx.guild.id))
-    await ctx.send(results)
     await bot.release(connection)
+    await ctx.send(results)
 
 FETCH_REQUEST_CHANNEL_INFO = """
  SELECT * FROM valid_request_channels where (guild_id = $1);
@@ -31,6 +31,7 @@ FETCH_REQUEST_CHANNEL_INFO = """
 async def get_request_channel(bot, guild_id):
     connection = await bot.acquire()
     results = await connection.fetchrow(FETCH_REQUEST_CHANNEL_INFO, guild_id)
+    await bot.release(connection)
     if not results:
         return False
     return results.get("channel_id")
@@ -45,21 +46,22 @@ SET channel_id = $1
 WHERE (guild_id = $2);
 """
 async def database_register_request_channel(bot, ctx, channel_id, guild_id):
-    connection = await bot.pool.acquire()
     request_channel_id = await get_request_channel(bot, guild_id)
     if request_channel_id:
         await handle_clear_all_requests_for_guild(ctx, bot)
     results = None
+    connection = await bot.acquire()
+
     try:
         if request_channel_id:
               await connection.execute(UPDATE_REQUEST_CHANNEL, int(channel_id), int(guild_id))
         else:
-            results = await connection.execute(add_request_channel,
-                                               int(channel_id),
-                                               int(guild_id))
+              results = await connection.execute(add_request_channel,
+                                                 int(channel_id),
+                                                 int(guild_id))
     except asyncpg.PostgresError as e:
         print("[!] Error occured registering request channel. [{}]".format(e))
-    await bot.pool.release(connection)
+    await bot.release(connection)
     if results:
         print("[*] [{}] [{}] New request channel registered.".format(ctx.guild.name, channel_id))
 
@@ -88,9 +90,9 @@ GET_REQUEST_BY_MESSAGE_ID = """
 """
 async def get_request_by_message_id(bot, message_id):
     connection = await bot.acquire()
-    result = await connection.execute(GET_REQUEST_BY_MESSAGE_ID, int(message_id))
+    result = await connection.fetchrow(GET_REQUEST_BY_MESSAGE_ID, int(message_id))
     await bot.release(connection)
-    if result:
+    if not result:
         return False, None, None, None
     return True, result.get("channel_id"), result.get("message_id"), result.get("role_id")
   
@@ -106,7 +108,7 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
         print("[!] An error occurred creating a new role: [{}]".format(error))
     author = ctx.author
     try:
-        await author.add_roles(new_role, reason="Assigning request role to user")
+        await give_request_role(author, guild, new_role)
     except discord.DiscordException as error:
         print("[!] An error occurred giving a user a role: [{}]".format(error))
         return
@@ -175,10 +177,12 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
             print("[!][{}] An error occurred when deleting a message [{}]".format(guild.name,  error))
     await ctx.send("Total roles deleted: [{}]".format(len(query_results)), delete_after=15)
 
-async def give_request_role(author, role_id):
-    role = discord.Object(role_id)
+async def give_request_role(author, guild, role):
+    blurb = "You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing in the requests channel. To opt back in, click on the 📬.".format(role.name)
+    dm_message = H.guild_member_dm(guild.name, blurb)
     try:
         await author.add_roles(role, reason="Giving user a request role.")
+        await author.send(dm_message)
     except discord.DiscordException as error:
         print("[!] An error occurred giving a user a role: [{}]".format(error))
         return
@@ -267,7 +271,7 @@ async def delete_request_role_and_post(ctx, bot, guild, message, role):
 def get_pokemon_name_from_raid(message):
     embed = message.embeds[0]
     title = embed.title
-    if title.startswith("Mega", 0, 4):
+    if title.startswith("Mega ", 0, 5):
         return True, title.split(" ")[1]
     return False, title
 
@@ -294,7 +298,7 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         tier = ""
     guild_id = ctx.guild.id
     is_valid, response, suggestion, dex_num = validate_pokemon(pokemon_name, tier)
-    if tier.lower() == "mega" and not pokemon_name.startswith("Mega", 0, 5):
+    if tier.lower() == "mega" and not pokemon_name.startswith("Mega ", 0, 5):
         pokemon_name = "Mega " + pokemon_name
     if not is_valid:
         author_dm = H.guild_member_dm(ctx.guild.name, "")
@@ -315,7 +319,8 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
             return
             
         if not await check_if_user_already_assigned_role(author, role_id):
-            await give_request_role(author, role_id)
+            role = discord.utils .get(ctx.guild.roles, id=role_id)
+            await give_request_role(author, ctx.guild, role)
             await increment_request_count(ctx, bot, request_channel_id, message_id)
     return
 

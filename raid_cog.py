@@ -31,7 +31,7 @@ class RaidPost(commands.Cog):
                    time_to_expire = "`No time to expire provided`"):
 
         """Post a raid"""
-
+        print("[*] Processing raid.")
         if not await RH.check_if_valid_raid_channel(self.bot, ctx.channel.id):
             return
 

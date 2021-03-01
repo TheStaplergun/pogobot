@@ -1,5 +1,6 @@
 """Main bot set up and command set up"""
 
+import argparse
 from datetime import datetime
 import discord
 from discord.ext import commands
@@ -73,9 +74,10 @@ async def on_raw_message_delete(ctx):
 @BOT.event
 async def on_message(message):
     """Built in event"""
-    handled = await EH.on_message_handle(message, BOT)
-    if handled:
-        return
+    try:
+        await EH.on_message_handle(message, BOT)
+    except Exception as error:
+        print("[!] An exception occurred during message handling. [{}]".format(error))
     await BOT.process_commands(message)
 
 @BOT.command()
@@ -95,7 +97,7 @@ async def clear_requests(ctx):
 async def request(ctx, tier=None, pokemon_name=None):
     """Processes a users pokemon request"""
     if not await REQH.check_if_valid_request_channel(BOT, ctx.channel.id):
-        ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
+        await ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
         return
     await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
 
@@ -135,19 +137,30 @@ async def ping(ctx):
     cur_time = datetime.now()
     time_dif = cur_time - create_time
     await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
-
+live=False
 async def startup_process():
     """Startup process. Linear process."""
     await BOT.wait_until_ready()
     BOT.pool = await init_pool()
     BOT.add_cog(raid_cog.RaidPost(BOT))
-    #await SH.spin_up_message_deletions(BOT)
+    if live:
+        await SH.spin_up_message_deletions(BOT)
 
 async def status_update_loop():
     """Updates status continually every ten minutes."""
     await BOT.wait_until_ready()
     await SH.start_status_update_loop(BOT)
-
-BOT.loop.create_task(startup_process())
-BOT.loop.create_task(status_update_loop())
-BOT.run(important.TOKEN)
+    
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="")
+    parser.add_argument("-l", action="store_true")
+    args = parser.parse_args()
+    BOT.loop.create_task(startup_process())
+    BOT.loop.create_task(status_update_loop())
+    if args.l:
+        print("Running bot live.")
+        live=True
+        BOT.run(important.LIVE_TOKEN)
+    else:
+        print("Running bot in test mode")
+        BOT.run(important.TESTING_TOKEN)

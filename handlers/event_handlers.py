@@ -65,10 +65,10 @@ async def raw_reaction_add_handle(ctx, bot):
                 return
 
 async def raid_delete_handle(ctx, bot):
-    conn = await bot.acquire()
     if not await RH.message_is_raid(ctx, bot, ctx.message_id):
         return
-  
+    conn = await bot.acquire()
+
     await RH.remove_raid_from_table(conn, ctx.message_id)
     await bot.release(conn)
     try:
@@ -78,19 +78,18 @@ async def raid_delete_handle(ctx, bot):
 
 async def request_delete_handle(ctx, bot):
     does_exist, channel_id, message_id, role_id = await REQH.get_request_by_message_id(bot, ctx.message_id)
-    if ctx.guild:
-        guild = ctx.guild
-    elif ctx.guild_id:
-        guild = bot.get_guild(ctx.guild_id)
+    guild = bot.get_guild(ctx.guild_id)
     if not does_exist:
         return
     role = discord.utils.get(guild.roles, id=role_id)
-    channel = bot.get_channel(channel_id)
+    channel = guild.get_channel(channel_id)
+    message = None
     try:
-        message = await channel.fetch_message(message_id)
+        if channel:
+            message = await channel.fetch_message(message_id)
     except discord.DiscordException:
         pass
-    await REQH.delete_request_role_and_post(ctx, bot, guild, channel, message, role)
+    await REQH.delete_request_role_and_post(ctx, bot, guild, message, role)
 
 async def raw_message_delete_handle(ctx, bot):
     if await RH.check_if_valid_raid_channel(bot, ctx.channel_id):
@@ -107,14 +106,15 @@ async def on_message_handle(message, bot):
 
     if message.author.id == bot.user.id:
         return False
-
+    if message.author.bot:
+        return True
     if discord.utils.get(message.author.roles, name="Mods"):
         return False
 
     if not message.content.startswith(bot.command_prefix, 0, 1):
         content = message.content
         try:
-            await message.author.send(H.guild_member_dm(message.guild.name, "Type -raid in that channel to get more info."))
+            await message.author.send(H.guild_member_dm(message.guild.name, "This is a curated channel. Read the guide and use the correct command for this channel."))
         except discord.DiscordException:
             pass
         try:
@@ -122,7 +122,3 @@ async def on_message_handle(message, bot):
             await message.delete()
         except discord.NotFound:
             pass
-
-        return True
-
-    return False

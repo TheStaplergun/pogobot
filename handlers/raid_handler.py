@@ -130,7 +130,7 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
     except discord.DiscordException as error:
         print("[!] An error occurred trying to remove a user from their raid manually. [{}]".format(error))
         return
-    ctx.send("User was successfully removed from raid.", delete_after=5)
+    await ctx.send("User was successfully removed from raid.", delete_after=5)
 
 CHECK_VALID_RAID_CHANNEL = """
  SELECT * FROM valid_raid_channels where (channel_id = $1)

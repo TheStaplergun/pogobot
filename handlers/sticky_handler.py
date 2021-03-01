@@ -62,7 +62,7 @@ async def make_new_no_raids_placeholder_message(bot, channel_id):
     channel = bot.get_channel(channel_id)
     title = "No raids available."
     description = "Check back any time to see if one has been listed."
-    embed = format_sticky_embed(title, description)
+    embed = await format_sticky_embed(title, description)
     message = await channel.send(embed=embed)
 
     await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
@@ -71,12 +71,12 @@ async def make_new_raids_remaining_placeholder_message(bot, channel_id):
     channel = bot.get_channel(channel_id)
     title = "Raids available!"
     description = "All available raids are listed below."
-    embed = format_sticky_embed(title, description)
+    embed = await format_sticky_embed(title, description)
     message = await channel.send(embed=embed)
 
     await update_placeholder_database(bot, int(channel.id), int(message.id), int(channel.guild.id))
 
-def format_sticky_embed(title, description):
+async def format_sticky_embed(title, description):
     embed = discord.Embed(title=title, description=description, color=0xff8c00)
     embed_host_raid_msg = "If you want to host a raid, check out the post above!"
     embed.add_field(name="Want to host a raid?", value=embed_host_raid_msg, inline=False)
@@ -85,13 +85,13 @@ def format_sticky_embed(title, description):
 async def edit_to_no_raids_remaining_placeholder(message):
     title = "No raids available."
     description = "Check back any time to see if one has been listed."
-    embed = format_sticky_embed(title, description)
+    embed = await format_sticky_embed(title, description)
     await message.edit(embed=embed)
 
 async def edit_to_raids_remaining_placeholder(message):
     title = "Raids available!"
     description = "All available raids are listed below."
-    embed = format_sticky_embed(title, description)
+    embed = await format_sticky_embed(title, description)
     await message.edit(embed=embed)
 
 async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):

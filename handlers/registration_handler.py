@@ -14,7 +14,7 @@ VALUES ($1);
 """
 async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
     """Registers raid channel within database and initalizes guilds raid counter."""
-    connection = await bot.pool.acquire()
+    connection = await bot.acquire()
     results = None
     try:
         results = await connection.execute(ADD_RAID_CHANNEL,
@@ -27,7 +27,7 @@ async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
                                  int(guild_id))
     except asyncpg.PostgresError as error:
         print("[!] Error occured registering raid counter. [{}]".format(error))
-    await bot.pool.release(connection)
+    await bot.release(connection)
     if results:
         print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
 
