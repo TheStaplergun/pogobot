@@ -34,7 +34,7 @@ async def increment_raid_counter(ctx, bot, guild_id):
 GET_RAID_COUNT_STATEMENT = """
     SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
 """
-async def get_raid_count(bot, ctx):
+async def get_raid_count(bot, ctx, should_send):
     """Get raid count for server the command was called in."""
     connection = await bot.pool.acquire()
     try:
@@ -47,6 +47,8 @@ async def get_raid_count(bot, ctx):
         await bot.pool.release(connection)
     num = count.get("raid_counter")
     msg = "Total raids sent within this server [`{}`]".format(num)
+    if not should_send:
+        return num
     try:
         await ctx.channel.send(msg)
     except discord.DiscordException as error:

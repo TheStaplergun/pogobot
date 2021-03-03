@@ -97,7 +97,14 @@ async def clear_requests(ctx):
 async def request(ctx, tier=None, pokemon_name=None):
     """Processes a users pokemon request"""
     if not await REQH.check_if_valid_request_channel(BOT, ctx.channel.id):
-        await ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
+        try:
+            await ctx.message.delete()
+        except discord.DiscordException:
+            pass
+        try:
+            await ctx.author.send(H.guild_member_dm(ctx.guild, "That channel is not a valid request channel."))
+        except discord.DiscordException:
+            pass
         return
     await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
 
@@ -128,7 +135,7 @@ async def raid_count(ctx):
         await ctx.message.delete()
     except discord.NotFound as error:
         print("[!] Message already gone. [{}]".format(error))
-    await RH.get_raid_count(BOT, ctx)
+    await RH.get_raid_count(BOT, ctx, True)
 
 @BOT.command()
 async def ping(ctx):
