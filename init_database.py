@@ -14,14 +14,21 @@ CREATE TABLE IF NOT EXISTS players (
 """
 
 raid_table_create = """
+DROP TABLE IF EXISTS raids;
 CREATE TABLE IF NOT EXISTS raids (
-  raid_message_id BIGINT PRIMARY KEY,
-  host_user_id BIGINT NOT NULL,
+  message_id BIGINT PRIMARY KEY,
+  lobby_id BIGINT NOT NULL,
+  time_registered TIMESTAMP NOT NULL,
   guild_id BIGINT NOT NULL,
-  time_to_remove TIMESTAMP NOT NULL,
-  FOREIGN KEY (host_user_id)
-    REFERENCES players (user_id)
+  channel_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  time_to_remove TIMESTAMP NOT NULL
 );
+"""
+
+raid_table_add_lobby_column = """
+ALTER TABLE raids
+ADD COLUMN lobby_id BIGINT;
 """
 
 raid_anonymous_tracker = """
@@ -76,6 +83,13 @@ CREATE TABLE IF NOT EXISTS request_role_id_map (
   message_id BIGINT NOT NULL,
   guild_id BIGINT NOT NULL,
   role_name VARCHAR(32)
+)
+"""
+
+raid_lobby_category_table = """
+CREATE TABLE IF NOT EXISTS raid_lobby_categories (
+  primary_id BIGINT PRIMARY KEY,
+  guild_id BIGINT NOT NULL
 )
 """
 
