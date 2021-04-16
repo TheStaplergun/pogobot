@@ -86,7 +86,7 @@ async def set_new_presence(bot, old_count):
     if total == old_count:
         return old_count
 
-    game = discord.Game("Total raids hosted: {}".format(total))
+    game = discord.Game("{} raids hosted".format(total))
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:
@@ -99,7 +99,5 @@ async def start_status_update_loop(bot):
         await asyncio.sleep(1)
     count = 0
     while True:
-        print("[*] Updating counter status.")
         count = await set_new_presence(bot, count)
-        print("[*] Completed status update. Sleeping")
         await asyncio.sleep(10*60)

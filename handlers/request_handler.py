@@ -1,4 +1,5 @@
 """Request handler system."""
+import re
 import discord
 import asyncpg
 import handlers.helpers as H
@@ -204,7 +205,15 @@ async def increment_request_count(ctx, bot, channel_id, message_id):
     
     count += 1
     new_embed = discord.Embed(title=embed.title, description="")
-    new_embed.set_thumbnail(url=embed.thumbnail.url)
+    thumbnail_url = embed.thumbnail.url
+    if re.search(r'_shiny', thumbnail_url):
+        thumbnail_url = thumbnail_url.replace("_shiny","")
+    #if not re.search(r'_shiny', thumbnail_url):
+    #    if re.search(r'shiny', thumbnail_url):
+    #        thumbnail_url = thumbnail_url.replace("shiny", "_shiny")
+    #    else:
+    #        thumbnail_url = thumbnail_url[:len(thumbnail_url) - 4] + "_shiny" + thumbnail_url[len(thumbnail_url) - 4:]
+    new_embed.set_thumbnail(url=thumbnail_url)
     new_embed.add_field(name=old_field.name, value=str(count))
     new_embed.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to get pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
                 
@@ -235,7 +244,15 @@ async def decrement_request_count(ctx, bot, channel_id, message_id):
         await delete_request_role_and_post(ctx, bot, guild, message, role)
         return
     new_embed = discord.Embed(title=embed.title, description="")
-    new_embed.set_thumbnail(url=embed.thumbnail.url)
+    thumbnail_url = embed.thumbnail.url
+    if re.search(r'_shiny', thumbnail_url):
+        thumbnail_url = thumbnail_url.replace("_shiny","")
+    #if not re.search(r'_shiny', thumbnail_url):
+    #    if re.search(r'shiny', thumbnail_url):
+    #        thumbnail_url = thumbnail_url.replace("shiny", "_shiny")
+    #    else:
+    #        thumbnail_url = thumbnail_url[:len(thumbnail_url) - 4] + "_shiny" + thumbnail_url[len(thumbnail_url) - 4:]
+    new_embed.set_thumbnail(url=thumbnail_url)
     new_embed.add_field(name=old_field.name, value=str(count))
     new_embed.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to get pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
                 

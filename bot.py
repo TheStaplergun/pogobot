@@ -60,6 +60,7 @@ async def on_ready():
     print('Logged in as')
     print(BOT.user.name)
     print('------------------')
+    #print(BOT.commands)
 
 @BOT.event
 async def on_raw_reaction_add(ctx):
@@ -137,6 +138,7 @@ async def ping(ctx):
     cur_time = datetime.now()
     time_dif = cur_time - create_time
     await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
+
 live=False
 async def startup_process():
     """Startup process. Linear process."""

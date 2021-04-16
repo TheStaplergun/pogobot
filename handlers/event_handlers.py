@@ -1,9 +1,15 @@
 """Event handler functions."""
+from datetime import datetime
 import discord
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
+
+async def length_of_time_raid_was_live(message):
+    listing_time = message.created_at
+    current_time = datetime.now()
+    return current_time - listing_time
 
 async def handle_reaction_remove_raid(bot, ctx, message, emoji):
     user_id = message.mentions[0].id
@@ -19,7 +25,10 @@ async def handle_reaction_remove_raid(bot, ctx, message, emoji):
         conn = await bot.acquire()
         await RH.remove_raid_from_table(conn, message.id)
         await bot.release(conn)
-        await message.delete()
+        try:
+            await message.delete()
+        except discord.DiscordException:
+            pass
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
@@ -111,6 +120,13 @@ async def on_message_handle(message, bot):
     if discord.utils.get(message.author.roles, name="Mods"):
         return False
 
+    if message.content.startswith(bot.command_prefix, 0, 1):
+        for command in bot.commands:
+            if message.content.startswith("-{}".format(command.name), 0, len(command.name) + 1):
+                return False
+            for alias in command.aliases:
+                if message.content.startswith("-{}".format(alias), 0, len(alias) + 1):
+                    return False
     if not message.content.startswith(bot.command_prefix, 0, 1):
         content = message.content
         try:

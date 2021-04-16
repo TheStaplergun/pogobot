@@ -18,7 +18,7 @@ class RaidPost(commands.Cog):
         """Mod Only - Show all current running raid statistics for this guild"""
         await RH.get_all_raids_for_guild(self.bot, ctx)
 
-    @commands.command()
+    @commands.command(aliases=["r"])
     @commands.guild_only()
     async def raid(self,
                    ctx,
@@ -28,7 +28,7 @@ class RaidPost(commands.Cog):
                    weather = "`No weather condition provided`",
                    #invite_slots = "`No invite slot count provided`",
                    #time_to_start = "`No time to start provided`",
-                   time_to_expire = "`No time to expire provided`"):
+                   time_to_expire = "0"):
 
         """Post a raid"""
         print("[*] Processing raid.")
