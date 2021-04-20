@@ -12,10 +12,15 @@ import pathlib
 
 # Load dataset
 data_dir = pathlib.Path("./training")
+model_dir = "./tensor_model"
 
 batch_size = 32
 img_height = 256
 img_width = 256
+
+# saver = tf.train.Saver()
+# session = tf.Session()
+# session.run
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     data_dir,
@@ -34,28 +39,6 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size)
 
 class_names = train_ds.class_names
-print(class_names)
-# Visualize Data
-#plt.figure(figsize=(10, 10))
-#for images, labels in train_ds.take(1):
-#    for i in range(3):
-#        ax = plt.subplot(3, 3, i + 1)
-#        plt.imshow(images[i].numpy().astype("uint8"))
-#        plt.title(class_names[labels[i]])
-#        plt.axis("off")
-
-# Standardize the data. Reduce colors from 0-255 to 0-1
-#normalization_layer = tf.keras.layers.experimental.preprocessing.Rescaling(1./255)
-
-normalized_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-image_batch, labels_batch = next(iter(normalized_ds))
-first_image = image_batch[0]
-# Notice the pixels values are now in `[0,1]`.
-print(np.min(first_image), np.max(first_image))
-
-
-
-
 
 for image_batch, labels_batch in train_ds:
     print(image_batch.shape)
@@ -70,7 +53,7 @@ val_ds = val_ds.cache().prefetch(buffer_size=AUTOTUNE)
 
 
 # Train a model
-num_classes = 3
+num_classes = len(class_names)
 
 model = tf.keras.Sequential([
   layers.experimental.preprocessing.Rescaling(1./255),
@@ -90,11 +73,7 @@ model.compile(
   loss=tf.losses.SparseCategoricalCrossentropy(from_logits=True),
   metrics=['accuracy'])
 
-model.fit(
-  train_ds,
-  validation_data=val_ds,
-  epochs=3
-)
+
 
 
 # Using tf.data for finer control. Allows for setting up finer data points.
@@ -139,17 +118,18 @@ print(tf.data.experimental.cardinality(val_ds).numpy())
 
 # Configure dataset for performance
 def configure_for_performance(ds):
-    ds = ds.cache()
     ds = ds.shuffle(buffer_size=1000)
     ds = ds.batch(batch_size)
     ds = ds.prefetch(buffer_size=AUTOTUNE)
+    ds = ds.cache()
+
     return ds
 
 train_ds = configure_for_performance(train_ds)
 val_ds = configure_for_performance(val_ds)
 
-# Visualize data
-image_batch, label_batch = next(iter(train_ds))
+## Visualize data
+#image_batch, label_batch = next(iter(train_ds))
 
 IMG_SIZE = 180
 
@@ -198,6 +178,24 @@ def prepare(ds, shuffle=False, augment=False):
   # Use buffered prefecting on all datasets
   return ds.prefetch(buffer_size=AUTOTUNE)
 
-train_ds = prepare(train_ds, shuffle=True, augment=True)
-val_ds = prepare(val_ds)
-test_ds = prepare(test_ds)
+#train_ds = prepare(train_ds, shuffle=True, augment=True)
+#val_ds = prepare(val_ds)
+#test_ds = prepare(test_ds)
+
+#net = Net()
+#opt = tf.keras.optimizers.Adam(0.1)
+ckpt = tf.train.Checkpoint(step=tf.Variable(1))
+manager = tf.train.CheckpointManager(ckpt, "./tf_ckpts", max_to_keep=3)
+
+ckpt.restore(manager.latest_checkpoint)
+if manager.latest_checkpoint:
+    print("Restored from {}".format(manager.latest_checkpoint))
+else:
+    print("Initializing from scratch.")
+
+model.fit(
+  train_ds,
+  validation_data=val_ds,
+  epochs=10
+)
+

@@ -63,7 +63,7 @@ def mask_half(image, section):
 def make_and_convert():
     end_path = "./training"
     mypath = "./images_to_move"
-    counter = 0
+    #counter = 0
 
     # helper_images = {}
     # helper_images.update({"blank-pokemon-stats-screen.jpg":cv.imread("{}/HELPERS/blank-pokemon-stats-screen.jpg".format(mypath))})
@@ -106,10 +106,11 @@ def make_and_convert():
                 if region == "mega":
                     dir_name = "Mega {}".format(dir_name)
 
-                new_dir_path = "{}/{}".format(end_path, dir_name)
+                new_dir_path = "{}/{}/".format(end_path, dir_name)
                 try:
                     os.mkdir(new_dir_path)
                 except OSError as error:
+                    print("{}".format(error))
                     print("Directory [{}] already exists. Ignoring.".format(dir_name))
 
                 #os.rename(current_file_name, "{}/{}/{}".format(dirpath, dir_name, filename))
