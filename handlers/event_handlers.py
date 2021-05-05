@@ -49,7 +49,7 @@ async def raw_reaction_add_handle(ctx, bot):
     if not len(message.embeds) == 1:
         return
 
-    if raid_channel or request_channel :
+    if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
         if ctx.emoji.name == "📬":
@@ -99,13 +99,20 @@ async def raw_message_delete_handle(ctx, bot):
         await request_delete_handle(ctx, bot)
 
 async def on_message_handle(message, bot):
+    # Handle this first because it's a logging function.
+    raid_lobby_channel = await RLH.check_if_in_raid_lobby(bot, message.channel.id)
+    if raid_lobby_channel:
+        await log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
+        return True
+
     raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
     request_channel = await REQH.check_if_valid_request_channel(bot, message.channel.id)
-    if not raid_channel and not request_channel:
+
+    if not raid_channel and not request_channel and not raid_lobby_channel:
         return False
 
-    if message.author.id == bot.user.id:
-        return False
+    #if message.author.id == bot.user.id:
+        #return False
     if message.author.bot:
         return True
     if discord.utils.get(message.author.roles, name="Mods"):

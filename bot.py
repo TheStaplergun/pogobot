@@ -91,7 +91,7 @@ async def clear_raid(ctx, user_id):
 @commands.has_role("Mods")
 async def clear_requests(ctx):
     await REQH.handle_clear_all_requests_for_guild(ctx, BOT)
-    
+
 @BOT.command()
 @commands.guild_only()
 async def request(ctx, tier=None, pokemon_name=None):
@@ -115,10 +115,18 @@ async def register_request_channel(ctx):
     await REGH.register_request_channel_handle(ctx, BOT)
 
 @BOT.command()
+@commands.guild_only()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
     """Mod only - Sets up channel to allow hosting raids"""
     await REGH.register_raid_channel_handle(ctx, BOT)
+
+@BOT.command()
+@commands.guild_only()
+@commands.has_role("Mods")
+async def register_raid_lobby_category(ctx):
+    """Mod only - Sets up category to allow automation of raid lobbies"""
+    await REGH.register_raid_lobby_category(ctx, BOT)
 
 @BOT.command()
 @commands.has_role("Mods")
@@ -137,6 +145,8 @@ async def ping(ctx):
     cur_time = datetime.now()
     time_dif = cur_time - create_time
     await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
+
+
 live=False
 async def startup_process():
     """Startup process. Linear process."""
@@ -150,7 +160,7 @@ async def status_update_loop():
     """Updates status continually every ten minutes."""
     await BOT.wait_until_ready()
     await SH.start_status_update_loop(BOT)
-    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")

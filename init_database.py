@@ -84,7 +84,7 @@ DROP TABLE IF EXISTS raid_lobby_category;
 CREATE TABLE IF NOT EXISTS raid_lobby_category (
   guild_id BIGINT PRIMARY KEY,
   category_id BIGINT NOT NULL,
-  management_channel_id BIGINT NOT NULL
+  log_channel_id BIGINT NOT NULL
 )
 """
 
