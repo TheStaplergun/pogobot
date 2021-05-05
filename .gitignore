@@ -4,3 +4,4 @@ init_database.py
 *__pycache__
 /data/storage
 /data/storage_backup
+/tensorflow/training/
