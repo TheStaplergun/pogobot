@@ -52,3 +52,31 @@ async def register_raid_channel_handle(ctx, bot):
         await SH.toggle_raid_sticky(bot, ctx, channel_id, guild_id)
     except discord.DiscordException as e:
         print("[!] An error occurred [{}]".format(e))
+
+ADD_RAID_LOBBY_CATEGORY = """
+INSERT INTO raid_lobby_category (guild_id, category_id)
+VALUES ($1, $2);
+"""
+async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
+    """Registers raid lobby channel within database and initalizes."""
+    connection = await bot.acquire()
+    results = None
+    try:
+        results = await connection.execute(ADD_RAID_LOBBY_CATEGORY,
+                                           int(guild_id),
+                                           int(channel_id))
+    except asyncpg.PostgresError as error:
+        print("[!] Error occured registering raid lobby category. [{}]".format(error))
+    await bot.release(connection)
+    if results:
+        print("[*][{}][{}] New raid lobby category registered.".format(ctx.guild.name, channel_id))
+
+
+async def register_raid_lobby_category(ctx, bot):
+    channel_id = ctx.channel.id
+    guild_id = ctx.guild.id
+    try:
+        await ctx.message.delete()
+    except discord.DiscordException:
+        pass
+    await database_register_raid_lobby_category(bot, ctx, channel_id, guild_id)

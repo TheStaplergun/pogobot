@@ -79,8 +79,23 @@ CREATE TABLE IF NOT EXISTS request_role_id_map (
 )
 """
 
+RAID_LOBBY_CATEGORY = """
+DROP TABLE IF EXISTS raid_lobby_category;
+CREATE TABLE IF NOT EXISTS raid_lobby_category (
+  guild_id BIGINT PRIMARY KEY,
+  category_id BIGINT NOT NULL,
+  management_channel_id BIGINT NOT NULL
+)
+"""
 
-
+RAID_LOBBY_USER_MAP = """
+DROP TABLE IF EXISTS raid_lobby_user_map;
+CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
+  lobby_channel_id BIGINT PRIMARY KEY,
+  host_user_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL
+)
+"""
 
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
