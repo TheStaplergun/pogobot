@@ -93,7 +93,8 @@ DROP TABLE IF EXISTS raid_lobby_user_map;
 CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
   lobby_channel_id BIGINT PRIMARY KEY,
   host_user_id BIGINT NOT NULL,
-  guild_id BIGINT NOT NULL
+  guild_id BIGINT NOT NULL,
+  delete_at TIMESTAMP NOT NULL
 )
 """
 

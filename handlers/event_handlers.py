@@ -3,6 +3,7 @@ import discord
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
+import handlers.raid_lobby_handler as RLH
 import handlers.sticky_handler as SH
 
 async def handle_reaction_remove_raid(bot, ctx, message, emoji):
@@ -102,7 +103,7 @@ async def on_message_handle(message, bot):
     # Handle this first because it's a logging function.
     raid_lobby_channel = await RLH.check_if_in_raid_lobby(bot, message.channel.id)
     if raid_lobby_channel:
-        await log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
+        await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
         return True
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
