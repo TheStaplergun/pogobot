@@ -69,12 +69,26 @@ class RaidPost(commands.Cog):
                     await ctx.send(ctx.author.name + ", I was unable to DM you. You must have your DMs open to coordinate raids.\nRaid will not be listed.", delete_after=15)
                     return
                 request_channel_id = await REQH.get_request_channel(self.bot, ctx.guild.id)
+                raid_lobby_category_id = await RLH.get_raid_lobby_category_channel_id(self.bot, ctx.guild.id)
                 if request_channel_id:
-                    response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to receive a role and be pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
-                message = await ctx.send(channel_message_body, embed=response, delete_after=remove_after_seconds)
+                    response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to be notified of future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
+                if raid_lobby_category_id:
+                    response.set_footer(text="To sign up for this raid, tap the 📝 below.")
+                    channel_message_body = "{} has been hosted.\n".format(role.mention)
+                try:
+                    message = await ctx.send(channel_message_body, embed=response, delete_after=remove_after_seconds)
+                except discord.DiscordException as error:
+                    print("[*][{}][{}] An error occurred listing a raid. [{}]".format(ctx.guild.name, ctx.author, error))
+                    return
+
+                time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
+                if RLH.get_raid_lobby_category_channel_id(self.bot, ctx.guild.id):
+                    time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
+                    await RLH.create_raid_lobby(ctx, self.bot, message.id, ctx.author, time_to_remove_lobby)
+                    await message.add_reaction("📝")
+
                 no_emoji = self.bot.get_emoji(743179437054361720)
                 await message.add_reaction(no_emoji)
-                time_to_delete = datetime.now() + timedelta(seconds = remove_after_seconds)
                 await RH.add_raid_to_table(ctx, self.bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
                 print("[*][{}][{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
                 if request_channel_id:
@@ -86,7 +100,7 @@ class RaidPost(commands.Cog):
                 try:
                     await SH.toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
                 except discord.DiscordException as error:
-                    print("[!] Exception occurred during togle of raid sticky. [{}]".format(error))
+                    print("[!] Exception occurred during toggle of raid sticky. [{}]".format(error))
                 try:
                     await RH.increment_raid_counter(ctx, self.bot, int(ctx.guild.id))
                 except discord.DiscordException as error:
