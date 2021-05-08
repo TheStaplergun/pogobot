@@ -138,6 +138,7 @@ async def start_lobby_removal_loop(bot):
                 await lobby.delete()
             except discord.DiscordException as error:
                 print("[!][{}] An error occurred removing a lobby automatically. [{}]".format(guild.name, error))
+        bot.lobby_remove_trigger.clear()
 
 async def start_applicant_loop(bot):
     while not bot.pool:
@@ -188,3 +189,4 @@ async def start_applicant_loop(bot):
                         user_list.append(user_data)
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     await process_user_list(bot, raid_lobby_data, sorted_users)
+        bot.applicant_trigger.clear()
