@@ -201,7 +201,7 @@ async def start_applicant_loop(bot):
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     print(sorted_users)
                     print("-------")
-                    await process_user_list(bot, raid_lobby_data, sorted_users)
+                    await RLH.process_user_list(bot, raid_lobby_data, sorted_users)
             await asyncio.sleep(1)
 
         await bot.applicant_trigger.wait()
