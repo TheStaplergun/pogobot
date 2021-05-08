@@ -178,7 +178,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         return False
 
     try:
-        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, ctx.guild.id, time_to_remove_lobby)
+        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
         print("[!][{}] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
