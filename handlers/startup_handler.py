@@ -170,6 +170,8 @@ async def start_applicant_loop(bot):
             if not raid_lobby_data_list:
                 break
 
+            total_lobbies_to_handle = len(raid_lobby_data_list)
+            checked_count = 0
             for raid_lobby_data in raid_lobby_data_list:
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=30)
@@ -179,7 +181,7 @@ async def start_applicant_loop(bot):
                     raid_message_id = raid_lobby_data.get("raid_message_id")
                     users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
                     if not users:
-                        continue
+                        checked_count += 1
                     guild_id = raid_lobby_data.get("guild_id")
                     guild = bot.get_guild(int(guild_id))
                     user_list = []
@@ -195,13 +197,11 @@ async def start_applicant_loop(bot):
                             "member_object":member,
                             }
                         user_list.append(user_data)
-                    print("-------")
-                    print(user_list)
-                    print("-------")
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
-                    print(sorted_users)
-                    print("-------")
                     await RLH.process_user_list(bot, raid_lobby_data, sorted_users)
+            if checked_count == total_lobbies_to_handle:
+                # Prevents infinitely looping when there's just no users for any of the lobbies.
+                break
             await asyncio.sleep(1)
 
         await bot.applicant_trigger.wait()

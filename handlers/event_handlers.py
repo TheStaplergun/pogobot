@@ -76,7 +76,8 @@ async def raw_reaction_add_handle(ctx, bot):
     if not len(message.embeds) == 1:
         return
 
-    if ctx.emoji.name == "⏱️" and not ctx.guild_id:
+    if ctx.emoji.name == "⏱️":
+        print("Clock reaction detected.")
         RLH.handle_activity_check_reaction(ctx, bot, message)
         return
 
