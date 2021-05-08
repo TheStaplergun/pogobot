@@ -158,7 +158,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     mod_role = discord.utils.get(guild.roles, name="Mods")
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
-    count = await RH.get_raid_count(bot, ctx)
+    count = await RH.get_raid_count(bot, ctx, False)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         mod_role: discord.PermissionOverwrite(read_messages=True),
@@ -168,7 +168,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     channel_name = "Raid Lobby {}".format(count)
     reason = "Spawning new raid lobby for [{}]".format(raid_host_member.name)
     try:
-        new_raid_lobby = await raid_lobby_category_channel.create_channel(channel_name, reason=reason, overwrites=overwrites)
+        new_raid_lobby = await raid_lobby_category_channel.create_text_channel(channel_name, reason=reason, overwrites=overwrites)
     except discord.DiscordException as error:
         try:
             await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error))

@@ -137,7 +137,7 @@ async def raid_count(ctx):
         await ctx.message.delete()
     except discord.NotFound as error:
         print("[!] Message already gone. [{}]".format(error))
-    await RH.get_raid_count(BOT, ctx)
+    await RH.get_raid_count(BOT, ctx, True)
 
 @BOT.command()
 async def ping(ctx):
