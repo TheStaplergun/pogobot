@@ -165,7 +165,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         raid_moderator_role: discord.PermissionOverwrite(read_messages=True),
         raid_host_member: discord.PermissionOverwrite(read_messages=True)
     }
-    channel_name = "Raid Lobby {}".format(count)
+    channel_name = "raid-lobby-{}".format(count)
     reason = "Spawning new raid lobby for [{}]".format(raid_host_member.name)
     try:
         new_raid_lobby = await raid_lobby_category_channel.create_text_channel(channel_name, reason=reason, overwrites=overwrites)
