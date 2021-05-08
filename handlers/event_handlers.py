@@ -174,4 +174,4 @@ async def on_guild_channel_delete(channel, bot):
     if lobby_channel:
         RLH.remove_lobby_by_lobby_id(bot, lobby_channel.id)
 
-    RLH.check_if_log_channel_and_purge_data(bot, channel.id)
+    await RLH.check_if_log_channel_and_purge_data(bot, channel.id)
