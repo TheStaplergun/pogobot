@@ -59,7 +59,7 @@ GET_LOBBY_BY_LOBBY_ID = """
 async def get_lobby_channel_by_lobby_id(bot, channel_id):
     connection = await bot.acquire()
     try:
-        lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
+        lobby_data = await connection.fetchrow(GET_LOBBY_BY_LOBBY_ID,
                                                int(channel_id))
     except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
@@ -197,7 +197,7 @@ async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
     channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
     try:
         new_embed = discord.Embed(title="System Notification", description="This lobby will expire in five minutes.")
-        await channel.send(" ", embed=new_embed, delete_after=15)
+        await channel.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
