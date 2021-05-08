@@ -93,8 +93,33 @@ DROP TABLE IF EXISTS raid_lobby_user_map;
 CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
   lobby_channel_id BIGINT PRIMARY KEY,
   host_user_id BIGINT NOT NULL,
+  raid_message_id BIGINT NOT NULL,
   guild_id BIGINT NOT NULL,
-  delete_at TIMESTAMP NOT NULL
+  posted_at TIMESTAMP NOT NULL,
+  delete_at TIMESTAMP NOT NULL,
+  user_count INT NOT NULL,
+  user_limit INT NOT NULL,
+  applied_users INT NOT NULL
+)
+"""
+
+RAID_RECENT_PARTICIPATION_TABLE = """
+DROP TABLE IF EXISTS raid_participation_table;
+CREATE TABLE IF NOT EXISTS raid_participation_table (
+  user_id BIGINT PRIMARY KEY,
+  last_participation_time TIMESTAMP NOT NULL
+)
+"""
+
+RAID_APPLICATION_USER_MAP = """
+DROP TABLE IF EXISTS raid_application_user_map;
+CREATE TABLE IF NOT EXISTS raid_application_user_map (
+  user_id BIGINT PRIMARY KEY,
+  raid_message_id BIGINT NOT NULL,
+  is_requesting BOOL NOT NULL
+  speed_bonus_weight INT NOT NULL,
+  has_been_notified BOOL NOT NULL,
+  activity_check_message_id BIGINT
 )
 """
 

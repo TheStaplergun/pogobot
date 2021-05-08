@@ -10,6 +10,7 @@ import raid_cog
 import handlers.event_handlers as EH
 import handlers.helpers as H
 import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
 import handlers.startup_handler as SH
@@ -161,12 +162,24 @@ async def status_update_loop():
     await BOT.wait_until_ready()
     await SH.start_status_update_loop(BOT)
 
+async def lobby_removal_loop():
+    """Removes lobbies as their time expires."""
+    await BOT.wait_until_ready()
+    #await RLH.establish_lobby_removal_list(BOT)
+    await SH.start_lobby_removal_loop(BOT)
+
+async def applicant_loop():
+    await BOT.wait_until_ready()
+    await SH.start_applicant_loop(BOT)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")
     args = parser.parse_args()
     BOT.loop.create_task(startup_process())
     BOT.loop.create_task(status_update_loop())
+    BOT.loop.create_task(applicant_loop())
+    BOT.loop.create_task(lobby_removal_loop())
     if args.l:
         print("Running bot live.")
         live=True

@@ -62,17 +62,17 @@ class RaidPost(commands.Cog):
                 if role_id:
                     role = discord.utils.get(ctx.guild.roles, id=role_id)
                     channel_message_body = "{} hosted by {}\n".format(role.mention, ctx.author.mention)
-                message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire`.\nPress the red X emoji to remove it at any time."
+                message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 5 minutes.\nPress the trash can to remove it at any time."
                 try:
                     await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
                 except discord.Forbidden:
                     await ctx.send(ctx.author.name + ", I was unable to DM you. You must have your DMs open to coordinate raids.\nRaid will not be listed.", delete_after=15)
                     return
                 request_channel_id = await REQH.get_request_channel(self.bot, ctx.guild.id)
-                raid_lobby_category_id = await RLH.get_raid_lobby_category_channel_id(self.bot, ctx.guild.id)
                 if request_channel_id:
                     response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to be notified of future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
-                if raid_lobby_category_id:
+                raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id)
+                if raid_lobby_category:
                     response.set_footer(text="To sign up for this raid, tap the 📝 below.")
                     channel_message_body = "{} has been hosted.\n".format(role.mention)
                 try:
@@ -81,14 +81,14 @@ class RaidPost(commands.Cog):
                     print("[*][{}][{}] An error occurred listing a raid. [{}]".format(ctx.guild.name, ctx.author, error))
                     return
 
+                await message.add_reaction("🗑️")
+
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
-                if RLH.get_raid_lobby_category_channel_id(self.bot, ctx.guild.id):
+                if RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                     await RLH.create_raid_lobby(ctx, self.bot, message.id, ctx.author, time_to_remove_lobby)
                     await message.add_reaction("📝")
 
-                no_emoji = self.bot.get_emoji(743179437054361720)
-                await message.add_reaction(no_emoji)
                 await RH.add_raid_to_table(ctx, self.bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
                 print("[*][{}][{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
                 if request_channel_id:

@@ -92,13 +92,24 @@ async def message_is_raid(ctx, bot, message_id):
         return True
     return False
 
+# Redundant but different return type. Can probably be added to above but do not feel like reworking at the moment.
+async def retrieve_raid_data_by_message_id(ctx, bot, message_id):
+    connection = await bot.acquire()
+    result = await connection.execute(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    await bot.release(connection)
+    return result
+
 RAID_TABLE_REMOVE_RAID = """
 DELETE FROM raids WHERE (message_id = $1)
 RETURNING message_id
 """
+CLEAR_APPLICANTS_FOR_RAID = """
+DELETE FROM raid_application_user_map WHERE (raid_message_id = $1)
+"""
 async def remove_raid_from_table(connection, message_id):
     """Removes a raid from the table."""
     await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
+    await connection.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild

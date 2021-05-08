@@ -1,5 +1,5 @@
 """State restoration for bot."""
-
+from operator import itemgetter
 import asyncio
 from datetime import datetime
 import time
@@ -99,7 +99,93 @@ async def start_status_update_loop(bot):
         await asyncio.sleep(1)
     count = 0
     while True:
-        print("[*] Updating counter status.")
         count = await set_new_presence(bot, count)
-        print("[*] Completed status update. Sleeping")
         await asyncio.sleep(10*60)
+
+async def start_lobby_removal_loop(bot):
+    """Permanently running loop while bot is up."""
+
+    while not bot.pool:
+        await asyncio.sleep(1)
+
+    bot.lobby_remove_trigger = asyncio.Event()
+
+    # Outer loop to wait on the event if no lobbies are present.
+    while True:
+        await bot.lobby_remove_trigger.wait()
+        # Process lobbies until no lobbies remain before going to outer loop.
+        while True:
+            lobby_data = await RLH.get_next_lobby_to_remove(bot)
+            if not lobby_data:
+                break
+
+            deletion_time = lobby_data.get("delete_at")
+            lobby_id = lobby_data.get("lobby_channel_id")
+            guild_id = lobby_data.get("guild_id")
+
+            # Refresh in 30 seconds if greater than one minute wait time.
+            # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
+            if deletion_time.total_seconds() < 60:
+                await asyncio.sleep(30)
+                continue
+
+            if deletion_time.total_seconds() > 0:
+                await asyncio.sleep(deletion_time.total_seconds())
+
+            guild = bot.get_guild(int(guild_id))
+            lobby = guild.get_channel(int(lobby_id))
+            try:
+                await lobby.delete()
+            except discord.DiscordException as error:
+                print("[!][{}] An error occurred removing a lobby automatically. [{}]".format(guild.name, error))
+
+async def start_applicant_loop(bot):
+    while not bot.pool:
+        await asyncio.sleep(1)
+
+    bot.applicant_trigger = asyncio.Event()
+    while True:
+        await bot.applicant_trigger.wait()
+        while True:
+            raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
+            if not raid_lobby_data:
+                break
+
+            for raid_lobby_data in raid_lobby_data_list:
+                raid_host_id = raid_lobby_data.get("host_user_id")
+                raid_message_id = raid_lobby_data.get("raid_message_id")
+                guild_id = raid_lobby_data.get("guild_id")
+                guild = bot.get_guild(int(guild_id))
+
+                raid_data = RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
+                channel_id = raid_data.get("channel_id")
+                channel = guild.get_channel(int(channel_id))
+
+                try:
+                    raid_message = await channel.fetch_message(int(raid_message_id))
+                except discord.DiscordException as error:
+                    print("[!][{}] Error occurred fetching raid message. [{}]".format(guild.name, error))
+                    continue
+
+                cur_time = datetime.now()
+                threshold_time = cur_time - timedelta(seconds=30)
+                posted_time = raid_lobby_data.get("posted_at")
+                if posted_time < threshold_time:
+                    users = await RLH.get_applicants_by_raid_id(raid_message_id)
+                    if not users:
+                        continue
+                    user_list = []
+                    for user in users:
+                        has_been_notified = user.get("has_been_notified")
+                        if has_been_notified:
+                            continue
+                        member_id = user.get("user_id")
+                        member = guild.get_member(int(member_id))
+                        user_data = {
+                            "user_data":user,
+                            "weight":RLH.calculate_weight(bot, user_data, member),
+                            "member_object":member,
+                            }
+                        user_list.append(user_data)
+                    sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
+                    await process_user_list(bot, raid_lobby_data, sorted_users)

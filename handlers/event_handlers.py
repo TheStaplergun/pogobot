@@ -6,15 +6,30 @@ import handlers.request_handler as REQH
 import handlers.raid_lobby_handler as RLH
 import handlers.sticky_handler as SH
 
-async def handle_reaction_remove_raid(bot, ctx, message, emoji):
+async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
+    message_id = message.id
+    results = await RH.check_if_in_raid(ctx.user_id)
+    if results and results.get("message_id") == message_id:
+        message_to_send = "Your raid has been successfuly deleted."
+        conn = await bot.acquire()
+        await RH.remove_raid_from_table(conn, message.id)
+        await bot.release(conn)
+        await message.delete()
+        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, message)
+        try:
+            await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
+        except discord.DiscordException as error:
+            print("[!] An error occurred [{}]".format(error))
+    else:
+        message_to_send = "You are not the host. You cannot delete this raid!"
+
+    await ctx.member.send(H.guild_member_dm(bot.get_guild(ctx.guild_id).name, message_to_send))
+
+async def handle_reaction_remove_raid_no_lobby(bot, ctx, message):
     user_id = message.mentions[0].id
 
     if int(user_id) != ctx.user_id:
         message_to_send = "You are not the host. You cannot delete this raid!"
-        try:
-            await message.remove_reaction(emoji, (bot.get_guild(ctx.guild_id)).get_member(ctx.user_id))
-        except discord.DiscordException as error:
-            print("[*] Error removing reaction [{}]".format(error))
     else:
         message_to_send = "Your raid has been successfuly deleted."
         conn = await bot.acquire()
@@ -27,10 +42,20 @@ async def handle_reaction_remove_raid(bot, ctx, message, emoji):
             print("[!] An error occurred [{}]".format(error))
     await ctx.member.send(H.guild_member_dm(bot.get_guild(ctx.guild_id).name, message_to_send))
 
+WATCHED_EMOJIS = (
+    "📝",
+    "📬",
+    "📪",
+    "🗑️",
+    "⏱️"
+)
 
 async def raw_reaction_add_handle(ctx, bot):
     #Bot ignores itself adding emojis
     if ctx.user_id == bot.user.id:
+        return
+
+    if ctx.emoji.name not in WATCHED_EMOJIS:
         return
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
@@ -43,6 +68,7 @@ async def raw_reaction_add_handle(ctx, bot):
         message = await channel.fetch_message(ctx.message_id)
     except discord.DiscordException:
         return
+    category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild_id)
 
     if not message.author.id == bot.user.id:
         return
@@ -50,28 +76,39 @@ async def raw_reaction_add_handle(ctx, bot):
     if not len(message.embeds) == 1:
         return
 
+    if ctx.emoji.name == "⏱️" and not ctx.guild_id:
+        RLH.handle_activity_check_reaction(ctx, bot, message)
+        return
+
     if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
-        if ctx.emoji.name == "📬":
+        if ctx.emoji.name == "📝":
+            if not category_exists:
+                return
+            await RLH.handle_application_to_raid(bot, ctx, message, channel)
+        elif ctx.emoji.name == "📬":
             await REQH.add_request_role_to_user(bot, ctx, message)
-            return
         elif ctx.emoji.name == "📪":
             await REQH.remove_request_role_from_user(bot, ctx, message)
-            return
-        elif len(message.mentions) == 1:
-            no_emoji = bot.get_emoji(743179437054361720)
-            if ctx.emoji == no_emoji:
-                await handle_reaction_remove_raid(bot, ctx, message, no_emoji)
-                return
+        elif ctx.emoji.name == "🗑️":
+            if len(message.mentions) == 1:
+                await handle_reaction_remove_raid_no_lobby(bot, ctx, message)
+            else:
+                await handle_reaction_remove_raid_with_lobby(bot, ctx, message)
+        # elif len(message.mentions) == 1:
+        #     no_emoji = bot.get_emoji(743179437054361720)
+        #     if ctx.emoji == no_emoji:
+        #         await handle_reaction_remove_raid(bot, ctx, message, no_emoji)
+        #         return
 
 async def raid_delete_handle(ctx, bot):
     if not await RH.message_is_raid(ctx, bot, ctx.message_id):
         return
     conn = await bot.acquire()
-
     await RH.remove_raid_from_table(conn, ctx.message_id)
     await bot.release(conn)
+
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
     except discord.DiscordException as error:
