@@ -414,3 +414,21 @@ async def handle_activity_check_reaction(ctx, bot, message):
                                         send_messages=True)
 
     await increment_user_count_for_raid_lobby(bot, lobby_id)
+
+SELECT_ALL_LOBBIES = """
+    SELECT * FROM raid_lobby_user_map;
+"""
+async def get_all_lobbies_for_guild(ctx, bot):
+    connection = await bot.acquire()
+    result = await connection.execute(SELECT_ALL_LOBBIES)
+    await bot.release(connection)
+    print(result)
+
+SELECT_ALL_APPLICATIONS = """
+    SELECT * FROM raid_application_user_map;
+"""
+async def get_all_applications(ctx, bot):
+    connection = await bot.acquire()
+    result = await connection.execute(SELECT_ALL_APPLICATIONS)
+    await bot.release(connection)
+    print(result)

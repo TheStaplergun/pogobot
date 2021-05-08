@@ -141,6 +141,18 @@ async def raid_count(ctx):
     await RH.get_raid_count(BOT, ctx, True)
 
 @BOT.command()
+@commands.has_role("Mods")
+async def get_lobbies(ctx):
+    """Mod Only - Show all current running raid statistics for this guild"""
+    await RLH.get_all_lobbies_for_guild(ctx, BOT)
+
+@BOT.command()
+@commands.has_role("Mods")
+async def get_all_applications(ctx):
+    """Mod Only - Show all current running raid statistics for this guild"""
+    await RLH.get_all_applications_for_guild(ctx, BOT)
+
+@BOT.command()
 async def ping(ctx):
     """Check if alive"""
     create_time = ctx.message.created_at
