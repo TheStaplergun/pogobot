@@ -72,16 +72,16 @@ async def spin_up_message_deletions(bot):
             delay = 0
         await delete_after_delay(bot, data[0], data[1], delay.total_seconds())
 
-    lobbies = RLH.get_all_lobbies(bot)
-    for lobby in lobbies:
-        if lobby.get("delete_at") < cur_time:
-            lobby_channel_id = lobby.get("lobby_channel_id")
-            lobby_channel = bot.get_channel(int(lobby_channel_id))
-            try:
-                await lobby_channel.delete()
-            except discord.DiscordException:
-                pass
-            await RLH.remove_lobby_by_lobby_id(bot, lobby_channel_id)
+    # lobbies = RLH.get_all_lobbies(bot)
+    # for lobby in lobbies:
+    #     if lobby.get("delete_at") < cur_time:
+    #         lobby_channel_id = lobby.get("lobby_channel_id")
+    #         lobby_channel = bot.get_channel(int(lobby_channel_id))
+    #         try:
+    #             await lobby_channel.delete()
+    #         except discord.DiscordException:
+    #             pass
+    #         await RLH.remove_lobby_by_lobby_id(bot, lobby_channel_id)
 
     print("[*] All pending deletions complete.")
 
