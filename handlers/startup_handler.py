@@ -164,7 +164,7 @@ async def start_applicant_loop(bot):
         await asyncio.sleep(1)
 
     while True:
-        await bot.applicant_trigger.wait()
+        # Outer loop waits on triggers.
         while True:
             raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
             if not raid_lobby_data_list:
@@ -203,4 +203,7 @@ async def start_applicant_loop(bot):
                     print("-------")
                     await process_user_list(bot, raid_lobby_data, sorted_users)
             await asyncio.sleep(0.1)
+
+        await bot.applicant_trigger.wait()
+
         bot.applicant_trigger.clear()
