@@ -171,16 +171,17 @@ async def start_applicant_loop(bot):
                 break
 
             for raid_lobby_data in raid_lobby_data_list:
-                raid_host_id = raid_lobby_data.get("host_user_id")
-                raid_message_id = raid_lobby_data.get("raid_message_id")
-
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=30)
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
+                    #raid_host_id = raid_lobby_data.get("host_user_id")
+                    raid_message_id = raid_lobby_data.get("raid_message_id")
                     users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
                     if not users:
                         continue
+                    guild_id = raid_lobby_data.get("guild_id")
+                    guild = bot.get_guild(int(guild_id))
                     user_list = []
                     for user in users:
                         has_been_notified = user.get("has_been_notified")
