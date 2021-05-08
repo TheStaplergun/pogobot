@@ -4,6 +4,8 @@ import asyncio
 from datetime import datetime
 import time
 import discord
+import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 from handlers.raid_handler import remove_raid_from_table
 
 async def delete_after_delay(bot, channel_id, message_id, delay):
@@ -157,7 +159,7 @@ async def start_applicant_loop(bot):
                 guild_id = raid_lobby_data.get("guild_id")
                 guild = bot.get_guild(int(guild_id))
 
-                raid_data = RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
+                raid_data = await RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
                 channel_id = raid_data.get("channel_id")
                 channel = guild.get_channel(int(channel_id))
 
@@ -183,7 +185,7 @@ async def start_applicant_loop(bot):
                         member = guild.get_member(int(member_id))
                         user_data = {
                             "user_data":user,
-                            "weight":RLH.calculate_weight(bot, user_data, member),
+                            "weight":await RLH.calculate_weight(bot, user_data, member),
                             "member_object":member,
                             }
                         user_list.append(user_data)
