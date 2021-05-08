@@ -137,6 +137,8 @@ async def raw_message_delete_handle(ctx, bot):
         await request_delete_handle(ctx, bot)
 
 async def on_message_handle(message, bot):
+    if message.author.bot:
+        return True
     # Handle this first because it's a logging function.
     raid_lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
     print(raid_lobby_channel)
@@ -152,8 +154,7 @@ async def on_message_handle(message, bot):
 
     #if message.author.id == bot.user.id:
         #return False
-    if message.author.bot:
-        return True
+
     if discord.utils.get(message.author.roles, name="Mods"):
         return False
 
