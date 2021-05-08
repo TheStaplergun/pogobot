@@ -177,6 +177,7 @@ async def start_applicant_loop(bot):
                         continue
                     user_list = []
                     for user in users:
+
                         has_been_notified = user.get("has_been_notified")
                         if has_been_notified:
                             continue
