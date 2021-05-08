@@ -92,10 +92,14 @@ async def get_latest_lobby_data_by_timestamp(bot):
 
 async def log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel):
     author = message.author
+    category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
+    log_channel_id = category_data.get("log_channel_id")
+    log_channel = bot.get_channel(int(log_channel_id))
+
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
     new_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
     new_embed.set_footer(text="User ID: {}".format(author.id))
-    await raid_lobby_channel.send(" ", embed=new_embed)
+    await log_channel.send(" ", embed=new_embed)
 # async def set_up_management_channel(ctx, bot):
 #     channel = ctx.channel
 #     if not channel.category_id:
