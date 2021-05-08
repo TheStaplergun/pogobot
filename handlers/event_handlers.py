@@ -60,8 +60,7 @@ async def raw_reaction_add_handle(ctx, bot):
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
-    if not raid_channel and not request_channel:
-        return
+
 
     channel = bot.get_channel(ctx.channel_id)
     try:
@@ -80,7 +79,8 @@ async def raw_reaction_add_handle(ctx, bot):
         return
     # if not len(message.embeds) == 1:
     #     return
-
+    # if not raid_channel and not request_channel:
+    #     return
     if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
