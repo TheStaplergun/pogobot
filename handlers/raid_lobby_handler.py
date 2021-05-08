@@ -21,7 +21,7 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
 
     #category_id = category_data.get("category_id")
     if not category_data:
-        print("[!] Error retreiving raid lobby category data. [{}]".format(error))
+        print("[!] Error retreiving raid lobby category data. [{}]".format("No category found. Passing."))
         return False
 
     return category_data
