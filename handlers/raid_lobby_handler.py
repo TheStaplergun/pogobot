@@ -28,7 +28,7 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
 
 
 GET_LOBBY_BY_USER_ID = """
-    SELECT * FROM raid_lobby_user_map WHERE (host_user_id = $1) LIMIT 1;
+    SELECT * FROM raid_lobby_user_map WHERE (host_user_id = $1);
 """
 async def get_lobby_channel_for_user_by_id(bot, user_id):
     connection = await bot.acquire()
@@ -52,7 +52,7 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
     return lobby
 
 GET_LOBBY_BY_LOBBY_ID = """
-    SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1) LIMIT 1;
+    SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
 async def get_lobby_channel_by_lobby_id(bot, channel_id):
     connection = await bot.acquire()
@@ -68,14 +68,8 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
         return False
 
     lobby_channel_id = lobby_data.get("lobby_channel_id")
-    guild_id = lobby_data.get("guild_id")
 
-    guild = bot.get_guild(int(guild_id))
-    if not guild:
-        print("[!] Error retreiving guild. [{}]".format(error))
-        return False
-
-    lobby = guild.get_channel(int(lobby_channel_id))
+    lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
         print("[!] Error retreiving lobby. [{}]".format(error))
         return False
