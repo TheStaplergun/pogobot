@@ -132,19 +132,19 @@ async def start_lobby_removal_loop(bot):
 
             deletion_time = lobby_data.get("delete_at")
             lobby_id = lobby_data.get("lobby_channel_id")
-            guild_id = lobby_data.get("guild_id")
+            #guild_id = lobby_data.get("guild_id")
             deletion_time = deletion_time - datetime.now()
             # Refresh in 30 seconds if greater than one minute wait time.
             # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
-            if deletion_time.total_seconds() < 60:
+            if deletion_time.total_seconds() > 30:
                 await asyncio.sleep(30)
                 continue
 
             if deletion_time.total_seconds() > 0:
                 await asyncio.sleep(deletion_time.total_seconds())
 
-            guild = bot.get_guild(int(guild_id))
-            lobby = guild.get_channel(int(lobby_id))
+            #guild = bot.get_guild(int(guild_id))
+            lobby = bot.get_channel(int(lobby_id))
             try:
                 await lobby.delete()
             except discord.DiscordException as error:
@@ -165,19 +165,6 @@ async def start_applicant_loop(bot):
             for raid_lobby_data in raid_lobby_data_list:
                 raid_host_id = raid_lobby_data.get("host_user_id")
                 raid_message_id = raid_lobby_data.get("raid_message_id")
-                print("Raid message ID for this lobby [{}]".format(raid_message_id))
-                guild_id = raid_lobby_data.get("guild_id")
-                guild = bot.get_guild(int(guild_id))
-
-                # raid_data = await RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
-                # channel_id = raid_data.get("channel_id")
-                # channel = guild.get_channel(int(channel_id))
-
-                # try:
-                #     raid_message = await channel.fetch_message(int(raid_message_id))
-                # except discord.DiscordException as error:
-                #     print("[!][{}] Error occurred fetching raid message. [{}]".format(guild.name, error))
-                #     continue
 
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=30)
