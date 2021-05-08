@@ -116,7 +116,7 @@ DROP TABLE IF EXISTS raid_application_user_map;
 CREATE TABLE IF NOT EXISTS raid_application_user_map (
   user_id BIGINT PRIMARY KEY,
   raid_message_id BIGINT NOT NULL,
-  is_requesting BOOL NOT NULL
+  is_requesting BOOL NOT NULL,
   speed_bonus_weight INT NOT NULL,
   has_been_notified BOOL NOT NULL,
   activity_check_message_id BIGINT
@@ -129,8 +129,10 @@ async def main():
                                host='localhost',
                                user='pi',
                                password=PASSWORD)
-
-  #await conn.execute(request_channel_table)
-  #await conn.execute(request_role_to_id_map)
+                               
+  #await conn.execute(RAID_LOBBY_CATEGORY)
+  #await conn.execute(RAID_LOBBY_USER_MAP)
+  #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
+  #await conn.execute(RAID_APPLICATION_USER_MAP)
 
 asyncio.get_event_loop().run_until_complete(main())

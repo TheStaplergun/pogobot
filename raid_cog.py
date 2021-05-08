@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from pogo_raid_lib import *
 import handlers.helpers as H
 import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
 
@@ -18,7 +19,7 @@ class RaidPost(commands.Cog):
         """Mod Only - Show all current running raid statistics for this guild"""
         await RH.get_all_raids_for_guild(self.bot, ctx)
 
-    @commands.command()
+    @commands.command(aliases=["r"])
     @commands.guild_only()
     async def raid(self,
                    ctx,
@@ -28,7 +29,7 @@ class RaidPost(commands.Cog):
                    weather = "`No weather condition provided`",
                    #invite_slots = "`No invite slot count provided`",
                    #time_to_start = "`No time to start provided`",
-                   time_to_expire = "`No time to expire provided`"):
+                   time_to_expire = "0"):
 
         """Post a raid"""
         print("[*] Processing raid.")
@@ -59,9 +60,6 @@ class RaidPost(commands.Cog):
                 remove_after_seconds = int(remove_after) * 60
                 channel_message_body = "Raid hosted by {}\n".format(ctx.author.mention)
                 _, _, _, role_id = await REQH.check_if_request_message_exists(self.bot, response.title, ctx.guild.id)
-                if role_id:
-                    role = discord.utils.get(ctx.guild.roles, id=role_id)
-                    channel_message_body = "{} hosted by {}\n".format(role.mention, ctx.author.mention)
                 message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 5 minutes.\nPress the trash can to remove it at any time."
                 try:
                     await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
@@ -72,9 +70,15 @@ class RaidPost(commands.Cog):
                 if request_channel_id:
                     response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to be notified of future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
                 raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id)
+                start_string = ""
+                if role_id:
+                    start_string = "{}".format(role.mention)
+                end_string = ""
                 if raid_lobby_category:
                     response.set_footer(text="To sign up for this raid, tap the 📝 below.")
-                    channel_message_body = "{} has been hosted.\n".format(role.mention)
+                else:
+                    end_string = " hosted by {}\n".format(ctx.author.mention)
+                channel_message_body = start_string + end_string
                 try:
                     message = await ctx.send(channel_message_body, embed=response, delete_after=remove_after_seconds)
                 except discord.DiscordException as error:

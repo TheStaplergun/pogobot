@@ -102,7 +102,10 @@ def validate_and_format_message(ctx,
     embed.add_field(name="Weather", value=embed_weather, inline=True)
     #embed.add_field(name="Invites Available", value=embed_invites, inline=False)
     #embed.add_field(name="Time until start", value=embed_tts, inline=True)
-    embed.add_field(name="Time until expiration", value=embed_tte, inline=False)
+    if embed_tte != "5":
+      embed.add_field(name="Time until expiration", value=embed_tte, inline=False)
+    else:
+      time_to_expire = 5
     embed.set_footer(text="To join this raid, DM the host above.")
     if embed_pokemon in RAID_COUNTER_GUIDE:
       embed.set_image(url=RAID_COUNTER_GUIDE.get(embed_pokemon))
@@ -416,6 +419,9 @@ def validate_tte_argument(tte):
     if tte >= 10 and tte <= 45:
       is_valid = True
       response = str(tte) + " minutes"
+    if tte == 0:
+      is_valid = True
+      response = 5
   except ValueError:
     response = backtick_and_bracket(tte) + " is not a valid number."
     response += "\n"
@@ -427,7 +433,7 @@ def validate_tte_argument(tte):
   return (is_valid, response)
 
 def format_invalid_tte_message():
-  return "**Time to expire** must be between " + backtick_and_bracket("10") + " minutes and " + backtick_and_bracket("45") + " minutes"
+  return "**Time to expire** must be between " + backtick_and_bracket("10") + " minutes and " + backtick_and_bracket("45") + " minutes if a custom value is specified."
 
 
 """----------------------------------------------------------------"""
@@ -456,7 +462,7 @@ def backtick_and_bracket(string):
 
 # Append a space to the end of the string
 def sp(string):
-  return string + " "
+  return str(string) + " "
 
 def format_command_suggestion(tier,
                               pokemon_name,

@@ -20,7 +20,7 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
         await bot.pool.release(connection)
 
     #category_id = category_data.get("category_id")
-    if not category_id:
+    if not category_data:
         print("[!] Error retreiving raid lobby category data. [{}]".format(error))
         return False
 
@@ -158,7 +158,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     mod_role = discord.utils.get(guild.roles, name="Mods")
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
-    count = await RH.get_raid_count(bot, ctx, False)
+    count = await RH.get_raid_count(bot, ctx)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         mod_role: discord.PermissionOverwrite(read_messages=True),

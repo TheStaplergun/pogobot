@@ -8,7 +8,7 @@ import handlers.sticky_handler as SH
 
 async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
     message_id = message.id
-    results = await RH.check_if_in_raid(ctx.user_id)
+    results = await RH.check_if_in_raid(ctx, bot, ctx.user_id)
     if results and results.get("message_id") == message_id:
         message_to_send = "Your raid has been successfuly deleted."
         conn = await bot.acquire()
@@ -68,7 +68,7 @@ async def raw_reaction_add_handle(ctx, bot):
         message = await channel.fetch_message(ctx.message_id)
     except discord.DiscordException:
         return
-    category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild_id)
+    category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
 
     if not message.author.id == bot.user.id:
         return
