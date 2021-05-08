@@ -75,7 +75,6 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
 
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        print("[!] Error retreiving lobby. [{}]".format(error))
         return False
 
     return lobby
