@@ -165,6 +165,7 @@ async def start_applicant_loop(bot):
             for raid_lobby_data in raid_lobby_data_list:
                 raid_host_id = raid_lobby_data.get("host_user_id")
                 raid_message_id = raid_lobby_data.get("raid_message_id")
+                print("Raid message ID for this lobby [{}]".format(raid_message_id))
                 guild_id = raid_lobby_data.get("guild_id")
                 guild = bot.get_guild(int(guild_id))
 
@@ -188,7 +189,6 @@ async def start_applicant_loop(bot):
                     if not users:
                         continue
                     user_list = []
-                    print(users)
                     for user in users:
                         has_been_notified = user.get("has_been_notified")
                         if has_been_notified:
