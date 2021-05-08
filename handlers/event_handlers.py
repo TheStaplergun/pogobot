@@ -68,23 +68,24 @@ async def raw_reaction_add_handle(ctx, bot):
         message = await channel.fetch_message(ctx.message_id)
     except discord.DiscordException:
         return
-    category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
 
     if not message.author.id == bot.user.id:
         return
 
-    if not len(message.embeds) == 1:
-        return
-
+    if channel.type == discord.ChannelType.private:
+        print("PrivateChannel")
     if ctx.emoji.name == "⏱️":
         print("Clock reaction detected.")
         RLH.handle_activity_check_reaction(ctx, bot, message)
         return
+    # if not len(message.embeds) == 1:
+    #     return
 
     if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
         if ctx.emoji.name == "📝":
+            category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
             if not category_exists:
                 return
             await RLH.handle_application_to_raid(bot, ctx, message, channel)
