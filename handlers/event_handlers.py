@@ -70,7 +70,7 @@ async def raw_reaction_add_handle(ctx, bot):
     if not message.author.id == bot.user.id:
         return
 
-    if self.bot.categories_allowed and ctx.emoji.name == "⏱️" and channel.type == discord.ChannelType.private:
+    if bot.categories_allowed and ctx.emoji.name == "⏱️" and channel.type == discord.ChannelType.private:
         await RLH.handle_activity_check_reaction(ctx, bot, message)
         return
     # if not len(message.embeds) == 1:
@@ -80,7 +80,7 @@ async def raw_reaction_add_handle(ctx, bot):
     if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
 
-        if self.bot.categories_allowed and ctx.emoji.name == "📝":
+        if bot.categories_allowed and ctx.emoji.name == "📝":
             category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
             if not category_exists:
                 return
@@ -136,7 +136,7 @@ async def raw_message_delete_handle(ctx, bot):
 
     channel_id = ctx.channel_id
     channel = bot.get_channel(int(channel_id))
-    if self.bot.categories_allowed and channel.type == discord.ChannelType.private:
+    if bot.categories_allowed and channel.type == discord.ChannelType.private:
         applicant_data = await RLH.get_applicant_data_by_message_id(bot, ctx.message_id)
         if not applicant_data:
             return
@@ -148,7 +148,7 @@ async def on_message_handle(message, bot):
         return True
     # Handle this first because it's a logging function.
     raid_lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
-    if self.bot.categories_allowed and raid_lobby_channel:
+    if bot.categories_allowed and raid_lobby_channel:
         await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
         return True
 
