@@ -387,7 +387,7 @@ QUERY_LOBBY_BY_RAID_ID = """
 """
 async def get_lobby_data_by_raid_id(bot, raid_id):
     connection = await bot.acquire()
-    result = connection.fetchrow(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
+    result = await connection.fetchrow(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
     await bot.release(connection)
 
     return result
@@ -399,7 +399,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     connection = await bot.acquire()
-    result = connection.execute(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
+    result = await connection.execute(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
     await bot.release(connection)
 
 async def handle_activity_check_reaction(ctx, bot, message):
