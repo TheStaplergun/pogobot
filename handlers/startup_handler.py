@@ -123,7 +123,6 @@ async def start_lobby_removal_loop(bot):
 
     # Outer loop to wait on the event if no lobbies are present.
     while True:
-        await bot.lobby_remove_trigger.wait()
         # Process lobbies until no lobbies remain before going to outer loop.
         while True:
             lobby_data = await RLH.get_next_lobby_to_remove(bot)
@@ -150,6 +149,7 @@ async def start_lobby_removal_loop(bot):
                 await lobby.delete()
             except discord.DiscordException as error:
                 print("[!][{}] An error occurred removing a lobby automatically. [{}]".format(guild.name, error))
+        await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 
 async def start_applicant_loop(bot):
