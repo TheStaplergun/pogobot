@@ -148,6 +148,9 @@ async def start_lobby_removal_loop(bot):
             #guild = bot.get_guild(int(guild_id))
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby = bot.get_channel(int(lobby_id))
+            if not lobby:
+                RLH.remove_lobby_by_lobby_id(bot, lobby_id)
+                continue
             try:
                 await lobby.delete()
             except discord.DiscordException as error:
