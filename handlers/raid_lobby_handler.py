@@ -376,8 +376,8 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
         member = user["member_object"]
         user_data = user["user_data"]
         new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
-        await message.add_reaction("⏱️")
         message = await member.send(" ", embed=new_embed, delete_after=30)
+        await message.add_reaction("⏱️")
         await set_notified_flag(bot, message.id, member.id)
 
 QUERY_LOBBY_BY_RAID_ID = """
