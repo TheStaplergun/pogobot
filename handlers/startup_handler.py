@@ -183,6 +183,8 @@ async def start_applicant_loop(bot):
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
                     users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
+                    print(users)
+                    RLH.get_all_applications(bot)
                     if not users:
                         continue
                     user_list = []

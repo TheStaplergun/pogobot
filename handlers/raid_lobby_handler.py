@@ -309,7 +309,7 @@ async def handle_application_to_raid(bot, ctx, message, channel):
         await handle_new_application(ctx, bot, member, message, channel)
 
 GET_USERS_BY_RAID_MESSAGE_ID = """
-    SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1)
+    SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1);
 """
 async def get_applicants_by_raid_id(bot, raid_message_id):
     connection = await bot.acquire()
@@ -463,5 +463,5 @@ async def get_all_applications(bot):
     connection = await bot.acquire()
     result = await connection.fetch(SELECT_ALL_APPLICATIONS)
     await bot.release(connection)
-
+    print(result)
     return result
