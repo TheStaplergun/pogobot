@@ -329,11 +329,9 @@ GET_USERS_BY_RAID_MESSAGE_ID = """
 """
 async def get_applicants_by_raid_id(bot, raid_message_id):
     connection = await bot.acquire()
-    results = await connection.execute(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
-    print(results)
+    results = await connection.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
     await bot.release(connection)
-    if isinstance(results, str):
-        return False
+
     return results
 
 QUERY_RECENT_PARTICIPATION = """
