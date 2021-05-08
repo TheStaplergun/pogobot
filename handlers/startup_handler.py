@@ -132,8 +132,8 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             print("Deletion time [{}]".format(deletion_time))
             print("Current time [{}]".format(datetime.now()))
-            lobby_id = lobby_data.get("lobby_channel_id")
             deletion_time_dif = datetime.now() - deletion_time
+            print("Deletion dif [{}]".format(deletion_time_dif.total_seconds()))
             # Refresh in 30 seconds if greater than one minute wait time.
             # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
             if deletion_time_dif.total_seconds() > 30:
@@ -144,6 +144,7 @@ async def start_lobby_removal_loop(bot):
                 await asyncio.sleep(deletion_time_dif.total_seconds())
 
             #guild = bot.get_guild(int(guild_id))
+            lobby_id = lobby_data.get("lobby_channel_id")
             lobby = bot.get_channel(int(lobby_id))
             try:
                 await lobby.delete()
