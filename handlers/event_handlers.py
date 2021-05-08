@@ -61,7 +61,6 @@ async def raw_reaction_add_handle(ctx, bot):
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
-    print(ctx)
     channel = bot.get_channel(int(ctx.channel_id))
     try:
         message = await channel.fetch_message(int(ctx.message_id))
@@ -71,11 +70,9 @@ async def raw_reaction_add_handle(ctx, bot):
     if not message.author.id == bot.user.id:
         return
 
-    if channel.type == discord.ChannelType.private:
-        print("PrivateChannel")
-    if ctx.emoji.name == "⏱️":
+    if ctx.emoji.name == "⏱️" and channel.type == discord.ChannelType.private:
         print("Clock reaction detected.")
-        RLH.handle_activity_check_reaction(ctx, bot, message)
+        await RLH.handle_activity_check_reaction(ctx, bot, message)
         return
     # if not len(message.embeds) == 1:
     #     return
