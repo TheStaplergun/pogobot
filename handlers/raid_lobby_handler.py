@@ -276,7 +276,7 @@ async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_req
                              int(guild_id),
                              is_requesting,
                              speed_bonus_weight,
-                             False
+                             False,
                              False)
     await bot.release(connection)
 
