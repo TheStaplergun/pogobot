@@ -44,13 +44,11 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
     if not lobby_data:
         return
     lobby_channel_id = lobby_data.get("lobby_channel_id")
-    print(lobby_data)
-    print(lobby_channel_id)
+
     #guild_id = lobby_data.get("guild_id")
 
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        print("[!] Error retreiving lobby.")
         return False
 
     return lobby
@@ -137,7 +135,6 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
     connection = await bot.acquire()
-    print("Inserting lobby id [{}]".format(lobby_channel_id))
     await connection.execute(NEW_LOBBY_INSERT,
                              int(lobby_channel_id),
                              int(host_user_id),
@@ -180,7 +177,6 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         return False
 
     try:
-        print("adding lobby [{}]".format(new_raid_lobby.id))
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
@@ -299,7 +295,6 @@ async def handle_new_application(ctx, bot, member, message, channel):
 
     role = discord.utils.get(member.roles, name=pokemon_name)
     speed_bonus = await calculate_speed_bonus(bot, message)
-    print("Adding new raid application with raid ID [{}]".format(message.id))
     await insert_new_application(bot, member.id, message.id, True if role else False, speed_bonus)
     bot.applicant_trigger.set()
 
@@ -430,8 +425,9 @@ async def handle_activity_check_reaction(ctx, bot, message):
     member = guild.get_member(int(user_id))
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
-
     await increment_user_count_for_raid_lobby(bot, lobby_id)
+    new_embed = discord.Embed(title="System Notification", description="{} has checked in.".format(member.mention))
+    message = await lobby.send(" ", embed=new_embed)
 
 GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
@@ -459,7 +455,6 @@ async def remove_lobby_by_lobby_id(bot, lobby_id):
     raid_id = lobby_data.get("raid_message_id")
     await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
-    print("Removing data for raid lobby channel id [{}]".format(lobby_id))
     connection = await bot.acquire()
     await connection.execute(REMOVE_LOBBY_BY_ID, lobby_id)
     await bot.release(connection)
@@ -481,7 +476,6 @@ async def get_all_applications(bot):
     connection = await bot.acquire()
     result = await connection.fetch(SELECT_ALL_APPLICATIONS)
     await bot.release(connection)
-    print(result)
     return result
 
 REMOVE_LOG_CHANNEL_BY_ID = """
