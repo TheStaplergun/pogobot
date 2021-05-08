@@ -399,7 +399,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     connection = await bot.acquire()
-    result = await connection.execute(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
+    result = await connection.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
     await bot.release(connection)
 
 async def handle_activity_check_reaction(ctx, bot, message):
