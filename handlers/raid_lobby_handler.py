@@ -357,8 +357,8 @@ async def calculate_weight(bot, user_data, member):
 
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_application_user_map
-    SET has_been_notified = true
-    SET activity_check_message_id = $1
+    SET has_been_notified = true,
+        activity_check_message_id = $1
     WHERE (user_id = $2);
 """
 
