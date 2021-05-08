@@ -9,7 +9,6 @@ import handlers.sticky_handler as SH
 async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
     message_id = message.id
     results = await RH.check_if_in_raid(ctx, bot, ctx.user_id)
-    print("Trying to update lobby data.")
     if results and results.get("message_id") == message_id:
         message_to_send = "Your raid has been successfuly deleted."
         conn = await bot.acquire()
@@ -94,11 +93,9 @@ async def raw_reaction_add_handle(ctx, bot):
         elif ctx.emoji.name == "📪":
             await REQH.remove_request_role_from_user(bot, ctx, message)
         elif ctx.emoji.name == "🗑️":
-            print("Request to remove raid")
             if len(message.mentions) == 1:
                 await handle_reaction_remove_raid_no_lobby(bot, ctx, message)
             elif bot.categories_allowed:
-                print("Categories are allowed")
                 await handle_reaction_remove_raid_with_lobby(bot, ctx, message)
         # elif len(message.mentions) == 1:
         #     no_emoji = bot.get_emoji(743179437054361720)
