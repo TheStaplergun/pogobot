@@ -34,13 +34,15 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
     connection = await bot.acquire()
     try:
         lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
-                                                  int(user_id))
+                                               int(user_id))
     except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
     finally:
         await bot.pool.release(connection)
 
+    if not lobby_data:
+        return
     lobby_channel_id = lobby_data.get("lobby_channel_id")
     print(lobby_data)
     print(lobby_channel_id)
