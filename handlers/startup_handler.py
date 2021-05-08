@@ -156,15 +156,15 @@ async def start_applicant_loop(bot):
                 guild_id = raid_lobby_data.get("guild_id")
                 guild = bot.get_guild(int(guild_id))
 
-                raid_data = await RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
-                channel_id = raid_data.get("channel_id")
-                channel = guild.get_channel(int(channel_id))
+                # raid_data = await RH.retrieve_raid_data_by_message_id(None, bot, raid_message_id)
+                # channel_id = raid_data.get("channel_id")
+                # channel = guild.get_channel(int(channel_id))
 
-                try:
-                    raid_message = await channel.fetch_message(int(raid_message_id))
-                except discord.DiscordException as error:
-                    print("[!][{}] Error occurred fetching raid message. [{}]".format(guild.name, error))
-                    continue
+                # try:
+                #     raid_message = await channel.fetch_message(int(raid_message_id))
+                # except discord.DiscordException as error:
+                #     print("[!][{}] Error occurred fetching raid message. [{}]".format(guild.name, error))
+                #     continue
 
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=30)
