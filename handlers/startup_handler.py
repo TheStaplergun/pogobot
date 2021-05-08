@@ -191,4 +191,5 @@ async def start_applicant_loop(bot):
                         user_list.append(user_data)
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     await process_user_list(bot, raid_lobby_data, sorted_users)
+            await asyncio.sleep(0.1)
         bot.applicant_trigger.clear()
