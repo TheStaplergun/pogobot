@@ -89,7 +89,7 @@ CHECK_IF_MESSAGE_IS_RAID = """
 """
 async def message_is_raid(ctx, bot, message_id):
     connection = await bot.acquire()
-    result = await connection.execute(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
     await bot.release(connection)
     if result:
         return True
@@ -98,7 +98,7 @@ async def message_is_raid(ctx, bot, message_id):
 # Redundant but different return type. Can probably be added to above but do not feel like reworking at the moment.
 async def retrieve_raid_data_by_message_id(ctx, bot, message_id):
     connection = await bot.acquire()
-    result = await connection.execute(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
     await bot.release(connection)
     return result
 
