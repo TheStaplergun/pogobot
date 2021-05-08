@@ -92,7 +92,7 @@ async def raw_reaction_add_handle(ctx, bot):
         elif ctx.emoji.name == "🗑️":
             if len(message.mentions) == 1:
                 await handle_reaction_remove_raid_no_lobby(bot, ctx, message)
-            else:
+            elif bot.categories_allowed:
                 await handle_reaction_remove_raid_with_lobby(bot, ctx, message)
         # elif len(message.mentions) == 1:
         #     no_emoji = bot.get_emoji(743179437054361720)
