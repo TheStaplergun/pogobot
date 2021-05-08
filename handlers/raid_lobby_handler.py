@@ -129,7 +129,7 @@ async def log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel):
 #     return True
 
 NEW_LOBBY_INSERT = """
-INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users)
+INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
 """
 async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at):
@@ -174,13 +174,13 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
             await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error))
         except discord.DiscordException:
             pass
-        print("[!][{}] An error occurred creating a raid lobby. [{}]".format(error))
+        print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
 
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
-        print("[!][{}] An error occurred adding a lobby to the database. [{}]".format(error))
+        print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
         return False
 
