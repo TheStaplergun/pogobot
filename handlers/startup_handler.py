@@ -133,7 +133,7 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             lobby_id = lobby_data.get("lobby_channel_id")
             #guild_id = lobby_data.get("guild_id")
-            deletion_time = deletion_time - datetime.now()
+            deletion_time = datetime.now() - deletion_time
             # Refresh in 30 seconds if greater than one minute wait time.
             # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
             if deletion_time.total_seconds() > 30:
