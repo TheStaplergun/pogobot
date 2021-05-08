@@ -128,8 +128,8 @@ async def log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel):
 #     return True
 
 NEW_LOBBY_INSERT = """
-INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users)
-VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)
+INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
+VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 """
 async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at):
     """Add a raid to the database with all the given data points."""
@@ -144,6 +144,7 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
                              delete_at,
                              0,
                              5,
+                             0,
                              0)
     await bot.release(connection)
 
@@ -259,21 +260,23 @@ async def remove_application_for_user(bot, member, raid_id):
         pass
 
 INSERT_NEW_APPLICATION_DATA = """
-    INSERT INTO raid_application_user_map (user_id, raid_message_id, is_requesting, speed_bonus_weight, has_been_notified)
-    VALUES ($1, $2, $3, $4, $5)
+    INSERT INTO raid_application_user_map (user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight, has_been_notified, checked_in)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
 """
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_lobby_user_map
     SET applied_users = applied_users + 1
     WHERE (raid_message_id = $1);
 """
-async def insert_new_application(bot, user_id, raid_message_id, is_requesting, speed_bonus_weight):
+async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight):
     connection = await bot.acquire()
     await connection.execute(INSERT_NEW_APPLICATION_DATA,
                              int(user_id),
                              int(raid_message_id),
+                             int(guild_id),
                              is_requesting,
                              speed_bonus_weight,
+                             False
                              False)
     await bot.release(connection)
 
@@ -298,18 +301,23 @@ async def handle_new_application(ctx, bot, member, message, channel):
 
     role = discord.utils.get(member.roles, name=pokemon_name)
     speed_bonus = await calculate_speed_bonus(bot, message)
-    await insert_new_application(bot, member.id, message.id, True if role else False, speed_bonus)
+    await insert_new_application(bot, member.id, message.id, message.guild.id, True if role else False, speed_bonus)
     bot.applicant_trigger.set()
 
 QUERY_APPLICATION_DATA_FOR_USER = """
     SELECT * FROM raid_application_user_map WHERE (user_id = $1);
 """
+async def get_applicant_data_for_user(bot, user_id):
+    connection = await bot.acquire()
+    result = await connection.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, user_id)
+    await bot.release(connection)
+    return result
+
 async def handle_application_to_raid(bot, ctx, message, channel):
     guild = message.guild
     member = guild.get_member(ctx.user_id)
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
-    await bot.release(connection)
+    result = await get_applicant_data_for_user(bot, ctx.user_id)
+
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
@@ -323,6 +331,16 @@ async def handle_application_to_raid(bot, ctx, message, channel):
             await update_application_for_user(bot, member)
     else:
         await handle_new_application(ctx, bot, member, message, channel)
+
+QUERY_APPLICANT_BY_MESSAGE_ID = """
+    SELECT * FROM raid_application_user_map WHERE (activity_check_message_id = $1);
+"""
+async def get_applicant_data_by_message_id(bot, message_id):
+    connection = await bot.acquire()
+    result = await connection.fetchrow(QUERY_APPLICANT_BY_MESSAGE_ID, message_id)
+    await bot.release(connection)
+    return result
+
 
 GET_USERS_BY_RAID_MESSAGE_ID = """
     SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1);
@@ -367,10 +385,27 @@ async def set_notified_flag(bot, message_id, user_id):
     await connection.execute(UPDATE_LOBBY_APPLICANT_DATA, int(message_id), int(user_id))
     await bot.release(connection)
 
+INCREMENT_APPLICANT_COUNT = """
+    UPDATE raid_lobby_user_map
+    SET notified_users = notified_users + 1
+    WHERE (lobby_channel_id = $1)
+"""
+async def increment_notified_users_for_raid_lobby(bot, lobby_id):
+    connection = await bot.acquire()
+    await connection.execute(INCREMENT_APPLICANT_COUNT, int(lobby_id))
+    await bot.release(connection)
+
 async def process_user_list(bot, raid_lobby_data, sorted_users):
     counter = 0
+    current_count = raid_lobby_data.get("user_count")
+    user_limit = raid_lobby_data.get("user_limit")
+    notified_count = raid_lobby_data.get("notified_users")
+
+    current_needed = user_limit - current_count
+    amount_to_notify = current_needed - notified_count
+
     for user in sorted_users:
-        if counter > 5:
+        if counter > amount_to_notify:
             break
         counter+=1
         member = user["member_object"]
@@ -379,6 +414,7 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
         message = await member.send(" ", embed=new_embed, delete_after=30)
         await message.add_reaction("⏱️")
         await set_notified_flag(bot, message.id, member.id)
+        await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
@@ -392,12 +428,23 @@ async def get_lobby_data_by_raid_id(bot, raid_id):
 
 UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
     UPDATE raid_lobby_user_map
-    SET user_count = user_count + 1
+    SET user_count = user_count + 1,
+        notified_users = notified_users - 1
     WHERE (lobby_channel_id = $1);
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     connection = await bot.acquire()
     result = await connection.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
+    await bot.release(connection)
+
+UPDATE_CHECKED_IN_FLAG = """
+    UPDATE raid_application_user_map
+    SET checked_in = true
+    WHERE (user_id = $1);
+"""
+async def set_checked_in_flag(bot, user_id):
+    connection = await bot.acquire()
+    result = await connection.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
     await bot.release(connection)
 
 async def handle_activity_check_reaction(ctx, bot, message):
@@ -426,6 +473,7 @@ async def handle_activity_check_reaction(ctx, bot, message):
     guild = lobby.guild
     user_id = ctx.user_id
     member = guild.get_member(int(user_id))
+    await set_checked_in_flag(bot, member.id)
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
     await increment_user_count_for_raid_lobby(bot, lobby_id)
@@ -488,3 +536,19 @@ async def check_if_log_channel_and_purge_data(bot, channel_id):
     connection = await bot.acquire()
     result = await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
     await bot.release(connection)
+
+
+async def handle_user_failed_checkin(bot, applicant_data):
+    guild_id = applicant_data.get("guild_id")
+    guild = bot.get_guild(int(guild_id))
+
+    member = guild.get_member(applicant_data.get("user_id"))
+    if not member:
+        return False
+
+    await remove_application_for_user(bot, member, applicant_data.get("raid_message_id"))
+    new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
+    try:
+        await member.send(" ", embed=new_embed)
+    except discord.DiscordException:
+        pass

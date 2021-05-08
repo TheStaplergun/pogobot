@@ -134,6 +134,15 @@ async def raw_message_delete_handle(ctx, bot):
     if await REQH.check_if_valid_request_channel(bot, ctx.channel_id):
         await request_delete_handle(ctx, bot)
 
+    channel_id = ctx.channel_id
+    channel = bot.get_channel(int(channel_id))
+    if channel.type == discord.ChannelType.private:
+        applicant_data = await RLH.get_applicant_data_by_message_id(bot, ctx.message_id)
+        if not applicant_data:
+            return
+        if not applicant_data.get("checked_in") and ctx.message_id == applicant_data.get("activity_check_message_id"):
+            await RLH.handle_user_failed_checkin(bot, applicant_data)
+
 async def on_message_handle(message, bot):
     if message.author.bot:
         return True

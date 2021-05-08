@@ -99,7 +99,8 @@ CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
   delete_at TIMESTAMP NOT NULL,
   user_count INT NOT NULL,
   user_limit INT NOT NULL,
-  applied_users INT NOT NULL
+  applied_users INT NOT NULL,
+  notified_users INT NOT NULL
 )
 """
 
@@ -116,9 +117,11 @@ DROP TABLE IF EXISTS raid_application_user_map;
 CREATE TABLE IF NOT EXISTS raid_application_user_map (
   user_id BIGINT PRIMARY KEY,
   raid_message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL,
   is_requesting BOOL NOT NULL,
   speed_bonus_weight INT NOT NULL,
   has_been_notified BOOL NOT NULL,
+  checked_in BOOL NOT NULL
   activity_check_message_id BIGINT
 )
 """
@@ -129,7 +132,7 @@ async def main():
                                host='localhost',
                                user='pi',
                                password=PASSWORD)
-                               
+
   #await conn.execute(RAID_LOBBY_CATEGORY)
   #await conn.execute(RAID_LOBBY_USER_MAP)
   #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
