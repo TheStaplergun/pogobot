@@ -13,7 +13,7 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
     try:
         category_data = await connection.fetchrow(GET_CATEGORY_BY_GUILD_ID,
                                                   int(guild_id))
-    except asyncpg.Exception as error:
+    except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby category data. [{}]".format(error))
         return
     finally:
@@ -35,7 +35,7 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
     try:
         lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
                                                   int(user_id))
-    except asyncpg.Exception as error:
+    except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
     finally:
@@ -59,7 +59,7 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
     try:
         lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
                                                int(channel_id))
-    except asyncpg.Exception as error:
+    except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
     finally:
@@ -141,7 +141,7 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
                              int(host_user_id),
                              int(raid_id),
                              int(guild_id),
-                             cur_time
+                             cur_time,
                              delete_at,
                              0,
                              5,

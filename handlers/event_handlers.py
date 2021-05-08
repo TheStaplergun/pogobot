@@ -138,7 +138,7 @@ async def raw_message_delete_handle(ctx, bot):
 
 async def on_message_handle(message, bot):
     # Handle this first because it's a logging function.
-    raid_lobby_channel = await RLH.check_if_in_raid_lobby(bot, message.channel.id)
+    raid_lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
     if raid_lobby_channel:
         await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
         return True
