@@ -146,12 +146,11 @@ async def start_lobby_removal_loop(bot):
                 if deletion_time_dif.total_seconds() > 0:
                     await asyncio.sleep(deletion_time_dif.total_seconds())
 
-            #guild = bot.get_guild(int(guild_id))
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby = bot.get_channel(int(lobby_id))
             if not lobby:
                 print("Lobby channel doesn't exist. Removing data.")
-                RLH.remove_lobby_by_lobby_id(bot, lobby_id)
+                await RLH.remove_lobby_by_lobby_id(bot, lobby_id)
                 continue
             try:
                 await lobby.delete()

@@ -452,13 +452,13 @@ async def remove_applicants_for_raid_by_raid_id(bot, raid_id):
 
 REMOVE_LOBBY_BY_ID = """
     DELETE FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
-    RETURNING raid_message_id;
 """
 async def remove_lobby_by_lobby_id(bot, lobby_id):
     lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
     raid_id = lobby_data.get("raid_message_id")
     await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
+    print("Removing data for raid lobby channel id [{}]".format(lobby_id))
     connection = await bot.acquire()
     await connection.execute(REMOVE_LOBBY_BY_ID, lobby_id)
     await bot.release(connection)
