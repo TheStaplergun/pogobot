@@ -61,10 +61,11 @@ async def raw_reaction_add_handle(ctx, bot):
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
+    print("Channel id [{}]".format(ctx.channel_id))
 
-    channel = bot.get_channel(ctx.channel_id)
+    channel = bot.get_channel(int(ctx.channel_id))
     try:
-        message = await channel.fetch_message(ctx.message_id)
+        message = await channel.fetch_message(int(ctx.message_id))
     except discord.DiscordException:
         return
 
