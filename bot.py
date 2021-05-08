@@ -139,7 +139,8 @@ async def register_raid_lobby_category(ctx):
 @BOT.command()
 @commands.has_role("Mods")
 async def toggle_category_system(ctx):
-    BOT.categories_allowed = not Bot.categories_allowed
+    BOT.categories_allowed = not BOT.categories_allowed
+    await ctx.send("System is {}".format("on" if BOT.categories_allowed else "off"), delete_after=5)
 
 @BOT.command()
 @commands.has_role("Mods")
