@@ -74,7 +74,7 @@ class RaidPost(commands.Cog):
                 if role_id:
                     start_string = "{}".format(role.mention)
                 end_string = ""
-                if raid_lobby_category:
+                if self.bot.categories_allowed and raid_lobby_category:
                     response.set_footer(text="To sign up for this raid, tap the 📝 below.")
                 else:
                     end_string = " hosted by {}\n".format(ctx.author.mention)
@@ -88,7 +88,7 @@ class RaidPost(commands.Cog):
                 await message.add_reaction("🗑️")
 
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
-                if await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id):
+                if self.bot.categories_allowed and await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                     await RLH.create_raid_lobby(ctx, self.bot, message.id, ctx.author, time_to_remove_lobby)
                     await message.add_reaction("📝")

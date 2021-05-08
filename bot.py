@@ -31,6 +31,7 @@ GAME = discord.Game(CUSTOM_STATUS)
 BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
 
 BOT.pool = None
+BOT.categories_allowed = True
 #BOT.raids_enabled = True
 #BOT.bot_ready_to_process = False
 
@@ -134,6 +135,11 @@ async def register_raid_channel(ctx):
 async def register_raid_lobby_category(ctx):
     """Mod only - Sets up category to allow automation of raid lobbies"""
     await REGH.register_raid_lobby_category(ctx, BOT)
+
+@BOT.command()
+@commands.has_role("Mods")
+async def toggle_category_system(ctx):
+    BOT.categories_allowed = not Bot.categories_allowed
 
 @BOT.command()
 @commands.has_role("Mods")
