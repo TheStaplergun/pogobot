@@ -1,6 +1,7 @@
 """Main bot set up and command set up"""
 
 import argparse
+import asyncio
 from datetime import datetime
 import discord
 from discord.ext import commands
@@ -176,6 +177,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")
     args = parser.parse_args()
+    BOT.applicant_trigger = asyncio.Event()
+    BOT.lobby_remove_trigger = asyncio.Event()
+
     BOT.loop.create_task(startup_process())
     BOT.loop.create_task(status_update_loop())
     BOT.loop.create_task(applicant_loop())

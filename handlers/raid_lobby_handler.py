@@ -84,8 +84,8 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
 
 GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
     SELECT * FROM raid_lobby_user_map
-    ORDER BY posted_at
-    WHERE user_count < user_limit
+    WHERE (user_count < user_limit)
+    ORDER BY posted_at;
 """
 async def get_latest_lobby_data_by_timestamp(bot):
     connection = await bot.acquire()
@@ -184,13 +184,13 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         await new_raid_lobby.delete()
         return False
 
-    await bot.lobby_remove_trigger.set()
+    bot.lobby_remove_trigger.set()
 
     return True
 
 UPDATE_TIME_TO_REMOVE_LOBBY = """
     UPDATE raid_lobby_user_map
-    SET (delete_at = $1)
+    SET delete_at = $1
     WHERE (host_user_id = $2);
 """
 async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
@@ -239,10 +239,10 @@ REDUCE_APPLICANT_COUNT_BY_RAID_ID = """
     SET applied_users = applied_users - 1
     WHERE (raid_message_id = $1);
 """
-async def remove_application_for_user(bot, member):
+async def remove_application_for_user(bot, member, raid_id):
     connection = await bot.acquire()
-    raid_message_id = await connection.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
-    await connection.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_message_id)
+    await connection.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
+    await connection.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
     await bot.release(connection)
     try:
         await member.send("You have withdrawn your application to the selected raid.")
@@ -289,7 +289,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
     role = discord.utils.get(member.roles, name=pokemon_name)
     speed_bonus = await calculate_speed_bonus(bot, message)
     await insert_new_application(bot, member.id, message.id, True if role else False, speed_bonus)
-    await bot.applicant_trigger.set()
+    bot.applicant_trigger.set()
 
 QUERY_APPLICATION_DATA_FOR_USER = """
     SELECT * FROM raid_application_user_map WHERE (user_id = $1);
@@ -308,7 +308,7 @@ async def handle_application_to_raid(bot, ctx, message, channel):
             return
         raid_message_id = message.id
         if applied_to_raid_id == raid_message_id:
-            await remove_application_for_user(bot, member)
+            await remove_application_for_user(bot, member, applied_to_raid_id)
         else:
             await update_application_for_user(bot, member)
     else:

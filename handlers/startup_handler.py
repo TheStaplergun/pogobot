@@ -110,8 +110,6 @@ async def start_lobby_removal_loop(bot):
     while not bot.pool:
         await asyncio.sleep(1)
 
-    bot.lobby_remove_trigger = asyncio.Event()
-
     # Outer loop to wait on the event if no lobbies are present.
     while True:
         await bot.lobby_remove_trigger.wait()
@@ -124,7 +122,7 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             lobby_id = lobby_data.get("lobby_channel_id")
             guild_id = lobby_data.get("guild_id")
-
+            deletion_time = deletion_time - datetime.now()
             # Refresh in 30 seconds if greater than one minute wait time.
             # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
             if deletion_time.total_seconds() < 60:
@@ -145,12 +143,11 @@ async def start_applicant_loop(bot):
     while not bot.pool:
         await asyncio.sleep(1)
 
-    bot.applicant_trigger = asyncio.Event()
     while True:
         await bot.applicant_trigger.wait()
         while True:
             raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
-            if not raid_lobby_data:
+            if not raid_lobby_data_list:
                 break
 
             for raid_lobby_data in raid_lobby_data_list:
