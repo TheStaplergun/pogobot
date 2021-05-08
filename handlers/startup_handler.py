@@ -150,6 +150,7 @@ async def start_lobby_removal_loop(bot):
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby = bot.get_channel(int(lobby_id))
             if not lobby:
+                print("Lobby channel doesn't exist. Removing data.")
                 RLH.remove_lobby_by_lobby_id(bot, lobby_id)
                 continue
             try:
