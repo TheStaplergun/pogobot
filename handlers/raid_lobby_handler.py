@@ -294,7 +294,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
 QUERY_APPLICATION_DATA_FOR_USER = """
     SELECT * FROM raid_application_user_map WHERE (user_id = $1);
 """
-async def handle_application_to_raid(bot, ctx, message, channel)
+async def handle_application_to_raid(bot, ctx, message, channel):
     guild = message.guild
     member = guild.get_member(ctx.user_id)
     connection = await bot.acquire()
