@@ -76,7 +76,7 @@ async def on_raw_message_delete(ctx):
 
 @BOT.event
 async def on_guild_channel_delete(channel):
-    await EH.on_guild_channel_delete(channel, bot)
+    await EH.on_guild_channel_delete(channel, BOT)
 
 @BOT.event
 async def on_message(message):

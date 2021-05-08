@@ -183,7 +183,6 @@ async def start_applicant_loop(bot):
                         continue
                     user_list = []
                     for user in users:
-
                         has_been_notified = user.get("has_been_notified")
                         if has_been_notified:
                             continue
@@ -202,7 +201,7 @@ async def start_applicant_loop(bot):
                     print(sorted_users)
                     print("-------")
                     await process_user_list(bot, raid_lobby_data, sorted_users)
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(1)
 
         await bot.applicant_trigger.wait()
 
