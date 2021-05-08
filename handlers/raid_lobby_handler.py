@@ -201,8 +201,9 @@ async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
     new_delete_time = current_time + timedelta(minutes=5)
     channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
     try:
-        new_embed = discord.Embed(title="System Notification", description="This lobby will expire in five minutes.")
-        await channel.send(" ", embed=new_embed)
+        if channel:
+            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in five minutes.")
+            await channel.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
