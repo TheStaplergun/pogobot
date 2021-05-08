@@ -42,11 +42,13 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
         await bot.pool.release(connection)
 
     lobby_channel_id = lobby_data.get("lobby_channel_id")
+    print(lobby_data)
+    print(lobby_channel_id)
     #guild_id = lobby_data.get("guild_id")
 
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        print("[!] Error retreiving lobby. [{}]".format(error))
+        print("[!] Error retreiving lobby.")
         return False
 
     return lobby
