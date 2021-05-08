@@ -233,7 +233,8 @@ async def update_application_for_user(bot, member, raid_message_id):
                              int(member.id))
     await bot.release(connection)
     try:
-        await member.send("You have updated your application to the selected raid.")
+        new_embed = discord.Embed(title="System Notification", description="You have updated your application to the selected raid.")
+        await member.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
@@ -252,7 +253,8 @@ async def remove_application_for_user(bot, member, raid_id):
     await connection.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
     await bot.release(connection)
     try:
-        await member.send("You have withdrawn your application to the selected raid.")
+        new_embed = discord.Embed(title="System Notification", description="You have withdrawn your application to the selected raid.")
+        await member.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
@@ -287,7 +289,8 @@ async def handle_new_application(ctx, bot, member, message, channel):
     pokemon_name = H.get_pokemon_name_from_raid(message)
     # Prevents users from applying without ability to send a DM.
     try:
-        await member.send("You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.")
+        new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.")
+        await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
         await channel.send(" ", embed=new_embed, delete_after=15)
