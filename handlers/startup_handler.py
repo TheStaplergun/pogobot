@@ -1,7 +1,7 @@
 """State restoration for bot."""
 from operator import itemgetter
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import discord
 import handlers.raid_handler as RH
