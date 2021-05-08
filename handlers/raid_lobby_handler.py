@@ -194,6 +194,7 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
     WHERE (host_user_id = $2);
 """
 async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
+    print("Altering deletion time.")
     current_time = datetime.now()
     new_delete_time = current_time + timedelta(minutes=5)
     channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)

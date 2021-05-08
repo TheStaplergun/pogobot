@@ -121,7 +121,7 @@ CREATE TABLE IF NOT EXISTS raid_application_user_map (
   is_requesting BOOL NOT NULL,
   speed_bonus_weight INT NOT NULL,
   has_been_notified BOOL NOT NULL,
-  checked_in BOOL NOT NULL
+  checked_in BOOL NOT NULL,
   activity_check_message_id BIGINT
 )
 """
