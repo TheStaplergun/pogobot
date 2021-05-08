@@ -168,3 +168,10 @@ async def on_message_handle(message, bot):
             await message.delete()
         except discord.NotFound:
             pass
+
+async def on_guild_channel_delete(channel, bot):
+    lobby_channel = await RLH.get_lobby_channel_by_lobby_id(channel.id)
+    if lobby_channel:
+        RLH.remove_lobby_by_lobby_id(bot, lobby_channel.id)
+
+    RLH.check_if_log_channel_and_purge_data(bot, channel.id)

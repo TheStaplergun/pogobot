@@ -297,6 +297,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
 
     role = discord.utils.get(member.roles, name=pokemon_name)
     speed_bonus = await calculate_speed_bonus(bot, message)
+    print("Adding new raid application with raid ID [{}]".format(message.id))
     await insert_new_application(bot, member.id, message.id, True if role else False, speed_bonus)
     bot.applicant_trigger.set()
 
@@ -480,3 +481,11 @@ async def get_all_applications(bot):
     await bot.release(connection)
     print(result)
     return result
+
+REMOVE_LOG_CHANNEL_BY_ID = """
+    DELETE FROM raid_lobby_category WHERE (log_channel_id = $1);
+"""
+async def check_if_log_channel_and_purge_data(bot, channel_id):
+    connection = await bot.acquire()
+    result = await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
+    await bot.release(connection)

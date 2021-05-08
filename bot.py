@@ -25,6 +25,7 @@ CUSTOM_STATUS = ""
 
 intent = discord.Intents().default()
 intent.members = True
+intent.guilds = True
 
 GAME = discord.Game(CUSTOM_STATUS)
 BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
@@ -72,6 +73,10 @@ async def on_raw_reaction_add(ctx):
 async def on_raw_message_delete(ctx):
     """Built in event"""
     await EH.raw_message_delete_handle(ctx, BOT)
+
+@BOT.event
+async def on_guild_channel_delete(channel):
+    await EH.on_guild_channel_delete(channel, bot)
 
 @BOT.event
 async def on_message(message):
