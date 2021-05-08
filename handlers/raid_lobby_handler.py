@@ -190,6 +190,13 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
 async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
     current_time = datetime.now()
     new_delete_time = current_time + timedelta(minutes=5)
+    channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
+    try:
+        new_embed = discord.Embed(title="System Notification", description="This lobby will expire in five minutes.")
+        await channel.send(" ", embed=new_embed, delete_after=15)
+    except discord.DiscordException:
+        pass
+
     connection = await bot.acquire()
     await connection.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
                              new_delete_time,
