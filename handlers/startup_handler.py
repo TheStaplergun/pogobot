@@ -191,7 +191,7 @@ async def start_applicant_loop(bot):
                         member = guild.get_member(int(member_id))
                         user_data = {
                             "user_data":user,
-                            "weight":await RLH.calculate_weight(bot, user_data, member),
+                            "weight":await RLH.calculate_weight(bot, user, member),
                             "member_object":member,
                             }
                         user_list.append(user_data)
