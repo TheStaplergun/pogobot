@@ -132,6 +132,7 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
     connection = await bot.acquire()
+    print("Inserting lobby id [{}]".format(lobby_channel_id))
     await connection.execute(NEW_LOBBY_INSERT,
                              int(lobby_channel_id),
                              int(host_user_id),
@@ -174,6 +175,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         return False
 
     try:
+        print("adding lobby [{}]".format(new_raid_lobby.id))
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
