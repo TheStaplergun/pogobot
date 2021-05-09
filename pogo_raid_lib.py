@@ -421,7 +421,7 @@ def validate_tte_argument(tte):
       response = str(tte) + " minutes"
     if tte == 0:
       is_valid = True
-      response = 5
+      response = 10
   except ValueError:
     response = backtick_and_bracket(tte) + " is not a valid number."
     response += "\n"

@@ -57,10 +57,12 @@ class RaidPost(commands.Cog):
                                                                                             #time_to_start,
                                                                                             time_to_expire)
             if raid_is_valid:
-                remove_after_seconds = int(remove_after) * 60
+                if remove_after < 10:
+                    remove_after = 10
+                remove_after_seconds = int(remove_after) * 60 
                 channel_message_body = "Raid hosted by {}\n".format(ctx.author.mention)
                 _, _, _, role_id = await REQH.check_if_request_message_exists(self.bot, response.title, ctx.guild.id)
-                message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 5 minutes.\nPress the trash can to remove it at any time."
+                message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."
                 try:
                     await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
                 except discord.Forbidden:
@@ -72,6 +74,7 @@ class RaidPost(commands.Cog):
                 raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id)
                 start_string = ""
                 if role_id:
+                    role = discord.utils.get(ctx.guild.roles, id=role_id)
                     start_string = "{}".format(role.mention)
                 end_string = ""
                 if self.bot.categories_allowed and raid_lobby_category:

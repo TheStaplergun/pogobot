@@ -150,8 +150,8 @@ async def start_lobby_removal_loop(bot):
                 continue
             try:
                 await lobby.delete()
-            except discord.DiscordException as error:
-                print("[!][{}] An error occurred removing a lobby automatically. [{}]".format(guild.name, error))
+            except discord.DiscordException:
+                pass
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 
@@ -170,7 +170,7 @@ async def start_applicant_loop(bot):
             checked_count = 0
             for raid_lobby_data in raid_lobby_data_list:
                 cur_time = datetime.now()
-                threshold_time = cur_time - timedelta(seconds=30)
+                threshold_time = cur_time - timedelta(seconds=60)
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
                     #raid_host_id = raid_lobby_data.get("host_user_id")

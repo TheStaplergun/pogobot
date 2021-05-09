@@ -165,6 +165,24 @@ async def raid_count(ctx):
 #     await RLH.get_all_applications_for_guild(ctx, BOT)
 
 @BOT.command()
+@commands.has_role("Mods")
+async def refresh_request_reactions(ctx, message_id):
+    try:
+        await ctx.message.delete()
+    except discord.DiscordException:
+        pass
+
+    channel = ctx.channel
+    try:
+        message = await channel.fetch_message(int(message_id))
+        print(message)
+        await message.clear_reactions()
+        await message.add_reaction("📬")
+        await message.add_reaction("📪")
+    except discord.DiscordException as error:
+        print("[!] Error refreshing reactions [{}]".format(error))
+    
+@BOT.command()
 async def ping(ctx):
     """Check if alive"""
     create_time = ctx.message.created_at

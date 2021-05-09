@@ -18,7 +18,7 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
             await message.delete()
         except discord.DiscordException:
             pass
-        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, message)
+        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, None)
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
@@ -82,9 +82,9 @@ async def raw_reaction_add_handle(ctx, bot):
     #     return
     if raid_channel or request_channel:
         await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
-
+        category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
         if bot.categories_allowed and ctx.emoji.name == "📝":
-            category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
+
             if not category_exists:
                 return
             await RLH.handle_application_to_raid(bot, ctx, message, channel)
@@ -93,9 +93,9 @@ async def raw_reaction_add_handle(ctx, bot):
         elif ctx.emoji.name == "📪":
             await REQH.remove_request_role_from_user(bot, ctx, message)
         elif ctx.emoji.name == "🗑️":
-            if len(message.mentions) == 1:
+            if not category_exists or not bot.categories_allowed:
                 await handle_reaction_remove_raid_no_lobby(bot, ctx, message)
-            elif bot.categories_allowed:
+            else:
                 await handle_reaction_remove_raid_with_lobby(bot, ctx, message)
         # elif len(message.mentions) == 1:
         #     no_emoji = bot.get_emoji(743179437054361720)
@@ -109,6 +109,12 @@ async def raid_delete_handle(ctx, bot):
     conn = await bot.acquire()
     await RH.remove_raid_from_table(conn, ctx.message_id)
     await bot.release(conn)
+    lobby_data = await RLH.get_lobby_data_by_raid_id(bot, ctx.message_id)
+    if not lobby_data:
+        return
+    user_id = lobby_data.get("host_user_id")
+    ctx.user_id = user_id
+    await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, None)
 
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))

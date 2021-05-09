@@ -49,7 +49,11 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
 
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        return False
+        guild = bot.get_guild(lobby_data.get("guild_id"))
+        try:
+            lobby = await bot.fetch_channel(int(lobby_channel_id))
+        except discord.DiscordException:
+            return False
 
     return lobby
 
@@ -176,7 +180,8 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
             pass
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
-
+    new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
+    await new_raid_lobby.send("{}".format(raid_host_member.mention), embed=new_embed)
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
@@ -195,11 +200,12 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
 """
 async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
     current_time = datetime.now()
-    new_delete_time = current_time + timedelta(minutes=5)
+    new_delete_time = current_time + timedelta(minutes=15)
     channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
+
     try:
         if channel:
-            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in five minutes.")
+            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.")
             await channel.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
@@ -283,18 +289,24 @@ async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_req
 async def calculate_speed_bonus(bot, message):
     creation_time = message.created_at
     time_difference = (datetime.now() - creation_time)
-    return time_difference.total_seconds() / 30 * 100
+    return time_difference.total_seconds() / 60 * 100
 
 async def handle_new_application(ctx, bot, member, message, channel):
     raid_data = await RH.retrieve_raid_data_by_message_id(ctx, bot, message.id)
     if not raid_data:
         return False
     pokemon_name = H.get_pokemon_name_from_raid(message)
-    # Prevents users from applying without ability to send a DM.
+    host_id = raid_data.get("user_id")
+
     try:
-        new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.")
-        await member.send(" ", embed=new_embed)
+        if host_id == member.id:
+            new_embed = discord.Embed(title="Error", description="You cannot apply to your own raid!")
+            await member.send(" ", embed=new_embed)
+        else:
+            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.")
+            await member.send(" ", embed=new_embed)
     except discord.Forbidden:
+        # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
         await channel.send(" ", embed=new_embed, delete_after=15)
         return False
@@ -322,13 +334,14 @@ async def handle_application_to_raid(bot, ctx, message, channel):
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
         if has_been_notified:
-            member.send("You are already locked into a raid. Wait until that raid is complete.")
+            new_embed = discord.Embed(title="Error", description="You are already locked into a raid. Wait until that raid is complete.")
+            await member.send(" ", embed=new_embed)
             return
         raid_message_id = message.id
         if applied_to_raid_id == raid_message_id:
             await remove_application_for_user(bot, member, applied_to_raid_id)
         else:
-            await update_application_for_user(bot, member)
+            await update_application_for_user(bot, member, applied_to_raid_id)
     else:
         await handle_new_application(ctx, bot, member, message, channel)
 
@@ -401,11 +414,11 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
     user_limit = raid_lobby_data.get("user_limit")
     notified_count = raid_lobby_data.get("notified_users")
 
-    current_needed = user_limit - current_count
-    amount_to_notify = current_needed - notified_count
+    total_pending = notified_count + current_count
+    current_needed = user_limit - total_pending
 
     for user in sorted_users:
-        if counter > amount_to_notify:
+        if counter > current_needed:
             break
         counter+=1
         member = user["member_object"]
@@ -447,6 +460,19 @@ async def set_checked_in_flag(bot, user_id):
     result = await connection.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
     await bot.release(connection)
 
+DELETE_RECENT_PARTICIPATION_RECORD = """
+    DELETE FROM raid_participation_table WHERE (user_id = $1);
+"""
+UDPATE_RECENT_PARTICIPATION = """
+    INSERT INTO raid_participation_table(user_id, last_participation_time)
+    VALUES ($1, $2);
+"""
+async def set_recent_participation(bot, user_id):
+    connection = await bot.acquire()
+    await connection.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
+    await connection.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
+    await bot.release(connection)
+
 async def handle_activity_check_reaction(ctx, bot, message):
     connection = await bot.acquire()
     result = await connection.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
@@ -459,10 +485,6 @@ async def handle_activity_check_reaction(ctx, bot, message):
         return
 
     raid_message_id = result.get("raid_message_id")
-    try:
-        await message.delete()
-    except discord.DiscordException:
-        pass
 
     lobby_data = await get_lobby_data_by_raid_id(bot, raid_message_id)
     if not lobby_data:
@@ -477,8 +499,13 @@ async def handle_activity_check_reaction(ctx, bot, message):
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
     await increment_user_count_for_raid_lobby(bot, lobby_id)
-    new_embed = discord.Embed(title="System Notification", description="{} has checked in.".format(member.mention))
-    message = await lobby.send(" ", embed=new_embed)
+    await set_recent_participation(bot, user_id)
+    new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
+    await lobby.send("{}".format(member.mention), embed=new_embed)
+    try:
+        await message.delete()
+    except discord.DiscordException:
+        pass
 
 GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
