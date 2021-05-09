@@ -99,7 +99,7 @@ async def set_new_presence(bot, old_count):
     if total == old_count:
         return old_count
 
-    game = discord.Game("Total raids hosted: {}".format(total))
+    game = discord.Game("{} raids hosted".format(total))
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:
