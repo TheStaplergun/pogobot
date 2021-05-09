@@ -79,8 +79,52 @@ CREATE TABLE IF NOT EXISTS request_role_id_map (
 )
 """
 
+RAID_LOBBY_CATEGORY = """
+DROP TABLE IF EXISTS raid_lobby_category;
+CREATE TABLE IF NOT EXISTS raid_lobby_category (
+  guild_id BIGINT PRIMARY KEY,
+  category_id BIGINT NOT NULL,
+  log_channel_id BIGINT NOT NULL
+)
+"""
 
+RAID_LOBBY_USER_MAP = """
+DROP TABLE IF EXISTS raid_lobby_user_map;
+CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
+  lobby_channel_id BIGINT PRIMARY KEY,
+  host_user_id BIGINT NOT NULL,
+  raid_message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL,
+  posted_at TIMESTAMP NOT NULL,
+  delete_at TIMESTAMP NOT NULL,
+  user_count INT NOT NULL,
+  user_limit INT NOT NULL,
+  applied_users INT NOT NULL,
+  notified_users INT NOT NULL
+)
+"""
 
+RAID_RECENT_PARTICIPATION_TABLE = """
+DROP TABLE IF EXISTS raid_participation_table;
+CREATE TABLE IF NOT EXISTS raid_participation_table (
+  user_id BIGINT PRIMARY KEY,
+  last_participation_time TIMESTAMP NOT NULL
+)
+"""
+
+RAID_APPLICATION_USER_MAP = """
+DROP TABLE IF EXISTS raid_application_user_map;
+CREATE TABLE IF NOT EXISTS raid_application_user_map (
+  user_id BIGINT PRIMARY KEY,
+  raid_message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL,
+  is_requesting BOOL NOT NULL,
+  speed_bonus_weight INT NOT NULL,
+  has_been_notified BOOL NOT NULL,
+  checked_in BOOL NOT NULL,
+  activity_check_message_id BIGINT
+)
+"""
 
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
@@ -89,7 +133,9 @@ async def main():
                                user='pi',
                                password=PASSWORD)
 
-  #await conn.execute(request_channel_table)
-  #await conn.execute(request_role_to_id_map)
+  #await conn.execute(RAID_LOBBY_CATEGORY)
+  #await conn.execute(RAID_LOBBY_USER_MAP)
+  #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
+  #await conn.execute(RAID_APPLICATION_USER_MAP)
 
 asyncio.get_event_loop().run_until_complete(main())

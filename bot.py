@@ -1,6 +1,7 @@
 """Main bot set up and command set up"""
 
 import argparse
+import asyncio
 from datetime import datetime
 import discord
 from discord.ext import commands
@@ -10,6 +11,7 @@ import raid_cog
 import handlers.event_handlers as EH
 import handlers.helpers as H
 import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
 import handlers.startup_handler as SH
@@ -23,11 +25,13 @@ CUSTOM_STATUS = ""
 
 intent = discord.Intents().default()
 intent.members = True
+intent.guilds = True
 
 GAME = discord.Game(CUSTOM_STATUS)
 BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
 
 BOT.pool = None
+BOT.categories_allowed = True
 #BOT.raids_enabled = True
 #BOT.bot_ready_to_process = False
 
@@ -73,6 +77,10 @@ async def on_raw_message_delete(ctx):
     await EH.raw_message_delete_handle(ctx, BOT)
 
 @BOT.event
+async def on_guild_channel_delete(channel):
+    await EH.on_guild_channel_delete(channel, BOT)
+
+@BOT.event
 async def on_message(message):
     """Built in event"""
     try:
@@ -92,7 +100,7 @@ async def clear_raid(ctx, user_id):
 @commands.has_role("Mods")
 async def clear_requests(ctx):
     await REQH.handle_clear_all_requests_for_guild(ctx, BOT)
-    
+
 @BOT.command()
 @commands.guild_only()
 async def request(ctx, tier=None, pokemon_name=None):
@@ -116,10 +124,24 @@ async def register_request_channel(ctx):
     await REGH.register_request_channel_handle(ctx, BOT)
 
 @BOT.command()
+@commands.guild_only()
 @commands.has_role("Mods")
 async def register_raid_channel(ctx):
     """Mod only - Sets up channel to allow hosting raids"""
     await REGH.register_raid_channel_handle(ctx, BOT)
+
+@BOT.command()
+@commands.guild_only()
+@commands.has_role("Mods")
+async def register_raid_lobby_category(ctx):
+    """Mod only - Sets up category to allow automation of raid lobbies"""
+    await REGH.register_raid_lobby_category(ctx, BOT)
+
+@BOT.command()
+@commands.has_role("Mods")
+async def toggle_category_system(ctx):
+    BOT.categories_allowed = not BOT.categories_allowed
+    await ctx.send("System is {}".format("on" if BOT.categories_allowed else "off"), delete_after=5)
 
 @BOT.command()
 @commands.has_role("Mods")
@@ -129,8 +151,38 @@ async def raid_count(ctx):
         await ctx.message.delete()
     except discord.NotFound as error:
         print("[!] Message already gone. [{}]".format(error))
-    await RH.get_raid_count(BOT, ctx)
+    await RH.get_raid_count(BOT, ctx, True)
 
+# @BOT.command()
+# @commands.has_role("Mods")
+# async def get_lobbies(ctx):
+#     """Mod Only - Show all current running raid statistics for this guild"""
+#     await RLH.get_all_lobbies_for_guild(ctx, BOT)
+
+# @BOT.command()
+# @commands.has_role("Mods")
+# async def get_all_applications(ctx):
+#     """Mod Only - Show all current running raid statistics for this guild"""
+#     await RLH.get_all_applications_for_guild(ctx, BOT)
+
+@BOT.command()
+@commands.has_role("Mods")
+async def refresh_request_reactions(ctx, message_id):
+    try:
+        await ctx.message.delete()
+    except discord.DiscordException:
+        pass
+
+    channel = ctx.channel
+    try:
+        message = await channel.fetch_message(int(message_id))
+        print(message)
+        await message.clear_reactions()
+        await message.add_reaction("📬")
+        await message.add_reaction("📪")
+    except discord.DiscordException as error:
+        print("[!] Error refreshing reactions [{}]".format(error))
+    
 @BOT.command()
 async def ping(ctx):
     """Check if alive"""
@@ -152,13 +204,28 @@ async def status_update_loop():
     """Updates status continually every ten minutes."""
     await BOT.wait_until_ready()
     await SH.start_status_update_loop(BOT)
-    
+
+async def lobby_removal_loop():
+    """Removes lobbies as their time expires."""
+    await BOT.wait_until_ready()
+    #await RLH.establish_lobby_removal_list(BOT)
+    await SH.start_lobby_removal_loop(BOT)
+
+async def applicant_loop():
+    await BOT.wait_until_ready()
+    await SH.start_applicant_loop(BOT)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")
     args = parser.parse_args()
+    BOT.applicant_trigger = asyncio.Event()
+    BOT.lobby_remove_trigger = asyncio.Event()
+
     BOT.loop.create_task(startup_process())
     BOT.loop.create_task(status_update_loop())
+    BOT.loop.create_task(applicant_loop())
+    BOT.loop.create_task(lobby_removal_loop())
     if args.l:
         print("Running bot live.")
         live=True

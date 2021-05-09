@@ -52,3 +52,45 @@ async def register_raid_channel_handle(ctx, bot):
         await SH.toggle_raid_sticky(bot, ctx, channel_id, guild_id)
     except discord.DiscordException as e:
         print("[!] An error occurred [{}]".format(e))
+
+ADD_RAID_LOBBY_CATEGORY = """
+INSERT INTO raid_lobby_category (guild_id, category_id, log_channel_id)
+VALUES ($1, $2, $3);
+"""
+#UPDATE_LOG_CHANNEL = """
+#UPDATE raid_lobby_category
+#SET log_channel_id = $1
+#WHERE (guild_id = $2);
+#"""
+async def database_register_raid_lobby_category(bot, ctx, guild_id, category_id, log_channel_id):
+    """Registers raid lobby category within database and initalizes log."""
+    connection = await bot.acquire()
+    results = None
+    try:
+        results = await connection.execute(ADD_RAID_LOBBY_CATEGORY,
+                                           int(guild_id),
+                                           int(category_id),
+                                           int(log_channel_id))
+    except asyncpg.PostgresError as error:
+        print("[!] Error occured registering raid lobby category. [{}]".format(error))
+    await bot.release(connection)
+    if results:
+        print("[*][{}][{}] New raid lobby category registered.".format(ctx.guild.name, category_id))
+
+
+async def register_raid_lobby_category(ctx, bot):
+    try:
+        await ctx.message.delete()
+    except discord.DiscordException:
+        pass
+
+    channel = ctx.channel
+    if not channel.category_id:
+        embed = discord.Embed(title="Error", description="This channel is not in a category. A category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
+        ctx.send(" ",embed=embed, delete_after=15)
+        return False
+
+    category_id = channel.category_id
+    log_channel_id = channel.id
+    #await RLH.set_up_lobby_log_channel(ctx, bot)
+    await database_register_raid_lobby_category(bot, ctx, ctx.guild.id, category_id, log_channel_id)

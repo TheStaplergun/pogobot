@@ -1,9 +1,11 @@
 """State restoration for bot."""
-
+from operator import itemgetter
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import discord
+import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 from handlers.raid_handler import remove_raid_from_table
 
 async def delete_after_delay(bot, channel_id, message_id, delay):
@@ -70,6 +72,17 @@ async def spin_up_message_deletions(bot):
             delay = 0
         await delete_after_delay(bot, data[0], data[1], delay.total_seconds())
 
+    # lobbies = RLH.get_all_lobbies(bot)
+    # for lobby in lobbies:
+    #     if lobby.get("delete_at") < cur_time:
+    #         lobby_channel_id = lobby.get("lobby_channel_id")
+    #         lobby_channel = bot.get_channel(int(lobby_channel_id))
+    #         try:
+    #             await lobby_channel.delete()
+    #         except discord.DiscordException:
+    #             pass
+    #         await RLH.remove_lobby_by_lobby_id(bot, lobby_channel_id)
+
     print("[*] All pending deletions complete.")
 
 GET_TOTAL_COUNT = """
@@ -101,3 +114,92 @@ async def start_status_update_loop(bot):
     while True:
         count = await set_new_presence(bot, count)
         await asyncio.sleep(10*60)
+
+async def start_lobby_removal_loop(bot):
+    """Permanently running loop while bot is up."""
+
+    while not bot.pool:
+        await asyncio.sleep(1)
+
+    # Outer loop to wait on the event if no lobbies are present.
+    while True:
+        # Process lobbies until no lobbies remain before going to outer loop.
+        while True:
+            lobby_data = await RLH.get_next_lobby_to_remove(bot)
+            if not lobby_data:
+                break
+
+            cur_time = datetime.now()
+            deletion_time = lobby_data.get("delete_at")
+            deletion_time_dif = deletion_time - cur_time
+            # Refresh in 30 seconds if greater than one minute wait time.
+            # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
+            if cur_time < deletion_time:
+                if deletion_time_dif.total_seconds() > 30:
+                    await asyncio.sleep(30)
+                    continue
+
+                if deletion_time_dif.total_seconds() > 0:
+                    await asyncio.sleep(deletion_time_dif.total_seconds())
+
+            lobby_id = lobby_data.get("lobby_channel_id")
+            lobby = bot.get_channel(int(lobby_id))
+            if not lobby:
+                print("Lobby channel doesn't exist. Removing data.")
+                await RLH.remove_lobby_by_lobby_id(bot, lobby_id)
+                continue
+            try:
+                await lobby.delete()
+            except discord.DiscordException:
+                pass
+        await bot.lobby_remove_trigger.wait()
+        bot.lobby_remove_trigger.clear()
+
+async def start_applicant_loop(bot):
+    while not bot.pool:
+        await asyncio.sleep(1)
+
+    while True:
+        # Outer loop waits on triggers.
+        while True:
+            raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
+            if not raid_lobby_data_list:
+                break
+
+            total_lobbies_to_handle = len(raid_lobby_data_list)
+            checked_count = 0
+            for raid_lobby_data in raid_lobby_data_list:
+                cur_time = datetime.now()
+                threshold_time = cur_time - timedelta(seconds=60)
+                posted_time = raid_lobby_data.get("posted_at")
+                if posted_time < threshold_time:
+                    #raid_host_id = raid_lobby_data.get("host_user_id")
+                    raid_message_id = raid_lobby_data.get("raid_message_id")
+                    users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
+                    if not users:
+                        checked_count += 1
+                    guild_id = raid_lobby_data.get("guild_id")
+                    guild = bot.get_guild(int(guild_id))
+                    user_list = []
+                    for user in users:
+                        has_been_notified = user.get("has_been_notified")
+                        if has_been_notified:
+                            continue
+                        member_id = user.get("user_id")
+                        member = guild.get_member(int(member_id))
+                        user_data = {
+                            "user_data":user,
+                            "weight":await RLH.calculate_weight(bot, user, member),
+                            "member_object":member,
+                            }
+                        user_list.append(user_data)
+                    sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
+                    await RLH.process_user_list(bot, raid_lobby_data, sorted_users)
+            if checked_count == total_lobbies_to_handle:
+                # Prevents infinitely looping when there's just no users for any of the lobbies.
+                break
+            await asyncio.sleep(1)
+
+        await bot.applicant_trigger.wait()
+
+        bot.applicant_trigger.clear()

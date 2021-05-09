@@ -34,7 +34,7 @@ async def increment_raid_counter(ctx, bot, guild_id):
 GET_RAID_COUNT_STATEMENT = """
     SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
 """
-async def get_raid_count(bot, ctx):
+async def get_raid_count(bot, ctx, should_print):
     """Get raid count for server the command was called in."""
     connection = await bot.pool.acquire()
     try:
@@ -46,11 +46,14 @@ async def get_raid_count(bot, ctx):
     finally:
         await bot.pool.release(connection)
     num = count.get("raid_counter")
-    msg = "Total raids sent within this server [`{}`]".format(num)
-    try:
-        await ctx.channel.send(msg)
-    except discord.DiscordException as error:
-        print("[!] Error sending raid count to channel. [{}]".format(error))
+    if should_print:
+        msg = "Total raids sent within this server [`{}`]".format(num)
+        try:
+            await ctx.channel.send(msg)
+        except discord.DiscordException as error:
+            print("[!] Error sending raid count to channel. [{}]".format(error))
+    else:
+        return num
 
 GET_RAIDS_FOR_GUILD = """
     SELECT * FROM raids WHERE (guild_id = $1);
@@ -86,19 +89,30 @@ CHECK_IF_MESSAGE_IS_RAID = """
 """
 async def message_is_raid(ctx, bot, message_id):
     connection = await bot.acquire()
-    result = await connection.execute(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
     await bot.release(connection)
     if result:
         return True
     return False
 
+# Redundant but different return type. Can probably be added to above but do not feel like reworking at the moment.
+async def retrieve_raid_data_by_message_id(ctx, bot, message_id):
+    connection = await bot.acquire()
+    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+    await bot.release(connection)
+    return result
+
 RAID_TABLE_REMOVE_RAID = """
 DELETE FROM raids WHERE (message_id = $1)
 RETURNING message_id
 """
+CLEAR_APPLICANTS_FOR_RAID = """
+DELETE FROM raid_application_user_map WHERE (raid_message_id = $1)
+"""
 async def remove_raid_from_table(connection, message_id):
     """Removes a raid from the table."""
     await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
+    await connection.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
