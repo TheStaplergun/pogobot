@@ -49,7 +49,7 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
 
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        guild = bot.get_guild(lobby_data.get("guild_id"))
+        #guild = bot.get_guild(lobby_data.get("guild_id"))
         try:
             lobby = await bot.fetch_channel(int(lobby_channel_id))
         except discord.DiscordException:
@@ -93,7 +93,7 @@ async def get_latest_lobby_data_by_timestamp(bot):
 
     return results
 
-async def log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel):
+async def log_message_in_raid_lobby_channel(bot, message):
     author = message.author
     category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
     log_channel_id = category_data.get("log_channel_id")
@@ -162,13 +162,16 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     mod_role = discord.utils.get(guild.roles, name="Mods")
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
+    lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
+
     count = await RH.get_raid_count(bot, ctx, False)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         mod_role: discord.PermissionOverwrite(read_messages=True),
-        raid_moderator_role: discord.PermissionOverwrite(read_messages=True),
         raid_host_member: discord.PermissionOverwrite(read_messages=True)
     }
+    if raid_moderator_role:
+        overwrites.update({raid_moderator_role: discord.PermissionOverwrite(read_messages=True)})
     channel_name = "raid-lobby-{}".format(count)
     reason = "Spawning new raid lobby for [{}]".format(raid_host_member.name)
     try:
@@ -181,7 +184,10 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
-    await new_raid_lobby.send("{}".format(raid_host_member.mention), embed=new_embed)
+    header_message_body = "{}".format(raid_host_member.mention)
+    if lobby_member_role:
+        header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(raid_host_member.mention)
+    await new_raid_lobby.send(header_message_body, embed=new_embed)
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
@@ -198,7 +204,7 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
     SET delete_at = $1
     WHERE (host_user_id = $2);
 """
-async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
+async def alter_deletion_time_for_raid_lobby(bot, ctx):
     current_time = datetime.now()
     new_delete_time = current_time + timedelta(minutes=15)
     channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
@@ -286,7 +292,7 @@ async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_req
                              False)
     await bot.release(connection)
 
-async def calculate_speed_bonus(bot, message):
+async def calculate_speed_bonus(message):
     creation_time = message.created_at
     time_difference = (datetime.now() - creation_time)
     return time_difference.total_seconds() / 60 * 100
@@ -312,7 +318,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
         return False
 
     role = discord.utils.get(member.roles, name=pokemon_name)
-    speed_bonus = await calculate_speed_bonus(bot, message)
+    speed_bonus = await calculate_speed_bonus(message)
     await insert_new_application(bot, member.id, message.id, message.guild.id, True if role else False, speed_bonus)
     bot.applicant_trigger.set()
 
@@ -422,7 +428,7 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
             break
         counter+=1
         member = user["member_object"]
-        user_data = user["user_data"]
+        #user_data = user["user_data"]
         new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
         message = await member.send(" ", embed=new_embed, delete_after=30)
         await message.add_reaction("⏱️")
@@ -447,7 +453,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     connection = await bot.acquire()
-    result = await connection.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
+    await connection.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
     await bot.release(connection)
 
 UPDATE_CHECKED_IN_FLAG = """
@@ -457,7 +463,7 @@ UPDATE_CHECKED_IN_FLAG = """
 """
 async def set_checked_in_flag(bot, user_id):
     connection = await bot.acquire()
-    result = await connection.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
+    await connection.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
     await bot.release(connection)
 
 DELETE_RECENT_PARTICIPATION_RECORD = """
@@ -472,6 +478,25 @@ async def set_recent_participation(bot, user_id):
     await connection.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
     await connection.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
     await bot.release(connection)
+
+async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
+    role = discord.utils.get(guild.roles, name="Lobby Member")
+    await set_checked_in_flag(bot, member.id)
+    await lobby.set_permissions(member, read_messages=True,
+                                        send_messages=True)
+    await increment_user_count_for_raid_lobby(bot, lobby.id)
+    await set_recent_participation(bot, member.id)
+    if role:
+        try:
+            await member.add_roles(role, reason="Member of lobby")
+        except discord.DiscordException:
+            pass
+    new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
+    await lobby.send("{}".format(member.mention), embed=new_embed)
+    try:
+        await message.delete()
+    except discord.DiscordException:
+        pass
 
 async def handle_activity_check_reaction(ctx, bot, message):
     connection = await bot.acquire()
@@ -495,17 +520,7 @@ async def handle_activity_check_reaction(ctx, bot, message):
     guild = lobby.guild
     user_id = ctx.user_id
     member = guild.get_member(int(user_id))
-    await set_checked_in_flag(bot, member.id)
-    await lobby.set_permissions(member, read_messages=True,
-                                        send_messages=True)
-    await increment_user_count_for_raid_lobby(bot, lobby_id)
-    await set_recent_participation(bot, user_id)
-    new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
-    await lobby.send("{}".format(member.mention), embed=new_embed)
-    try:
-        await message.delete()
-    except discord.DiscordException:
-        pass
+    await process_and_add_user_to_lobby(bot, member, lobby, guild, message)
 
 GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
@@ -561,7 +576,7 @@ REMOVE_LOG_CHANNEL_BY_ID = """
 """
 async def check_if_log_channel_and_purge_data(bot, channel_id):
     connection = await bot.acquire()
-    result = await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
+    await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
     await bot.release(connection)
 
 

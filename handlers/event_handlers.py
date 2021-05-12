@@ -19,7 +19,7 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
             await message.delete()
         except discord.DiscordException:
             pass
-        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, None)
+        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx)
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
@@ -118,7 +118,7 @@ async def raid_delete_handle(ctx, bot):
         return
     user_id = lobby_data.get("host_user_id")
     ctx.user_id = user_id
-    await RLH.alter_deletion_time_for_raid_lobby(bot, ctx, None)
+    await RLH.alter_deletion_time_for_raid_lobby(bot, ctx)
 
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
@@ -162,7 +162,7 @@ async def on_message_handle(message, bot):
     # Handle this first because it's a logging function.
     raid_lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
     if bot.categories_allowed and raid_lobby_channel:
-        await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel)
+        await RLH.log_message_in_raid_lobby_channel(bot, message)
         return True
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
