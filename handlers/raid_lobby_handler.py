@@ -205,7 +205,7 @@ async def alter_deletion_time_for_raid_lobby(bot, ctx, message):
 
     try:
         if channel:
-            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.")
+            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             await channel.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
@@ -230,7 +230,7 @@ async def get_next_lobby_to_remove(bot):
 
 UPDATE_APPLICATION_DATA_FOR_USER = """
     UPDATE raid_application_user_map
-    SET (raid_message_id = $1)
+    SET raid_message_id = $1
     WHERE (user_id = $2);
 """
 async def update_application_for_user(bot, member, raid_message_id):
@@ -303,7 +303,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
             new_embed = discord.Embed(title="Error", description="You cannot apply to your own raid!")
             await member.send(" ", embed=new_embed)
         else:
-            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.")
+            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
             await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
