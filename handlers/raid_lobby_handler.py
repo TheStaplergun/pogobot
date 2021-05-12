@@ -491,7 +491,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         await member.add_roles(role, reason="Member of lobby")
     except discord.DiscordException:
         pass
-    except AttributeError as error:
+    except AttributeError:
         pass
     new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
     await lobby.send("{}".format(member.mention), embed=new_embed)
@@ -594,5 +594,19 @@ async def handle_user_failed_checkin(bot, applicant_data):
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
     try:
         await member.send(" ", embed=new_embed)
+    except discord.DiscordException:
+        pass
+
+async def delete_lobby(lobby):
+    members = lobby.members
+    guild = lobby.guild
+    lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
+    for member in members:
+        try:
+            member.remove_roles(lobby_member_role, reason="End of raid")
+        except discord.DiscordException:
+            pass
+    try:
+        await lobby.delete()
     except discord.DiscordException:
         pass

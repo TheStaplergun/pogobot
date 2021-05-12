@@ -148,10 +148,7 @@ async def start_lobby_removal_loop(bot):
                 print("Lobby channel doesn't exist. Removing data.")
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_id)
                 continue
-            try:
-                await lobby.delete()
-            except discord.DiscordException:
-                pass
+            await RLH.delete_lobby(lobby)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 
