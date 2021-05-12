@@ -163,7 +163,6 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     mod_role = discord.utils.get(guild.roles, name="Mods")
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
-
     count = await RH.get_raid_count(bot, ctx, False)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
@@ -185,8 +184,10 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         return False
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
     header_message_body = "{}".format(raid_host_member.mention)
-    if lobby_member_role:
-        header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(raid_host_member.mention)
+    try:
+        header_message_body = header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
+    except AttributeError as error:
+        pass
     await new_raid_lobby.send(header_message_body, embed=new_embed)
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
@@ -486,11 +487,12 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
                                         send_messages=True)
     await increment_user_count_for_raid_lobby(bot, lobby.id)
     await set_recent_participation(bot, member.id)
-    if role:
-        try:
-            await member.add_roles(role, reason="Member of lobby")
-        except discord.DiscordException:
-            pass
+    try:
+        await member.add_roles(role, reason="Member of lobby")
+    except discord.DiscordException:
+        pass
+    except AttributeError as error:
+        pass
     new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
     await lobby.send("{}".format(member.mention), embed=new_embed)
     try:
