@@ -2,12 +2,14 @@
 
 import argparse
 import asyncio
+import asyncpg
 from datetime import datetime
+import dotenv
 import discord
 from discord.ext import commands
-import asyncpg
-import important
+import os
 import raid_cog
+import time
 import handlers.event_handlers as EH
 import handlers.helpers as H
 import handlers.raid_handler as RH
@@ -16,12 +18,17 @@ import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
 import handlers.startup_handler as SH
 
+if os.path.exists('.env'):
+    dotenv.load_dotenv()
+else:
+    print('[!] .env not found!')
+
 DESCRIPTION = '''TheStaplergun's Bot in Python'''
 
 #Set command_prefix to any character here.
-COMMAND_PREFIX = '-'
+COMMAND_PREFIX = os.getenv('PREFIX') or '-'
 #Change this string to change the 'playing' status of the bot.
-CUSTOM_STATUS = ""
+CUSTOM_STATUS = os.getenv('STATUS') or ''
 
 intent = discord.Intents().default()
 intent.members = True
@@ -50,20 +57,18 @@ BOT.release = release_pool_connection
 
 async def init_pool():
     """Set up asyncpg connection pool"""
-    pool = await asyncpg.create_pool(database=important.DATABASE,
-                                     port=important.PORT,
-                                     host=important.HOST,
-                                     user=important.DB_USER,
-                                     password=important.PASSWORD)
+    pool = await asyncpg.create_pool(database=os.getenv('DB'),
+                                     port=os.getenv('DBPORT'),
+                                     host=os.getenv('DBHOST'),
+                                     user=os.getenv('DBUSER'),
+                                     password=os.getenv('DBPASSWORD'))
 
     return pool
 
 @BOT.event
 async def on_ready():
     """Built in event"""
-    print('Logged in as')
-    print(BOT.user.name)
-    print('------------------')
+    print(f'[OK] Logged in as {BOT.user.name} \n')
     #print(BOT.commands)
 
 @BOT.event
@@ -91,13 +96,13 @@ async def on_message(message):
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def clear_raid(ctx, user_id):
     await RH.handle_clear_user_from_raid(ctx, BOT, user_id)
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def clear_requests(ctx):
     await REQH.handle_clear_all_requests_for_guild(ctx, BOT)
 
@@ -112,39 +117,39 @@ async def request(ctx, tier=None, pokemon_name=None):
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def get_requests(ctx):
     await REQH.handle_get_all_requests(ctx, BOT)
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def register_request_channel(ctx):
     """Mod only - Sets up channel to allow Pokemon requests"""
     await REGH.register_request_channel_handle(ctx, BOT)
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def register_raid_channel(ctx):
     """Mod only - Sets up channel to allow hosting raids"""
     await REGH.register_raid_channel_handle(ctx, BOT)
 
 @BOT.command()
 @commands.guild_only()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def register_raid_lobby_category(ctx):
     """Mod only - Sets up category to allow automation of raid lobbies"""
     await REGH.register_raid_lobby_category(ctx, BOT)
 
 @BOT.command()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def toggle_category_system(ctx):
     BOT.categories_allowed = not BOT.categories_allowed
     await ctx.send("System is {}".format("on" if BOT.categories_allowed else "off"), delete_after=5)
 
 @BOT.command()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def raid_count(ctx):
     """Mod only - Show total raids hosted in this server"""
     try:
@@ -154,19 +159,19 @@ async def raid_count(ctx):
     await RH.get_raid_count(BOT, ctx, True)
 
 # @BOT.command()
-# @commands.has_role("Mods")
+# @commands.has_role(os.getenv('MOD_ROLE'))
 # async def get_lobbies(ctx):
 #     """Mod Only - Show all current running raid statistics for this guild"""
 #     await RLH.get_all_lobbies_for_guild(ctx, BOT)
 
 # @BOT.command()
-# @commands.has_role("Mods")
+# @commands.has_role(os.getenv('MOD_ROLE'))
 # async def get_all_applications(ctx):
 #     """Mod Only - Show all current running raid statistics for this guild"""
 #     await RLH.get_all_applications_for_guild(ctx, BOT)
 
 @BOT.command()
-@commands.has_role("Mods")
+@commands.has_role(os.getenv('MOD_ROLE'))
 async def refresh_request_reactions(ctx, message_id):
     try:
         await ctx.message.delete()
@@ -186,10 +191,11 @@ async def refresh_request_reactions(ctx, message_id):
 @BOT.command()
 async def ping(ctx):
     """Check if alive"""
-    create_time = ctx.message.created_at
-    cur_time = datetime.now()
-    time_dif = cur_time - create_time
-    await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
+    curr = time.time()
+    latency: float = round(ctx.bot.latency * 1000.0, 2)
+    msg = await ctx.send('Pinging... 🏓')
+    await msg.edit(
+        content=f'🏓 Pong! Latency is {round((time.time() - curr) * 1000.0, 2)}ms. API latency is {latency}ms.')
 
 live=False
 async def startup_process():
@@ -227,9 +233,9 @@ if __name__ == "__main__":
     BOT.loop.create_task(applicant_loop())
     BOT.loop.create_task(lobby_removal_loop())
     if args.l:
-        print("Running bot live.")
+        print("[i] Running bot live.")
         live=True
-        BOT.run(important.LIVE_TOKEN)
+        BOT.run(os.getenv('LIVE_TOKEN'))
     else:
-        print("Running bot in test mode")
-        BOT.run(important.TESTING_TOKEN)
+        print("[i] Running bot in test mode")
+        BOT.run(os.getenv('TEST_TOKEN'))

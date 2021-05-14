@@ -8,13 +8,18 @@ import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
+import os
+import dotenv
+
+if os.path.exists('.env'):
+    dotenv.load_dotenv()
 
 class RaidPost(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command()
-    @commands.has_role("Mods")
+    @commands.has_role(os.getenv('MOD_ROLE'))
     async def get_raids(self, ctx):
         """Mod Only - Show all current running raid statistics for this guild"""
         await RH.get_all_raids_for_guild(self.bot, ctx)

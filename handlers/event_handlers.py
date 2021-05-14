@@ -1,11 +1,16 @@
 """Event handler functions."""
 from datetime import datetime
 import discord
+import dotenv
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
 import handlers.raid_lobby_handler as RLH
 import handlers.sticky_handler as SH
+import os
+
+if os.path.exists('.env'):
+    dotenv.load_dotenv()
 
 async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
     message_id = message.id
@@ -174,7 +179,7 @@ async def on_message_handle(message, bot):
     #if message.author.id == bot.user.id:
         #return False
 
-    if discord.utils.get(message.author.roles, name="Mods"):
+    if discord.utils.get(message.author.roles, name=os.getenv('MOD_ROLE')):
         return False
 
     if message.content.startswith(bot.command_prefix, 0, 1):
