@@ -68,7 +68,7 @@ async def init_pool():
 @BOT.event
 async def on_ready():
     """Built in event"""
-    print(f'[OK] Logged in as {BOT.user.name} \n')
+    print(f'[i] Logged in as {BOT.user.name} \n')
     #print(BOT.commands)
 
 @BOT.event
@@ -91,7 +91,7 @@ async def on_message(message):
     try:
         await EH.on_message_handle(message, BOT)
     except Exception as error:
-        print("[!] An exception occurred during message handling. [{}]".format(error))
+        print(f'[!] An exception occurred during message handling. [{error}]')
     await BOT.process_commands(message)
 
 @BOT.command()
@@ -155,7 +155,7 @@ async def raid_count(ctx):
     try:
         await ctx.message.delete()
     except discord.NotFound as error:
-        print("[!] Message already gone. [{}]".format(error))
+        print(f'[!] Message already gone. [{error}]')
     await RH.get_raid_count(BOT, ctx, True)
 
 # @BOT.command()
@@ -186,7 +186,7 @@ async def refresh_request_reactions(ctx, message_id):
         await message.add_reaction("📬")
         await message.add_reaction("📪")
     except discord.DiscordException as error:
-        print("[!] Error refreshing reactions [{}]".format(error))
+        print(f'[!] Error refreshing reactions [{error}]')
     
 @BOT.command()
 async def ping(ctx):

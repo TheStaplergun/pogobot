@@ -61,10 +61,10 @@ async def database_register_request_channel(bot, ctx, channel_id, guild_id):
                                                  int(channel_id),
                                                  int(guild_id))
     except asyncpg.PostgresError as e:
-        print("[!] Error occured registering request channel. [{}]".format(e))
+        print(f'[!] Error occured registering request channel. [{e}]')
     await bot.release(connection)
     if results:
-        print("[*] [{}] [{}] New request channel registered.".format(ctx.guild.name, channel_id))
+        print(f'[*] [{ctx.guild.name}] [{channel_id}] New request channel registered.')
 
 how_to_request = """
 To make a request, type the following:
@@ -106,12 +106,12 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     try:
         new_role = await guild.create_role(name=pokemon_name, reason="Setting up a request role.")
     except discord.DiscordException as error:
-        print("[!] An error occurred creating a new role: [{}]".format(error))
+        print(f'[!] An error occurred creating a new role: [{error}]')
     author = ctx.author
     try:
         await give_request_role(author, guild, new_role)
     except discord.DiscordException as error:
-        print("[!] An error occurred giving a user a role: [{}]".format(error))
+        print(f'[!] An error occurred giving a user a role: [{error}]')
         return
     new_embed = discord.Embed(title=pokemon_name.title(), description="")
     new_embed.set_thumbnail(url=build_image_link_github(number))
@@ -123,14 +123,14 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     try:
         message = await request_channel.send(embed=new_embed)
     except discord.DiscordException as error:
-        print("[!] An error occurred setting up the request sticky message. [{}]".format(error))
+        print(f'[!] An error occurred setting up the request sticky message. [{error}]')
         #await author.remove_roles([new_role])
         return
     try:
         await message.add_reaction("📬")
         await message.add_reaction("📪")
     except discord.DiscordException as error:
-        print("[!][{}] An error occurred while adding reactions to a new request listing. [{}]".format(error))
+        print(f'[!][{guild.name}] An error occurred while adding reactions to a new request listing. [{error}]')
 
     connection = await bot.acquire()
     try:
@@ -138,7 +138,7 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     except asyncpg.PostgresError as error:
         #await message.delete()
         #await author.remove_roles([new_role])
-        print("[!] An error occurred inserting the new role data. [{}]".format(error))
+        print(f'[!] An error occurred inserting the new role data. [{error}]')
     await bot.release(connection)
 
 GET_ALL_ROLES_FOR_GUILD = """
@@ -169,23 +169,25 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
             if role:
                 await role.delete()
         except discord.DiscordException as error:
-            print("[!][{}] An error occurred deleting a role. [{}]".format(error))
+            print(f'[!][{guild.name}] An error occurred deleting a role. [{error}]')
         try:
             await channel.delete_messages([discord.Object(message_id)])
         except discord.NotFound:
             pass
         except discord.DiscordException as error:
-            print("[!][{}] An error occurred when deleting a message [{}]".format(guild.name,  error))
-    await ctx.send("Total roles deleted: [{}]".format(len(query_results)), delete_after=15)
+            print(f'[!][{guild.name}] An error occurred when deleting a message [{error}]')
+    await ctx.send('Total roles deleted: [{}]'.format(len(query_results)), delete_after=15)
 
 async def give_request_role(author, guild, role):
-    blurb = "You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing in the requests channel. To opt back in, click on the 📬.".format(role.name)
+    blurb = f'You have been given the role {role.name} and you will be pinged **every time** a raid with that Pokémon name is created.'\
+       'If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing in the requests channel.'\
+       'To opt back in, click on the 📬.'
     dm_message = H.guild_member_dm(guild.name, blurb)
     try:
         await author.add_roles(role, reason="Giving user a request role.")
         await author.send(dm_message)
     except discord.DiscordException as error:
-        print("[!] An error occurred giving a user a role: [{}]".format(error))
+        print(f'[!][{guild.name}] An error occurred giving a user a role: [{error}]')
         return
 
 async def increment_request_count(ctx, bot, channel_id, message_id):
@@ -220,7 +222,7 @@ async def increment_request_count(ctx, bot, channel_id, message_id):
     try:
         await message.edit(embed=new_embed)
     except discord.DiscordException as error:
-        print("[!] An error occurred trying to update a request tracker. [{}]".format(error))
+        print(f'[!] An error occurred trying to update a request tracker. [{error}]')
 
 async def decrement_request_count(ctx, bot, channel_id, message_id):
     guild = ctx.guild
@@ -259,7 +261,7 @@ async def decrement_request_count(ctx, bot, channel_id, message_id):
     try:
         await message.edit(embed=new_embed)
     except discord.DiscordException as error:
-        print("[!] An error occurred trying to update a request tracker. [{}]".format(error))
+        print(f'[!] An error occurred trying to update a request tracker. [{error}]')
 
 DELETE_REQUEST_FROM_TABLE = """
     DELETE FROM request_role_id_map WHERE (role_id = $1)
@@ -275,13 +277,13 @@ async def delete_request_role_and_post(ctx, bot, guild, message, role):
     try:
         await role.delete(reason="No users requesting this pokemon any more")
     except discord.DiscordException as error:
-        print("[!][{}] An exception occurred attempting to delete a role. [{}]".format(guild.name, error))
+        print(f'[!][{guild.name}] An exception occurred attempting to delete a role. [{error}]')
 
     connection = await bot.acquire()
     try:
         result = await connection.execute(DELETE_REQUEST_FROM_TABLE, role_id)
     except asyncpg.Exception as error:
-        print("[!] An exception occurred attempting to remove a role listing from the database. [{}]".format(error))
+        print(f'[!] An exception occurred attempting to remove a role listing from the database. [{error}]')
     await bot.release(connection)
 
 async def check_if_user_already_assigned_role(member, role_id):
@@ -345,7 +347,7 @@ async def remove_request_pokemon_handle(bot, ctx, tier, pokemon_name):
     try:
         await author.remove_roles(discord.Object(role_id))
     except discord.DiscordException as error:
-        print("[!][{}] An error occurred removing a role from a user. [{}]".format(ctx.guild.name, error))
+        print(f'[!][{ctx.guild.name}] An error occurred removing a role from a user. [{error}]')
     await decrement_request_count(ctx, bot, request_channel_id, message_id)
 
 
@@ -359,7 +361,7 @@ async def add_request_role_to_user(bot, ctx, message):
         try:
             ctx.author = ctx.guild.fetch_member(ctx.user_id)
         except discord.DiscordException as error:
-            print("[!] An error occurred fetching a member from the guild [{}]".format(ctx.guild))
+            print(f'[!] An error occurred fetching a member from the guild [{ctx.guild}]')
 
     tier = pokemon_name
     if is_mega:
@@ -377,7 +379,7 @@ async def remove_request_role_from_user(bot, ctx, message):
         try:
             ctx.author = ctx.guild.fetch_member(ctx.user_id)
         except discord.DiscordException as error:
-            print("[!] An error occurred fetching a member from the guild [{}]".format(ctx.guild))
+            print(f'[!] An error occurred fetching a member from the guild [{ctx.guild}]')
 
     tier = pokemon_name
     if is_mega:

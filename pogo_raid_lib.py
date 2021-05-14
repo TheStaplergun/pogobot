@@ -11,10 +11,10 @@ import re
 
 def build_image_link_serebii(num):
   num = str(num).zfill(3)
-  return "https://www.serebii.net/swordshield/pokemon/{}.png".format(num)
+  return f'https://www.serebii.net/swordshield/pokemon/{num}.png'
 
 def build_image_link_github(num):
-  return "http://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{}.png".format(str(num))
+  return f'http://raw.githubusercontent.com/PokeMiners/pogo_assets/master/Images/Pokemon%20-%20256x256/pokemon_icon_{num}.png'
 
 
 def validate_and_format_message(ctx,

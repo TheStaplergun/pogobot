@@ -56,7 +56,7 @@ async def remove_old_sticky_message_from_table(bot, channel_id):
     connection = await bot.acquire()
     results = await connection.execute(DELETE_PLACEHOLDER_STICKY_MESSAGE, int(channel_id))
     await bot.release(connection)
-    print("[*] Table operation results [{}]".format(results))
+    print(f'[*] Table operation results [{results}]')
 
 async def make_new_no_raids_placeholder_message(bot, channel_id):
     channel = bot.get_channel(channel_id)
@@ -121,4 +121,4 @@ async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):
         return
 
     except discord.DiscordException as error:
-        print("[!] An exception occured while creating a placeholder. [{}]".format(error))
+        print(f'[!] An exception occured while creating a placeholder. [{error}]')

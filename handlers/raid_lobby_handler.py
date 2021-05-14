@@ -14,14 +14,14 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
         category_data = await connection.fetchrow(GET_CATEGORY_BY_GUILD_ID,
                                                   int(guild_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error retreiving raid lobby category data. [{}]".format(error))
+        print(f'[!] Error retreiving raid lobby category data. [{error}]')
         return
     finally:
         await bot.pool.release(connection)
 
     #category_id = category_data.get("category_id")
     if not category_data:
-        print("[!] Error retreiving raid lobby category data. [{}]".format("No category found. Passing."))
+        print('[!] Error retreiving raid lobby category data. [No category found. Passing.]')
         return False
 
     return category_data
@@ -36,7 +36,7 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
         lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
                                                int(user_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error retreiving raid lobby data. [{}]".format(error))
+        print(f'[!] Error retreiving raid lobby data. [{error}]')
         return
     finally:
         await bot.pool.release(connection)
@@ -66,7 +66,7 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
         lobby_data = await connection.fetchrow(GET_LOBBY_BY_LOBBY_ID,
                                                int(channel_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error retreiving raid lobby data. [{}]".format(error))
+        print(f'[!] Error retreiving raid lobby data. [{error}]')
         return
     finally:
         await bot.pool.release(connection)
@@ -101,7 +101,7 @@ async def log_message_in_raid_lobby_channel(bot, message):
 
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
     new_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
-    new_embed.set_footer(text="User ID: {}".format(author.id))
+    new_embed.set_footer(text=f'User ID: {author.id}')
     await log_channel.send(" ", embed=new_embed)
 # async def set_up_management_channel(ctx, bot):
 #     channel = ctx.channel
@@ -126,7 +126,7 @@ async def log_message_in_raid_lobby_channel(bot, message):
 #     try:
 #         await channel.edit(name="raid-lobby-logs", reason="Establishing log channel for raid lobbies.")
 #     except discord.DiscordException as error:
-#         print("[*][{}] An error occurred setting up the log channel for a raid category. [{}]".format(ctx.guild.name, error))
+#         print(f'[*][{ctx.guild.name}] An error occurred setting up the log channel for a raid category. [{error}]')
 #         return False
 
 #     return True
@@ -171,28 +171,28 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     }
     if raid_moderator_role:
         overwrites.update({raid_moderator_role: discord.PermissionOverwrite(read_messages=True)})
-    channel_name = "raid-lobby-{}".format(count)
-    reason = "Spawning new raid lobby for [{}]".format(raid_host_member.name)
+    channel_name = f'raid-lobby-{count}'
+    reason = f'Spawning new raid lobby for [{raid_host_member.name}]'
     try:
         new_raid_lobby = await raid_lobby_category_channel.create_text_channel(channel_name, reason=reason, overwrites=overwrites)
     except discord.DiscordException as error:
         try:
-            await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error))
+            await ctx.send(f'Something went wrong when trying to create your raid lobby: [{error}]')
         except discord.DiscordException:
             pass
-        print("[!] An error occurred creating a raid lobby. [{}]".format(error))
+        print(f'[!] An error occurred creating a raid lobby. [{error}]')
         return False
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
-    header_message_body = "{}".format(raid_host_member.mention)
+    header_message_body = f'{raid_host_member.mention}'
     try:
-        header_message_body = header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
+        header_message_body = header_message_body + f'\n\nPing the role {lobby_member_role.mention} for managing all members of this lobby at once.'
     except AttributeError as error:
         pass
     await new_raid_lobby.send(header_message_body, embed=new_embed)
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
-        print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
+        print(f'[!] An error occurred adding a lobby to the database. [{error}]')
         await new_raid_lobby.delete()
         return False
 
@@ -314,7 +314,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
             await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
-        new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
+        new_embed = discord.Embed(title="Communication Error", description=f'{member.mention}, I cannot DM you. You will not be able to apply for raids until I can.')
         await channel.send(" ", embed=new_embed, delete_after=15)
         return False
 
@@ -494,7 +494,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     except AttributeError:
         pass
     new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
-    await lobby.send("{}".format(member.mention), embed=new_embed)
+    await lobby.send(f'{member.mention}', embed=new_embed)
     try:
         await message.delete()
     except discord.DiscordException:

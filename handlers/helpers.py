@@ -1,6 +1,6 @@
 """Helper functions"""
 def guild_member_dm(guild_name, message):
-    return "**From:** {} raid hosting bot\n{}".format(guild_name, message)
+    return f'**From:** {guild_name} raid hosting bot\n{message}'
 
 def get_pokemon_name_from_raid(message):
     embed = message.embeds[0]

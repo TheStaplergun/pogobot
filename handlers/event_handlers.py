@@ -28,7 +28,7 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
-            print("[!] An error occurred [{}]".format(error))
+            print(f'[!] An error occurred [{error}]')
     else:
         message_to_send = "You are not the host. You cannot delete this raid!"
 
@@ -51,7 +51,7 @@ async def handle_reaction_remove_raid_no_lobby(bot, ctx, message):
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
-            print("[!] An error occurred [{}]".format(error))
+            print(f'[!] An error occurred [{error}]')
     await ctx.member.send(H.guild_member_dm(bot.get_guild(ctx.guild_id).name, message_to_send))
 
 WATCHED_EMOJIS = (
@@ -128,7 +128,7 @@ async def raid_delete_handle(ctx, bot):
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
     except discord.DiscordException as error:
-        print("[!] An error occurred [{}]".format(error))
+        print(f'[!] An error occurred [{error}]')
 
 async def request_delete_handle(ctx, bot):
     does_exist, channel_id, message_id, role_id = await REQH.get_request_by_message_id(bot, ctx.message_id)
@@ -196,7 +196,7 @@ async def on_message_handle(message, bot):
         except discord.DiscordException:
             pass
         try:
-            print("[*][{}][{}] Invalid message deleted [{}]".format(message.guild.name, message.author.name, content))
+            print(f'[*][{message.guild.name}][{message.author.name}] Invalid message deleted [{content}]')
             await message.delete()
         except discord.NotFound:
             pass

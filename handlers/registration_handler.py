@@ -21,15 +21,15 @@ async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
                                            int(channel_id),
                                            int(guild_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error occured registering raid channel. [{}]".format(error))
+        print(f'[!] Error occured registering raid channel. [{error}]')
     try:
         await connection.execute(INIT_RAID_COUNTER,
                                  int(guild_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error occured registering raid counter. [{}]".format(error))
+        print(f'[!] Error occured registering raid counter. [{error}]')
     await bot.release(connection)
     if results:
-        print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
+        print(f'[*][{ctx.guild.name}][{channel_id}] New raid channel registered.')
 
 async def register_request_channel_handle(ctx, bot):
     channel_id = ctx.channel.id
@@ -51,7 +51,7 @@ async def register_raid_channel_handle(ctx, bot):
     try:
         await SH.toggle_raid_sticky(bot, ctx, channel_id, guild_id)
     except discord.DiscordException as e:
-        print("[!] An error occurred [{}]".format(e))
+        print(f'[!] An error occurred [{e}]')
 
 ADD_RAID_LOBBY_CATEGORY = """
 INSERT INTO raid_lobby_category (guild_id, category_id, log_channel_id)
@@ -72,10 +72,10 @@ async def database_register_raid_lobby_category(bot, ctx, guild_id, category_id,
                                            int(category_id),
                                            int(log_channel_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error occured registering raid lobby category. [{}]".format(error))
+        print(f'[!] Error occured registering raid lobby category. [{error}]')
     await bot.release(connection)
     if results:
-        print("[*][{}][{}] New raid lobby category registered.".format(ctx.guild.name, category_id))
+        print(f'[*][{ctx.guild.name}][{category_id}] New raid lobby category registered.')
 
 
 async def register_raid_lobby_category(ctx, bot):

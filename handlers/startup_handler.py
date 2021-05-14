@@ -10,12 +10,12 @@ from handlers.raid_handler import remove_raid_from_table
 
 async def delete_after_delay(bot, channel_id, message_id, delay):
     """Delete after timed delay helper function. For use when bot goes down."""
-    print("[*] Sleeping for [{}] for next message deletion.".format(delay))
+    print(f'[*] Sleeping for [{delay}] for next message deletion.')
     await asyncio.sleep(delay)
     try:
         await bot.http.delete_message(channel_id, message_id)
     except discord.NotFound as error:
-        print("[!] Message did not exist on server. [{}]".format(error))
+        print(f'[!] Message did not exist on server. [{error}]')
         return
 
 GET_ALL_RAIDS = """
@@ -57,7 +57,7 @@ async def spin_up_message_deletions(bot):
                 continue
             await channel.delete_messages(delete_snowflakes)
         except discord.DiscordException as error:
-            print("[!] Message(s) did not exist on server. [{}]".format(error))
+            print(f'[!] Message(s) did not exist on server. [{error}]')
 
     await bot.pool.release(connection)
 
@@ -99,7 +99,7 @@ async def set_new_presence(bot, old_count):
     if total == old_count:
         return old_count
 
-    game = discord.Game("{} raids hosted".format(total))
+    game = discord.Game(f'{total} raids hosted')
     try:
         await bot.change_presence(activity=game)
     except discord.DiscordException:

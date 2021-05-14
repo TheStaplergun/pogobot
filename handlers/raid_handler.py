@@ -41,17 +41,17 @@ async def get_raid_count(bot, ctx, should_print):
         count = await connection.fetchrow(GET_RAID_COUNT_STATEMENT,
                                           int(ctx.guild.id))
     except asyncpg.Exception as error:
-        print("[!] Error obtaining raid count for guild. [{}]".format(error))
+        print(f'[!] Error obtaining raid count for guild. [{error}]')
         return
     finally:
         await bot.pool.release(connection)
     num = count.get("raid_counter")
     if should_print:
-        msg = "Total raids sent within this server [`{}`]".format(num)
+        msg = f'Total raids sent within this server [`{num}`]'
         try:
             await ctx.channel.send(msg)
         except discord.DiscordException as error:
-            print("[!] Error sending raid count to channel. [{}]".format(error))
+            print(f'[!] Error sending raid count to channel. [{error}]')
     else:
         return num
 
@@ -142,7 +142,7 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
         await remove_raid_from_table(connection, message_id)
         await bot.release(connection)
     except discord.DiscordException as error:
-        print("[!] An error occurred trying to remove a user from their raid manually. [{}]".format(error))
+        print(f'[!] An error occurred trying to remove a user from their raid manually. [{error}]')
         return
     await ctx.send("User was successfully removed from raid.", delete_after=5)
 
