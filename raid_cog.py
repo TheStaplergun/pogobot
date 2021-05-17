@@ -19,7 +19,7 @@ class RaidPost(commands.Cog):
         """Mod Only - Show all current running raid statistics for this guild"""
         await RH.get_all_raids_for_guild(self.bot, ctx)
 
-    @commands.command(aliases=["r"])
+    @commands.command(aliases=["r", "Raid"])
     @commands.guild_only()
     async def raid(self,
                    ctx,

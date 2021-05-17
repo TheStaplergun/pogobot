@@ -416,7 +416,7 @@ async def increment_notified_users_for_raid_lobby(bot, lobby_id):
     await bot.release(connection)
 
 async def process_user_list(bot, raid_lobby_data, sorted_users):
-    counter = 0
+    counter = 1
     current_count = raid_lobby_data.get("user_count")
     user_limit = raid_lobby_data.get("user_limit")
     notified_count = raid_lobby_data.get("notified_users")
@@ -427,7 +427,6 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
     for user in sorted_users:
         if counter > current_needed:
             break
-        counter+=1
         member = user["member_object"]
         #user_data = user["user_data"]
         new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
@@ -435,6 +434,7 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
         await message.add_reaction("⏱️")
         await set_notified_flag(bot, message.id, member.id)
         await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
+        counter+=1
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
@@ -482,10 +482,10 @@ async def set_recent_participation(bot, user_id):
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     role = discord.utils.get(guild.roles, name="Lobby Member")
+    await increment_user_count_for_raid_lobby(bot, lobby.id)
     await set_checked_in_flag(bot, member.id)
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
-    await increment_user_count_for_raid_lobby(bot, lobby.id)
     await set_recent_participation(bot, member.id)
     try:
         await member.add_roles(role, reason="Member of lobby")
@@ -603,7 +603,7 @@ async def delete_lobby(lobby):
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
     for member in members:
         try:
-            member.remove_roles(lobby_member_role, reason="End of raid")
+            await member.remove_roles(lobby_member_role, reason="End of raid")
         except discord.DiscordException:
             pass
     try:
