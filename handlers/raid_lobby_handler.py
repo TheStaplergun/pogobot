@@ -581,7 +581,16 @@ async def check_if_log_channel_and_purge_data(bot, channel_id):
     await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
     await bot.release(connection)
 
-
+DECREMENT_NOTIFIED_USERS = """
+    UPDATE raid_lobby_user_map
+    SET notified_users = notified_users - 1
+    WHERE (raid_message_id = $1)
+"""
+async def decrement_notified_users_by_raid_id(bot, raid_id):
+    connection = await bot.acquire()
+    await connection.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
+    await bot.release(connection)
+    
 async def handle_user_failed_checkin(bot, applicant_data):
     guild_id = applicant_data.get("guild_id")
     guild = bot.get_guild(int(guild_id))
@@ -589,8 +598,9 @@ async def handle_user_failed_checkin(bot, applicant_data):
     member = guild.get_member(applicant_data.get("user_id"))
     if not member:
         return False
-
-    await remove_application_for_user(bot, member, applicant_data.get("raid_message_id"))
+    raid_id = applicant_data.get("raid_message_id")
+    await remove_application_for_user(bot, member, raid_id)
+    await decrement_notified_users_by_raid_id(bot, raid_id)
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
     try:
         await member.send(" ", embed=new_embed)
