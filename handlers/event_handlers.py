@@ -69,6 +69,11 @@ async def raw_reaction_add_handle(ctx, bot):
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
     channel = bot.get_channel(int(ctx.channel_id))
+    if not channel:
+        try:
+            bot.fetch_channel(int(ctx.channel_id))
+        except discord.DiscordException:
+            return
     try:
         message = await channel.fetch_message(int(ctx.message_id))
     except discord.DiscordException:
@@ -85,7 +90,7 @@ async def raw_reaction_add_handle(ctx, bot):
     # if not raid_channel and not request_channel:
     #     return
     if raid_channel or request_channel:
-        await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
+        #await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
         category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
         if bot.categories_allowed and ctx.emoji.name == "📝":
 
@@ -176,7 +181,7 @@ async def on_message_handle(message, bot):
 
     if discord.utils.get(message.author.roles, name="Mods"):
         return False
-
+    
     if message.content.startswith(bot.command_prefix, 0, 1):
         for command in bot.commands:
             if message.content.startswith("-{}".format(command.name), 0, len(command.name) + 1):
@@ -184,17 +189,16 @@ async def on_message_handle(message, bot):
             for alias in command.aliases:
                 if message.content.startswith("-{}".format(alias), 0, len(alias) + 1):
                     return False
-    if not message.content.startswith(bot.command_prefix, 0, 1):
-        content = message.content
-        try:
-            await message.author.send(H.guild_member_dm(message.guild.name, "This is a curated channel. Read the guide and use the correct command for this channel."))
-        except discord.DiscordException:
-            pass
-        try:
-            print("[*][{}][{}] Invalid message deleted [{}]".format(message.guild.name, message.author.name, content))
-            await message.delete()
-        except discord.NotFound:
-            pass
+
+    content = message.content
+
+    await message.author.send(H.guild_member_dm(message.guild.name, "This is a curated channel. Read the guide and use the correct command for this channel."))
+        
+    try:
+        print("[*][{}][{}] Invalid message deleted [{}]".format(message.guild.name, message.author.name, content))
+        await message.delete()
+    except discord.NotFound:
+        pass
 
 async def on_guild_channel_delete(channel, bot):
     lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, channel.id)
