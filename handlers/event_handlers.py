@@ -74,6 +74,11 @@ async def raw_reaction_add_handle(ctx, bot):
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
     channel = bot.get_channel(int(ctx.channel_id))
+    if not channel:
+        try:
+            bot.fetch_channel(int(ctx.channel_id))
+        except discord.DiscordException:
+            return
     try:
         message = await channel.fetch_message(int(ctx.message_id))
     except discord.DiscordException:
@@ -90,7 +95,7 @@ async def raw_reaction_add_handle(ctx, bot):
     # if not raid_channel and not request_channel:
     #     return
     if raid_channel or request_channel:
-        await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
+        #await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
         category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
         if bot.categories_allowed and ctx.emoji.name == "📝":
 
@@ -181,7 +186,7 @@ async def on_message_handle(message, bot):
 
     if discord.utils.get(message.author.roles, name=os.getenv('MOD_ROLE')):
         return False
-
+    
     if message.content.startswith(bot.command_prefix, 0, 1):
         for command in bot.commands:
             if message.content.startswith("-{}".format(command.name), 0, len(command.name) + 1):

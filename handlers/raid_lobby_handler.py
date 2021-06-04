@@ -293,16 +293,16 @@ async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_req
                              False)
     await bot.release(connection)
 
-async def calculate_speed_bonus(message):
+async def calculate_speed_bonus(message, listing_duration):
     creation_time = message.created_at
     time_difference = (datetime.now() - creation_time)
-    return time_difference.total_seconds() / 60 * 100
+    return 100 - (time_difference.total_seconds() / listing_duration * 100) # Calculated by quickness of application over total life of raid listing.
 
 async def handle_new_application(ctx, bot, member, message, channel):
     raid_data = await RH.retrieve_raid_data_by_message_id(ctx, bot, message.id)
     if not raid_data:
         return False
-    pokemon_name = H.get_pokemon_name_from_raid(message)
+    _, pokemon_name = H.get_pokemon_name_from_raid(message)
     host_id = raid_data.get("user_id")
 
     try:
@@ -317,10 +317,11 @@ async def handle_new_application(ctx, bot, member, message, channel):
         new_embed = discord.Embed(title="Communication Error", description=f'{member.mention}, I cannot DM you. You will not be able to apply for raids until I can.')
         await channel.send(" ", embed=new_embed, delete_after=15)
         return False
-
     role = discord.utils.get(member.roles, name=pokemon_name)
-    speed_bonus = await calculate_speed_bonus(message)
-    await insert_new_application(bot, member.id, message.id, message.guild.id, True if role else False, speed_bonus)
+    time_to_end = raid_data.get("time_to_remove")
+    listing_duration = time_to_end - message.created_at
+    speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
+    await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), speed_bonus)
     bot.applicant_trigger.set()
 
 QUERY_APPLICATION_DATA_FOR_USER = """
@@ -381,8 +382,8 @@ async def calculate_weight(bot, user_data, member):
     await bot.release(connection)
 
     recent_participation_weight = 100
-    request_bonus_weight = int(user_data.get("is_requesting")) * 100
-    speed_bonus_weight = int(user_data.get("speed_bonus_weight"))
+    is_requesting = user_data.get("is_requesting")
+    speed_bonus_weight = user_data.get("speed_bonus_weight")
 
     if result:
         last_participation_time = result.get("last_participation_time")
@@ -390,8 +391,7 @@ async def calculate_weight(bot, user_data, member):
         time_difference = current_time - last_participation_time
         if time_difference.total_seconds() < 3600:
             recent_participation_weight = (time_difference.total_seconds()/3600) * 100
-
-    return recent_participation_weight + request_bonus_weight + speed_bonus_weight
+    return recent_participation_weight + (100 if is_requesting else 0) + speed_bonus_weight
 
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_application_user_map
@@ -429,9 +429,23 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
             break
         member = user["member_object"]
         #user_data = user["user_data"]
-        new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
-        message = await member.send(" ", embed=new_embed, delete_after=30)
-        await message.add_reaction("⏱️")
+        try:
+            new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
+            message = await member.send(" ", embed=new_embed, delete_after=30)
+        except discord.DiscordException:
+            try:
+                await message.delete()
+            except:
+                pass
+            continue
+        try:
+            await message.add_reaction("⏱️")
+        except discord.DiscordException:
+            try:
+                await message.delete()
+            except:
+                pass
+            continue
         await set_notified_flag(bot, message.id, member.id)
         await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
         counter+=1
@@ -581,7 +595,16 @@ async def check_if_log_channel_and_purge_data(bot, channel_id):
     await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
     await bot.release(connection)
 
-
+DECREMENT_NOTIFIED_USERS = """
+    UPDATE raid_lobby_user_map
+    SET notified_users = notified_users - 1
+    WHERE (raid_message_id = $1)
+"""
+async def decrement_notified_users_by_raid_id(bot, raid_id):
+    connection = await bot.acquire()
+    await connection.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
+    await bot.release(connection)
+    
 async def handle_user_failed_checkin(bot, applicant_data):
     guild_id = applicant_data.get("guild_id")
     guild = bot.get_guild(int(guild_id))
@@ -589,8 +612,9 @@ async def handle_user_failed_checkin(bot, applicant_data):
     member = guild.get_member(applicant_data.get("user_id"))
     if not member:
         return False
-
-    await remove_application_for_user(bot, member, applicant_data.get("raid_message_id"))
+    raid_id = applicant_data.get("raid_message_id")
+    await remove_application_for_user(bot, member, raid_id)
+    await decrement_notified_users_by_raid_id(bot, raid_id)
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
     try:
         await member.send(" ", embed=new_embed)

@@ -190,6 +190,7 @@ async def start_applicant_loop(bot):
                             "member_object":member,
                             }
                         user_list.append(user_data)
+
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     await RLH.process_user_list(bot, raid_lobby_data, sorted_users)
             if checked_count == total_lobbies_to_handle:
