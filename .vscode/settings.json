@@ -1,0 +1,33 @@
+{
+    "indentRainbow.colors": [
+    
+        "rgba(255,255,64,0.07)",
+        //"rgba(127,255,127,0.07)",
+        "rgba(255,127,255,0.07)",
+        "rgba(79,236,236,0.07)"
+    ],
+    "editor.renderWhitespace": "all",
+    "git.autofetch": true,
+    "workbench.editorAssociations": [
+        {
+            "viewType": "jupyter.notebook.ipynb",
+            "filenamePattern": "*.ipynb"
+        }
+    ],
+    "editor.rulers": [
+        80,
+        100,
+        120
+    ],
+    "[markdown]": {
+
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": false
+    },
+    "python.linting.enabled":true,
+    "python.linting.lintOnSave": true,
+    "python.linting.maxNumberOfProblems": 500,
+    "python.linting.pylintEnabled": true,
+    "editor.suggestSelection": "first",
+
+}

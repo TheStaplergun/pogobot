@@ -1,8 +1,9 @@
-import discord
-import importlib
-from discord.ext import commands
 from datetime import datetime, timedelta
-from pogo_raid_lib import *
+import os
+
+import discord
+from discord.ext import commands
+from pogo_raid_lib import validate_and_format_message
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
@@ -11,13 +12,7 @@ import handlers.sticky_handler as SH
 
 class RaidPost(commands.Cog):
     def __init__(self, bot):
-        self.bot = bot
-
-    @commands.command()
-    @commands.has_role("Mods")
-    async def get_raids(self, ctx):
-        """Mod Only - Show all current running raid statistics for this guild"""
-        await RH.get_all_raids_for_guild(self.bot, ctx)
+        self.__bot = bot
 
     @commands.command(aliases=["r", "Raid"])
     @commands.guild_only()
@@ -33,14 +28,14 @@ class RaidPost(commands.Cog):
 
         """Post a raid"""
         print("[*] Processing raid.")
-        if not await RH.check_if_valid_raid_channel(self.bot, ctx.channel.id):
+        if not await RH.check_if_valid_raid_channel(self.__bot, ctx.channel.id):
             return
 
         try:
             await ctx.message.delete()
         except:
             pass
-        if await RH.check_if_in_raid(ctx, self.bot, ctx.author.id):
+        if await RH.check_if_in_raid(ctx, self.__bot, ctx.author.id):
             try:
                 await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
             except discord.DiscordException:
@@ -60,62 +55,66 @@ class RaidPost(commands.Cog):
                 if remove_after < 10:
                     remove_after = 10
                 remove_after_seconds = int(remove_after) * 60 
-                channel_message_body = "Raid hosted by {}\n".format(ctx.author.mention)
-                _, _, _, role_id = await REQH.check_if_request_message_exists(self.bot, response.title, ctx.guild.id)
+                channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
+                _, _, _, role_id = await REQH.check_if_request_message_exists(self.__bot, response.title, ctx.guild.id)
                 message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."
                 try:
                     await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
                 except discord.Forbidden:
                     await ctx.send(ctx.author.name + ", I was unable to DM you. You must have your DMs open to coordinate raids.\nRaid will not be listed.", delete_after=15)
                     return
-                request_channel_id = await REQH.get_request_channel(self.bot, ctx.guild.id)
+                request_channel_id = await REQH.get_request_channel(self.__bot, ctx.guild.id)
                 if request_channel_id:
                     response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to be notified of future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
-                raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id)
+                raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id)
                 start_string = ""
                 if role_id:
                     role = discord.utils.get(ctx.guild.roles, id=role_id)
-                    start_string = "{}".format(role.mention)
+                    start_string = f'{role.mention}'
                 end_string = ""
-                if self.bot.categories_allowed and raid_lobby_category:
+                if raid_lobby_category:
                     response.set_footer(text="To sign up for this raid, tap the 📝 below.")
                 else:
-                    end_string = " hosted by {}\n".format(ctx.author.mention)
+                    end_string = f' hosted by {ctx.author.mention}\n'
                 channel_message_body = start_string + end_string
                 try:
                     message = await ctx.send(channel_message_body, embed=response, delete_after=remove_after_seconds)
                 except discord.DiscordException as error:
-                    print("[*][{}][{}] An error occurred listing a raid. [{}]".format(ctx.guild.name, ctx.author, error))
+                    print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                     return
 
                 await message.add_reaction("🗑️")
 
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
-                if self.bot.categories_allowed and await RLH.get_raid_lobby_category_by_guild_id(self.bot, ctx.guild.id):
+                if await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
-                    await RLH.create_raid_lobby(ctx, self.bot, message.id, ctx.author, time_to_remove_lobby)
+                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby)
                     await message.add_reaction("📝")
 
-                await RH.add_raid_to_table(ctx, self.bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
-                print("[*][{}][{}] Raid successfuly posted.".format(ctx.guild, ctx.author.name))
+                await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
+                print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
                 if request_channel_id:
                     try:
                         await message.add_reaction("📬")
                         await message.add_reaction("📪")
                     except discord.DiscordException as error:
-                      print("[!] Exception occurred during adding request enrollment reactions. [{}]".format(error))
+                        print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
                 try:
-                    await SH.toggle_raid_sticky(self.bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
+                    await SH.toggle_raid_sticky(self.__bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
                 except discord.DiscordException as error:
-                    print("[!] Exception occurred during toggle of raid sticky. [{}]".format(error))
+                    print(f'[!] Exception occurred during toggle of raid sticky. [{error}]')
                 try:
-                    await RH.increment_raid_counter(ctx, self.bot, int(ctx.guild.id))
+                    await RH.increment_raid_counter(ctx, self.__bot, int(ctx.guild.id))
                 except discord.DiscordException as error:
-                    print("[!] Exception occured during increment of raid counter. [{}]".format(error))
+                    print(f'[!] Exception occured during increment of raid counter. [{error}]')
             else:
                 response += "---------\n"
                 response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"
                 await ctx.author.send(response)
                 correction_suggestion = ctx.prefix + "raid " + suggestion
                 await ctx.author.send(correction_suggestion)
-                print("[!][{}][{}] Raid failed to post due to invalid arguments.".format(ctx.guild, ctx.author.name))
+                print(f'[!][{ctx.guild}][{ctx.author.name}] Raid failed to post due to invalid arguments.')
+
+def setup(bot):
+    """Default setup function for file"""
+    bot.add_cog(RaidPost(bot))
