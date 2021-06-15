@@ -11,7 +11,7 @@ import discord
 from discord.ext import commands
 
 import important
-import raid_cog
+#import raid_cog
 import handlers.event_handlers as EH
 import handlers.friend_code_handler as FCH
 import handlers.helpers as H
@@ -68,7 +68,6 @@ async def startup_process():
     """Startup process. Linear process."""
     await BOT.wait_until_ready()
     BOT.pool = await init_pool()
-    BOT.add_cog(raid_cog.RaidPost(BOT))
     if live:
         await SH.spin_up_message_deletions(BOT)
 
@@ -100,7 +99,8 @@ def initialize_cogs(bot):
         except Exception as error:
             print(f"[!] An error occurred while loading COG [{cog}]: [{error}]")
             return False
-
+    return True
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")

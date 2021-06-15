@@ -4,7 +4,7 @@ from discord.ext import commands
 
 import handlers.helpers as H
 import handlers.raid_handler as RH
-import handlers.request_handlers as REQH
+import handlers.request_handler as REQH
 
 class MemberCommands(commands.Cog):
     """Members Commands Cog"""

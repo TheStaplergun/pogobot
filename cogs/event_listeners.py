@@ -35,7 +35,6 @@ class Listeners(commands.Cog):
             await EH.on_message_handle(message, self.__bot)
         except Exception as error:
             print(f'[!] An exception occurred during message handling. [{error}]')
-        await self.__bot.process_commands(message)
 
 
 def setup(bot):

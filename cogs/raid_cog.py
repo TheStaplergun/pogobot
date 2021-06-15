@@ -10,11 +10,6 @@ import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
 
-import dotenv
-
-if os.path.exists('.env'):
-    dotenv.load_dotenv()
-
 class RaidPost(commands.Cog):
     def __init__(self, bot):
         self.__bot = bot
