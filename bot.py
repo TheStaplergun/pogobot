@@ -3,6 +3,7 @@
 import argparse
 import asyncio
 from datetime import datetime
+import os
 import sys
 
 import asyncpg
