@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 import asyncpg
 import discord
+import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 
@@ -183,12 +184,24 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
+    
+    friend_code = await FCH.get_friend_code(bot, raid_host_member.id)
+    header_message_body = f"{friend_code}\n{raid_host_member.mention}\n"
+
     header_message_body = "{}".format(raid_host_member.mention)
     try:
         header_message_body = header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
     except AttributeError as error:
         pass
-    await new_raid_lobby.send(header_message_body, embed=new_embed)
+
+    if len(friend_code) == 12:
+        header_message_body = f"{header_message_body}\n*Note: This message can be directly copied and pasted into your add friend code box in game*"
+
+    message = await new_raid_lobby.send(header_message_body, embed=new_embed)
+    try:
+        await message.pin()
+    except discord.DiscordException:
+        pass
     try:
         await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
     except asyncpg.PostgresError as error:
@@ -309,6 +322,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
         if host_id == member.id:
             new_embed = discord.Embed(title="Error", description="You cannot apply to your own raid!")
             await member.send(" ", embed=new_embed)
+            return False
         else:
             new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
             await member.send(" ", embed=new_embed)
@@ -507,8 +521,13 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         pass
     except AttributeError:
         pass
-    new_embed = discord.Embed(title="System Notification", description="A user has checked in. They have been pinged for convenience.\n\nThe host has been listed and pinged at the top of this channel.")
-    await lobby.send("{}".format(member.mention), embed=new_embed)
+    new_embed = discord.Embed(title="System Notification", description="A player has checked in. They have been pinged for convenience.\n\nThe hosts information is pinned in this channel.")
+    
+    friend_code = await FCH.get_friend_code(bot, member.id)
+    message_to_send = f"{friend_code}\n{member.mention}"
+    if len(friend_code) == 12:
+        message_to_send = f"{message_to_send}*Note: This message can be directly copied and pasted into your add friend code box in game*"
+    await lobby.send(message_to_send, embed=new_embed)
     try:
         await message.delete()
     except discord.DiscordException:

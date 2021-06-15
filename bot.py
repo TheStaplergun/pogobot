@@ -9,6 +9,7 @@ import asyncpg
 import important
 import raid_cog
 import handlers.event_handlers as EH
+import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
@@ -182,7 +183,15 @@ async def refresh_request_reactions(ctx, message_id):
         await message.add_reaction("📪")
     except discord.DiscordException as error:
         print("[!] Error refreshing reactions [{}]".format(error))
-    
+
+@BOT.command()
+async def fcreg(ctx):
+    await FCH.set_friend_code(ctx, BOT)
+
+@BOT.command()
+async def fc(ctx):
+    await FCH.send_fc(ctx, BOT)
+
 @BOT.command()
 async def ping(ctx):
     """Check if alive"""

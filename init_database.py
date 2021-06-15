@@ -129,16 +129,25 @@ UPDATE_DATA_TYPE = """
     ALTER TABLE raid_application_user_map
     ALTER COLUMN speed_bonus_weight TYPE DOUBLE PRECISION;
 """
+friend_code_table = """
+  CREATE TABLE IF NOT EXISTS friend_codes (
+    user_id BIGINT PRIMARY KEY,
+    friend_code CHAR(12) NOT NULL,
+    last_time_recalled TIMESTAMP NOT NULL
+  )
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
                                host='localhost',
                                user='pi',
                                password=PASSWORD)
-  await conn.execute(UPDATE_DATA_TYPE)
+  #await conn.execute(UPDATE_DATA_TYPE)
   #await conn.execute(RAID_LOBBY_CATEGORY)
   #await conn.execute(RAID_LOBBY_USER_MAP)
   #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
   #await conn.execute(RAID_APPLICATION_USER_MAP)
+  await conn.execute(friend_code_table)
+
 
 asyncio.get_event_loop().run_until_complete(main())
