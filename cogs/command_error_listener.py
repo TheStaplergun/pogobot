@@ -40,25 +40,25 @@ class CommandErrorHandler(commands.Cog):
             return
 
         if isinstance(error, commands.DisabledCommand):
-            await ctx.send(f'{ctx.command} has been disabled.')
+            await ctx.send(f'The command `{ctx.command}` has been disabled.')
 
         elif isinstance(error, commands.NoPrivateMessage):
             try:
-                await ctx.author.send(f'{ctx.command} can not be used in Private Messages.')
+                await ctx.author.send(f'The command `{ctx.command}` can not be used in Private Messages.')
             except discord.DiscordException:
                 pass
         
         elif isinstance(error, commands.MissingPermissions):
             perms = error.missing_perms
             try:
-                await ctx.send(f'{ctx.command} could not be executed. You are missing the following permissions: {perms}')
+                await ctx.send(f'The command `{ctx.command}` could not be executed. You are missing the following permissions: {perms}')
             except discord.DiscordException:
                 pass
         
         elif isinstance(error, commands.BotMissingPermissions):
             perms = error.missing_perms
             try:
-                await ctx.send(f'{ctx.command} could not be executed. I am missing the following permissions: {perms}')
+                await ctx.send(f'The command `{ctx.command}` could not be executed. I am missing the following permissions: {perms}')
             except discord.DiscordException:
                 pass
         # For this error example we check to see where it came from...
