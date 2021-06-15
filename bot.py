@@ -190,7 +190,7 @@ async def fcreg(ctx):
 
 @BOT.command()
 async def fc(ctx):
-    await FCH.send_fc(ctx, BOT)
+    await FCH.send_friend_code(ctx, BOT)
 
 @BOT.command()
 async def ping(ctx):

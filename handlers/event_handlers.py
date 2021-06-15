@@ -12,14 +12,15 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
     results = await RH.check_if_in_raid(ctx, bot, ctx.user_id)
     if results and results.get("message_id") == message_id:
         message_to_send = "Your raid has been successfuly deleted."
-        conn = await bot.acquire()
-        await RH.remove_raid_from_table(conn, message.id)
-        await bot.release(conn)
+
         try:
             await message.delete()
         except discord.DiscordException:
             pass
-        await RLH.alter_deletion_time_for_raid_lobby(bot, ctx)
+        await RLH.alter_deletion_time_for_raid_lobby(bot, message_id)
+        conn = await bot.acquire()
+        await RH.remove_raid_from_table(conn, message.id)
+        await bot.release(conn)
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
@@ -123,7 +124,8 @@ async def raid_delete_handle(ctx, bot):
         return
     user_id = lobby_data.get("host_user_id")
     ctx.user_id = user_id
-    await RLH.alter_deletion_time_for_raid_lobby(bot, lobby_data)
+    raid_id = lobby_data.get("raid_message_id")
+    await RLH.alter_deletion_time_for_raid_lobby(bot, raid_id)
 
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))

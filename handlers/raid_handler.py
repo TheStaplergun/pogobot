@@ -75,7 +75,7 @@ async def get_all_raids_for_guild(bot, ctx):
     await ctx.channel.send(message)
 
 GET_RAID_FOR_USER = """
- SELECT * FROM raids where (user_id = $1)
+ SELECT * FROM raids where (user_id = $1);
 """
 async def check_if_in_raid(ctx, bot, user_id):
     """Checks if a user is already in a raid. Prevents double listing."""

@@ -188,7 +188,6 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     friend_code = await FCH.get_friend_code(bot, raid_host_member.id)
     header_message_body = f"{friend_code}\n{raid_host_member.mention}\n"
 
-    header_message_body = "{}".format(raid_host_member.mention)
     try:
         header_message_body = header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
     except AttributeError as error:
@@ -218,9 +217,9 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
     SET delete_at = $1
     WHERE (raid_message_id = $2);
 """
-async def alter_deletion_time_for_raid_lobby(bot, lobby_data):
+async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     current_time = datetime.now()
-    new_delete_time = current_time + timedelta(minutes=15)
+    lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
     lobby_channel_id = lobby_data.get("lobby_channel_id")
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
@@ -230,18 +229,21 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby_data):
         except discord.DiscordException:
             pass
 
-    try:
-        if lobby:
-            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
-            await lobby.send(" ", embed=new_embed)
-    except discord.DiscordException:
-        pass
-
+    users = lobby_data.get("user_count")
+    new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
     connection = await bot.acquire()
     await connection.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
                              new_delete_time,
                              int(lobby_data.get("raid_message_id")))
     await bot.release(connection)
+    try:
+        if lobby and not users == 0:
+            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+            await lobby.send(" ", embed=new_embed)
+    except discord.DiscordException:
+        pass
+
+
 
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     SELECT * FROM raid_lobby_user_map
@@ -533,7 +535,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     friend_code = await FCH.get_friend_code(bot, member.id)
     message_to_send = f"{friend_code}\n{member.mention}"
     if len(friend_code) == 12:
-        message_to_send = f"{message_to_send}*Note: This message can be directly copied and pasted into your add friend code box in game*"
+        message_to_send = f"{message_to_send}\n*Note: This message can be directly copied and pasted into your add friend code box in game*"
     await lobby.send(message_to_send, embed=new_embed)
     try:
         await message.delete()
@@ -587,8 +589,9 @@ REMOVE_LOBBY_BY_ID = """
 """
 async def remove_lobby_by_lobby_id(bot, lobby_id):
     lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
-    raid_id = lobby_data.get("raid_message_id")
-    await remove_applicants_for_raid_by_raid_id(bot, raid_id)
+    if lobby_data:
+        raid_id = lobby_data.get("raid_message_id")
+        await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
     connection = await bot.acquire()
     await connection.execute(REMOVE_LOBBY_BY_ID, lobby_id)
@@ -655,6 +658,8 @@ async def delete_lobby(lobby):
         try:
             await member.remove_roles(lobby_member_role, reason="End of raid")
         except discord.DiscordException:
+            pass
+        except AttributeError:
             pass
     try:
         await lobby.delete()
