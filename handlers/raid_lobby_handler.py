@@ -216,24 +216,31 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 UPDATE_TIME_TO_REMOVE_LOBBY = """
     UPDATE raid_lobby_user_map
     SET delete_at = $1
-    WHERE (host_user_id = $2);
+    WHERE (raid_message_id = $2);
 """
-async def alter_deletion_time_for_raid_lobby(bot, ctx):
+async def alter_deletion_time_for_raid_lobby(bot, lobby_data):
     current_time = datetime.now()
     new_delete_time = current_time + timedelta(minutes=15)
-    channel = await get_lobby_channel_for_user_by_id(bot, ctx.user_id)
+    lobby_channel_id = lobby_data.get("lobby_channel_id")
+    lobby = bot.get_channel(int(lobby_channel_id))
+    if not lobby:
+        #guild = bot.get_guild(lobby_data.get("guild_id"))
+        try:
+            lobby = await bot.fetch_channel(int(lobby_channel_id))
+        except discord.DiscordException:
+            pass
 
     try:
-        if channel:
+        if lobby:
             new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
-            await channel.send(" ", embed=new_embed)
+            await lobby.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
     connection = await bot.acquire()
     await connection.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
                              new_delete_time,
-                             int(ctx.user_id))
+                             int(lobby_data.get("raid_message_id")))
     await bot.release(connection)
 
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """

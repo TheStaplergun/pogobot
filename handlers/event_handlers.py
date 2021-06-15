@@ -123,7 +123,7 @@ async def raid_delete_handle(ctx, bot):
         return
     user_id = lobby_data.get("host_user_id")
     ctx.user_id = user_id
-    await RLH.alter_deletion_time_for_raid_lobby(bot, ctx)
+    await RLH.alter_deletion_time_for_raid_lobby(bot, lobby_data)
 
     try:
         await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
