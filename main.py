@@ -8,8 +8,9 @@ import sys
 
 import asyncpg
 import discord
-from discord.ext import commands
+#from discord.ext import commands
 
+import classes.bot as bot
 import important
 #import raid_cog
 import handlers.event_handlers as EH
@@ -21,7 +22,7 @@ import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
 import handlers.startup_handler as SH
 
-DESCRIPTION = '''TheStaplergun's Bot in Python'''
+DESCRIPTION = '''TheStaplergun's Pokemon Go Raid Bot'''
 
 #Set command_prefix to any character here.
 COMMAND_PREFIX = '-'
@@ -33,7 +34,7 @@ intent.members = True
 intent.guilds = True
 
 GAME = discord.Game(CUSTOM_STATUS)
-BOT = commands.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
+BOT = bot.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=intent)
 
 BOT.pool = None
 BOT.categories_allowed = True
