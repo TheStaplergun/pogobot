@@ -3,9 +3,12 @@
 import argparse
 import asyncio
 from datetime import datetime
+import sys
+
+import asyncpg
 import discord
 from discord.ext import commands
-import asyncpg
+
 import important
 import raid_cog
 import handlers.event_handlers as EH
@@ -59,147 +62,6 @@ async def init_pool():
 
     return pool
 
-@BOT.event
-async def on_ready():
-    """Built in event"""
-    print('Logged in as')
-    print(BOT.user.name)
-    print('------------------')
-    #print(BOT.commands)
-
-@BOT.event
-async def on_raw_reaction_add(ctx):
-    """Built in event"""
-    await EH.raw_reaction_add_handle(ctx, BOT)
-
-@BOT.event
-async def on_raw_message_delete(ctx):
-    """Built in event"""
-    await EH.raw_message_delete_handle(ctx, BOT)
-
-@BOT.event
-async def on_guild_channel_delete(channel):
-    await EH.on_guild_channel_delete(channel, BOT)
-
-@BOT.event
-async def on_message(message):
-    """Built in event"""
-    try:
-        await EH.on_message_handle(message, BOT)
-    except Exception as error:
-        print("[!] An exception occurred during message handling. [{}]".format(error))
-    await BOT.process_commands(message)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def clear_raid(ctx, user_id):
-    await RH.handle_clear_user_from_raid(ctx, BOT, user_id)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def clear_requests(ctx):
-    await REQH.handle_clear_all_requests_for_guild(ctx, BOT)
-
-@BOT.command()
-@commands.guild_only()
-async def request(ctx, tier=None, pokemon_name=None):
-    """Processes a users pokemon request"""
-    if not await REQH.check_if_valid_request_channel(BOT, ctx.channel.id):
-        await ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
-        return
-    await REQH.request_pokemon_handle(BOT, ctx, tier, pokemon_name)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def get_requests(ctx):
-    await REQH.handle_get_all_requests(ctx, BOT)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def register_request_channel(ctx):
-    """Mod only - Sets up channel to allow Pokemon requests"""
-    await REGH.register_request_channel_handle(ctx, BOT)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def register_raid_channel(ctx):
-    """Mod only - Sets up channel to allow hosting raids"""
-    await REGH.register_raid_channel_handle(ctx, BOT)
-
-@BOT.command()
-@commands.guild_only()
-@commands.has_role("Mods")
-async def register_raid_lobby_category(ctx):
-    """Mod only - Sets up category to allow automation of raid lobbies"""
-    await REGH.register_raid_lobby_category(ctx, BOT)
-
-@BOT.command()
-@commands.has_role("Mods")
-async def toggle_category_system(ctx):
-    BOT.categories_allowed = not BOT.categories_allowed
-    await ctx.send("System is {}".format("on" if BOT.categories_allowed else "off"), delete_after=5)
-
-@BOT.command()
-@commands.has_role("Mods")
-async def raid_count(ctx):
-    """Mod only - Show total raids hosted in this server"""
-    try:
-        await ctx.message.delete()
-    except discord.NotFound as error:
-        print("[!] Message already gone. [{}]".format(error))
-    await RH.get_raid_count(BOT, ctx, True)
-
-# @BOT.command()
-# @commands.has_role("Mods")
-# async def get_lobbies(ctx):
-#     """Mod Only - Show all current running raid statistics for this guild"""
-#     await RLH.get_all_lobbies_for_guild(ctx, BOT)
-
-# @BOT.command()
-# @commands.has_role("Mods")
-# async def get_all_applications(ctx):
-#     """Mod Only - Show all current running raid statistics for this guild"""
-#     await RLH.get_all_applications_for_guild(ctx, BOT)
-
-@BOT.command()
-@commands.has_role("Mods")
-async def refresh_request_reactions(ctx, message_id):
-    try:
-        await ctx.message.delete()
-    except discord.DiscordException:
-        pass
-
-    channel = ctx.channel
-    try:
-        message = await channel.fetch_message(int(message_id))
-        print(message)
-        await message.clear_reactions()
-        await message.add_reaction("📬")
-        await message.add_reaction("📪")
-    except discord.DiscordException as error:
-        print("[!] Error refreshing reactions [{}]".format(error))
-
-@BOT.command()
-async def fcreg(ctx):
-    await FCH.set_friend_code(ctx, BOT)
-
-@BOT.command()
-async def fc(ctx):
-    await FCH.send_friend_code(ctx, BOT)
-
-@BOT.command()
-async def ping(ctx):
-    """Check if alive"""
-    create_time = ctx.message.created_at
-    cur_time = datetime.now()
-    time_dif = cur_time - create_time
-    await ctx.send("Pong `{}ms`".format(time_dif.total_seconds()*1000))
-
 live=False
 async def startup_process():
     """Startup process. Linear process."""
@@ -224,10 +86,29 @@ async def applicant_loop():
     await BOT.wait_until_ready()
     await SH.start_applicant_loop(BOT)
 
+def initialize_cogs(bot):
+    cog_list = []
+    for root, _, files in os.walk("cogs"):
+        for filename in files:
+            filepath = os.path.join(root, filename)
+            if filepath.endswith(".py"):
+                cog_list.append(filepath.split(".py")[0].replace(os.sep, "."))
+    for cog in cog_list:
+        try:
+            bot.load_extension(cog)
+        except Exception as error:
+            print(f"[!] An error occurred while loading COG [{cog}]: [{error}]")
+            return False
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="")
     parser.add_argument("-l", action="store_true")
     args = parser.parse_args()
+
+    if not initialize_cogs(BOT):
+        print("[!] An error occurred during cog initialization. Exiting.")
+        sys.exit()
+
     BOT.applicant_trigger = asyncio.Event()
     BOT.lobby_remove_trigger = asyncio.Event()
 
@@ -236,9 +117,9 @@ if __name__ == "__main__":
     BOT.loop.create_task(applicant_loop())
     BOT.loop.create_task(lobby_removal_loop())
     if args.l:
-        print("Running bot live.")
+        print("[!] Running bot live.")
         live=True
         BOT.run(important.LIVE_TOKEN)
     else:
-        print("Running bot in test mode")
+        print("[i] Running bot in test mode")
         BOT.run(important.TESTING_TOKEN)
