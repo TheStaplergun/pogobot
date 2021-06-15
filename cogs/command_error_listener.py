@@ -1,6 +1,8 @@
 import discord
 import traceback
 import sys
+
+import asyncpg
 from discord.ext import commands
 
 class CommandErrorHandler(commands.Cog):
@@ -59,6 +61,12 @@ class CommandErrorHandler(commands.Cog):
             perms = error.missing_perms
             try:
                 await ctx.send(f'The command `{ctx.command}` could not be executed. I am missing the following permissions: {perms}')
+            except discord.DiscordException:
+                pass
+
+        elif isinstance(error, asyncpg.PostgresError):
+            try:
+                await ctx.send(f'A database error occurred while processing your command: [{error}]')
             except discord.DiscordException:
                 pass
         # For this error example we check to see where it came from...
