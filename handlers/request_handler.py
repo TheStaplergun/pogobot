@@ -10,9 +10,7 @@ check_valid_request_channel = """
 """
 
 async def check_if_valid_request_channel(bot, channel_id):
-    connection = await bot.acquire()
-    results = await connection.fetchrow(check_valid_request_channel, int(channel_id))
-    await bot.release(connection)
+    results = await bot.database.fetchrow(check_valid_request_channel, int(channel_id))
     if not results:
         return False
     return True
@@ -21,18 +19,14 @@ GET_ALL_REQUESTS_FOR_GUILD = """
   SELECT * FROM request_role_id_map WHERE (guild_id = $1);
 """
 async def handle_get_all_requests(ctx, bot):
-    connection = await bot.acquire()
-    results = await connection.fetch(GET_ALL_REQUESTS_FOR_GUILD, int(ctx.guild.id))
-    await bot.release(connection)
+    results = await bot.database.fetch(GET_ALL_REQUESTS_FOR_GUILD, int(ctx.guild.id))
     await ctx.send(results)
 
 FETCH_REQUEST_CHANNEL_INFO = """
  SELECT * FROM valid_request_channels where (guild_id = $1);
 """
 async def get_request_channel(bot, guild_id):
-    connection = await bot.acquire()
-    results = await connection.fetchrow(FETCH_REQUEST_CHANNEL_INFO, guild_id)
-    await bot.release(connection)
+    results = await bot.database.fetchrow(FETCH_REQUEST_CHANNEL_INFO, guild_id)
     if not results:
         return False
     return results.get("channel_id")
@@ -51,18 +45,16 @@ async def database_register_request_channel(bot, ctx, channel_id, guild_id):
     if request_channel_id:
         await handle_clear_all_requests_for_guild(ctx, bot)
     results = None
-    connection = await bot.acquire()
 
     try:
         if request_channel_id:
-              await connection.execute(UPDATE_REQUEST_CHANNEL, int(channel_id), int(guild_id))
+              await bot.database.execute(UPDATE_REQUEST_CHANNEL, int(channel_id), int(guild_id))
         else:
-              results = await connection.execute(add_request_channel,
-                                                 int(channel_id),
-                                                 int(guild_id))
+              results = await bot.database.execute(add_request_channel,
+                                                   int(channel_id),
+                                                   int(guild_id))
     except asyncpg.PostgresError as e:
         print("[!] Error occured registering request channel. [{}]".format(e))
-    await bot.release(connection)
     if results:
         print("[*] [{}] [{}] New request channel registered.".format(ctx.guild.name, channel_id))
 
@@ -79,9 +71,7 @@ GET_REQUEST_POKEMON_MESSAGE = """
  SELECT * FROM request_role_id_map WHERE (role_name = $1 AND guild_id = $2);
 """
 async def check_if_request_message_exists(bot, pokemon_name, guild_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(GET_REQUEST_POKEMON_MESSAGE, pokemon_name, int(guild_id))
-    await bot.release(connection)
+    result = await bot.database.fetchrow(GET_REQUEST_POKEMON_MESSAGE, pokemon_name, int(guild_id))
     if not result:
         return False, None, None, None
     return True, result.get("channel_id"), result.get("message_id"), result.get("role_id")
@@ -90,9 +80,7 @@ GET_REQUEST_BY_MESSAGE_ID = """
   SELECT * FROM request_role_id_map WHERE (message_id = $1);
 """
 async def get_request_by_message_id(bot, message_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(GET_REQUEST_BY_MESSAGE_ID, int(message_id))
-    await bot.release(connection)
+    result = await bot.database.fetchrow(GET_REQUEST_BY_MESSAGE_ID, int(message_id))
     if not result:
         return False, None, None, None
     return True, result.get("channel_id"), result.get("message_id"), result.get("role_id")
@@ -132,14 +120,12 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     except discord.DiscordException as error:
         print("[!][{}] An error occurred while adding reactions to a new request listing. [{}]".format(error))
 
-    connection = await bot.acquire()
     try:
-        await connection.execute(INSERT_NEW_ROLE, new_role.id, message.id, guild.id, pokemon_name)
+        await bot.database.execute(INSERT_NEW_ROLE, new_role.id, message.id, guild.id, pokemon_name)
     except asyncpg.PostgresError as error:
         #await message.delete()
         #await author.remove_roles([new_role])
         print("[!] An error occurred inserting the new role data. [{}]".format(error))
-    await bot.release(connection)
 
 GET_ALL_ROLES_FOR_GUILD = """
   SELECT * FROM request_role_id_map
@@ -154,10 +140,14 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
         await ctx.message.delete()
     except discord.NotFound:
         pass
-    connection = await bot.acquire()
-    query_results = await connection.fetch(GET_ALL_ROLES_FOR_GUILD, ctx.guild.id)
-    await connection.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, ctx.guild.id)
-    await bot.release(connection)
+    queries = []
+    queries.append(bot.database.fetch(GET_ALL_ROLES_FOR_GUILD, ctx.guild.id))
+    queries.append(bot.database.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, ctx.guild.id))
+
+    results = await bot.database.batch(queries)
+
+    query_results = results.pop(0)
+
     guild = ctx.guild
     channel_id = await get_request_channel(bot, guild.id)
     channel = guild.get_channel(channel_id)
@@ -169,7 +159,7 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
             if role:
                 await role.delete()
         except discord.DiscordException as error:
-            print("[!][{}] An error occurred deleting a role. [{}]".format(error))
+            print("[!] An error occurred deleting a role. [{}]".format(error))
         try:
             await channel.delete_messages([discord.Object(message_id)])
         except discord.NotFound:
@@ -277,12 +267,10 @@ async def delete_request_role_and_post(ctx, bot, guild, message, role):
     except discord.DiscordException as error:
         print("[!][{}] An exception occurred attempting to delete a role. [{}]".format(guild.name, error))
 
-    connection = await bot.acquire()
     try:
-        result = await connection.execute(DELETE_REQUEST_FROM_TABLE, role_id)
-    except asyncpg.Exception as error:
+        await bot.database.execute(DELETE_REQUEST_FROM_TABLE, role_id)
+    except asyncpg.PostgresError as error:
         print("[!] An exception occurred attempting to remove a role listing from the database. [{}]".format(error))
-    await bot.release(connection)
 
 async def check_if_user_already_assigned_role(member, role_id):
     if discord.utils.get(member.roles, id=role_id):

@@ -10,15 +10,15 @@ VALUES($1, $2, $3, $4, $5, $6)
 async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    connection = await bot.acquire()
-    await connection.execute(NEW_RAID_INSERT,
+
+    await bot.database.execute(NEW_RAID_INSERT,
                                  int(message_id),
                                  cur_time,
                                  int(guild_id),
                                  int(channel_id),
                                  int(user_id),
                                  time_to_remove)
-    await bot.release(connection)
+
 
 INCREMENT_RAID_UPDATE_STATEMENT = """
 UPDATE guild_raid_counters
@@ -27,9 +27,7 @@ WHERE (guild_id = $1);
 """
 async def increment_raid_counter(ctx, bot, guild_id):
     """Increments raid counter for a server for statistics tracking."""
-    connection = await bot.acquire()
-    await connection.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
-    await bot.release(connection)
+    await bot.database.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
 
 GET_RAID_COUNT_STATEMENT = """
     SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
@@ -60,9 +58,9 @@ GET_RAIDS_FOR_GUILD = """
 """
 async def get_all_raids_for_guild(bot, ctx):
     """Admin command. Gets all raids for a guild and all pertaining data."""
-    connection = await bot.acquire()
-    results = await connection.fetch(GET_RAIDS_FOR_GUILD, ctx.guild.id)
-    await bot.release(connection)
+
+    results = await bot.database.fetch(GET_RAIDS_FOR_GUILD, ctx.guild.id)
+
     if not results:
         message = "No raids currently running."
         return
@@ -79,27 +77,22 @@ GET_RAID_FOR_USER = """
 """
 async def check_if_in_raid(ctx, bot, user_id):
     """Checks if a user is already in a raid. Prevents double listing."""
-    connection = await bot.acquire()
-    results = await connection.fetchrow(GET_RAID_FOR_USER, int(user_id))
-    await bot.release(connection)
-    return results
+    return await bot.database.fetchrow(GET_RAID_FOR_USER, int(user_id))
 
 CHECK_IF_MESSAGE_IS_RAID = """
   SELECT * FROM raids WHERE (message_id = $1)
 """
 async def message_is_raid(ctx, bot, message_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
-    await bot.release(connection)
+    result = await bot.database.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
     if result:
         return True
     return False
 
 # Redundant but different return type. Can probably be added to above but do not feel like reworking at the moment.
 async def retrieve_raid_data_by_message_id(ctx, bot, message_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
-    await bot.release(connection)
+
+    result = await bot.database.fetchrow(CHECK_IF_MESSAGE_IS_RAID, int(message_id))
+
     return result
 
 RAID_TABLE_REMOVE_RAID = """
@@ -109,10 +102,12 @@ RETURNING message_id
 CLEAR_APPLICANTS_FOR_RAID = """
 DELETE FROM raid_application_user_map WHERE (raid_message_id = $1)
 """
-async def remove_raid_from_table(connection, message_id):
+async def remove_raid_from_table(bot, message_id):
     """Removes a raid from the table."""
-    await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
-    await connection.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
+    queries = []
+    queries.append(bot.database.execute(RAID_TABLE_REMOVE_RAID, int(message_id)))
+    queries.append(bot.database.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id)))
+    await bot.database.batch(queries)
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
@@ -138,9 +133,9 @@ async def handle_clear_user_from_raid(ctx, bot, user_id):
         message = await channel.fetch_message(message_id)
         await message.delete()
     except discord.NotFound:
-        connection = await bot.acquire()
-        await remove_raid_from_table(connection, message_id)
-        await bot.release(connection)
+
+        await remove_raid_from_table(bot, message_id)
+
     except discord.DiscordException as error:
         print("[!] An error occurred trying to remove a user from their raid manually. [{}]".format(error))
         return
@@ -151,9 +146,9 @@ CHECK_VALID_RAID_CHANNEL = """
 """
 async def check_if_valid_raid_channel(bot, channel_id):
     """Checks if the channel is registered as a valid raid channel."""
-    connection = await bot.acquire()
-    results = await connection.fetchrow(CHECK_VALID_RAID_CHANNEL, int(channel_id))
-    await bot.release(connection)
+
+    results = await bot.database.fetchrow(CHECK_VALID_RAID_CHANNEL, int(channel_id))
+
     if not results:
         return False
     return True

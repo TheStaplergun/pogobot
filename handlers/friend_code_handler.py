@@ -19,16 +19,11 @@ UPDATE_FC_FOR_USER = """
 """
 async def add_friend_code_to_table(bot, user_id, friend_code):
     """Add a raid to the database with all the given data points."""
-    connection = await bot.acquire()
-    result = await connection.fetch(GET_FC_BY_USER_ID, int(user_id))
-
-    await connection.execute(UPDATE_FC_FOR_USER if result else NEW_FC_INSERT,
-                             int(user_id),
-                             str(friend_code),
-                             datetime.now())
-
-    await bot.release(connection)
-
+    result = await bot.database.fetch(GET_FC_BY_USER_ID, int(user_id))
+    await bot.database.execute(UPDATE_FC_FOR_USER if result else NEW_FC_INSERT,
+                               int(user_id),
+                               str(friend_code),
+                               datetime.now())
 
 UPDATE_LAST_RECALLED_TIME = """
     UPDATE friend_codes
@@ -36,14 +31,12 @@ UPDATE_LAST_RECALLED_TIME = """
     WHERE (user_id = $2);
 """
 async def get_friend_code(bot, user_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(GET_FC_BY_USER_ID,
-                                       int(user_id))
+    result = await bot.database.fetchrow(GET_FC_BY_USER_ID,
+                                         int(user_id))
     if result:
-        await connection.execute(UPDATE_LAST_RECALLED_TIME,
-                                 datetime.now(),
-                                 int(user_id))
-    await bot.release(connection)
+        await bot.database.execute(UPDATE_LAST_RECALLED_TIME,
+                                   datetime.now(),
+                                   int(user_id))
     return result.get("friend_code") if result else "Friend Code not found for member. To set your friend code, type `-fcreg <friend code>` in any lobby or appropriate channel."
 
 async def send_friend_code(ctx, bot):

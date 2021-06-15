@@ -41,34 +41,34 @@ BOT.categories_allowed = True
 #BOT.raids_enabled = True
 #BOT.bot_ready_to_process = False
 
-async def acquire_pool_connection():
-    """Asyncpg pool connection acquisition wrapper"""
-    connection = await BOT.pool.acquire()
-    return connection
+# async def acquire_pool_connection():
+#     """Asyncpg pool connection acquisition wrapper"""
+#     connection = await BOT.pool.acquire()
+#     return connection
 
-async def release_pool_connection(connection):
-    """Asyncpg pool connection release wrapper"""
-    if connection:
-        await BOT.pool.release(connection)
+# async def release_pool_connection(connection):
+#     """Asyncpg pool connection release wrapper"""
+#     if connection:
+#         await BOT.pool.release(connection)
 
-BOT.acquire = acquire_pool_connection
-BOT.release = release_pool_connection
+# BOT.acquire = acquire_pool_connection
+# BOT.release = release_pool_connection
 
-async def init_pool():
-    """Set up asyncpg connection pool"""
-    pool = await asyncpg.create_pool(database=important.DATABASE,
-                                     port=important.PORT,
-                                     host=important.HOST,
-                                     user=important.DB_USER,
-                                     password=important.PASSWORD)
+# async def init_pool():
+#     """Set up asyncpg connection pool"""
+#     pool = await asyncpg.create_pool(database=important.DATABASE,
+#                                      port=important.PORT,
+#                                      host=important.HOST,
+#                                      user=important.DB_USER,
+#                                      password=important.PASSWORD)
 
-    return pool
+#     return pool
 
 live=False
 async def startup_process():
     """Startup process. Linear process."""
     await BOT.wait_until_ready()
-    BOT.pool = await init_pool()
+    #BOT.pool = await init_pool()
     if live:
         await SH.spin_up_message_deletions(BOT)
 
