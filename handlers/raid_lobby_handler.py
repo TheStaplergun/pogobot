@@ -491,7 +491,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     new_embed = discord.Embed(description="A player has checked in.")
     
     try:
-        await member.send(f"You have been given permission to a lobby. Click this for a shortcut to the lobby: {lobby.mention}")
+        await member.send(f"You have been selected for the raid and added to the lobby. Click this for a shortcut to the lobby: {lobby.mention}")
     except discord.DiscordException:
         pass
 
