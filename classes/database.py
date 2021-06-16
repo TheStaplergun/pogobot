@@ -7,12 +7,17 @@ import important
 
 class Database():
     def __init__(self):
+        self.pool = None
+
+    async def init(self):
+        if self.pool:
+            return
         self.pool = await asyncpg.create_pool(database=important.DATABASE,
                                               port=important.PORT,
                                               host=important.HOST,
                                               user=important.DB_USER,
                                               password=important.PASSWORD)
-
+                                            
     async def execute(self, *args, **kwargs):
         """Wrapper for connection execute call"""
         connection = await self.pool.acquire()

@@ -67,6 +67,7 @@ BOT.categories_allowed = True
 live=False
 async def startup_process():
     """Startup process. Linear process."""
+    await BOT.database.init()
     await BOT.wait_until_ready()
     #BOT.pool = await init_pool()
     if live:

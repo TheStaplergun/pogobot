@@ -3,7 +3,7 @@ Bot class that wraps discord client
 """
 import asyncio
 
-import database
+import classes.database as database
 from discord.ext import commands
 
 class Bot(commands.Bot):
