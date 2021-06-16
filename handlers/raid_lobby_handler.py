@@ -172,17 +172,17 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
-    
-    friend_code = await FCH.get_friend_code(bot, raid_host_member.id)
+
+    friend_code, has_code = await FCH.get_friend_code(bot, raid_host_member.id)
     header_message_body = f"{friend_code}\n{raid_host_member.mention}\n"
 
     try:
-        header_message_body = header_message_body + "\n\nPing the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
+        header_message_body = header_message_body + "Ping the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
     except AttributeError as error:
         pass
 
-    if len(friend_code) == 12:
-        header_message_body = f"{header_message_body}\n*Note: This message can be directly copied and pasted into your add friend code box in game*"
+    if has_code:
+        new_embed.set_footer(text="This message can be directly copied and pasted into the text box in game.")
 
     message = await new_raid_lobby.send(header_message_body, embed=new_embed)
     try:
@@ -211,11 +211,10 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
 
     if not lobby_data:
         return
-        
+
     lobby_channel_id = lobby_data.get("lobby_channel_id")
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        #guild = bot.get_guild(lobby_data.get("guild_id"))
         try:
             lobby = await bot.fetch_channel(int(lobby_channel_id))
         except discord.DiscordException:
@@ -229,7 +228,7 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
                                int(lobby_data.get("raid_message_id")))
 
     try:
-        if lobby and not users == 0:
+        if lobby and users > 0:
             new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             await lobby.send(" ", embed=new_embed)
     except discord.DiscordException:
@@ -489,12 +488,20 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         pass
     except AttributeError:
         pass
-    new_embed = discord.Embed(title="System Notification", description="A player has checked in. They have been pinged for convenience.\n\nThe hosts information is pinned in this channel.")
+    new_embed = discord.Embed(description="A player has checked in.")
     
-    friend_code = await FCH.get_friend_code(bot, member.id)
-    message_to_send = f"{friend_code}\n{member.mention}"
-    if len(friend_code) == 12:
-        message_to_send = f"{message_to_send}\n*Note: This message can be directly copied and pasted into your add friend code box in game*"
+    try:
+        await member.send(f"You have been given permission to a lobby. Click this for a shortcut to the lobby: {lobby.mention}")
+    except discord.DiscordException:
+        pass
+
+    friend_code, has_code = await FCH.get_friend_code(bot, member.id)
+    if has_code:
+        message_to_send = f"{friend_code}\nFriend code for: {member.mention}"
+        new_embed.set_footer(text="This message can be directly copied and pasted into the text box in game.")
+    else:
+        message_to_send = f"{friend_code}\n{member.mention}"
+
     await lobby.send(message_to_send, embed=new_embed)
     try:
         await message.delete()
@@ -571,7 +578,7 @@ DECREMENT_NOTIFIED_USERS = """
 """
 async def decrement_notified_users_by_raid_id(bot, raid_id):
     await bot.database.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
-    
+
 async def handle_user_failed_checkin(bot, applicant_data):
     guild_id = applicant_data.get("guild_id")
     guild = bot.get_guild(int(guild_id))
