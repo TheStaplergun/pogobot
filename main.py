@@ -73,7 +73,7 @@ async def startup_process():
                                      host=important.HOST,
                                      user=important.DB_USER,
                                      password=important.PASSWORD)
-    BOT.database = await database.Database(pool)
+    BOT.database = database.Database(pool)
     await BOT.wait_until_ready()
     #BOT.pool = await init_pool()
     if live:
@@ -117,9 +117,6 @@ if __name__ == "__main__":
     if not initialize_cogs(BOT):
         print("[!] An error occurred during cog initialization. Exiting.")
         sys.exit()
-
-    BOT.applicant_trigger = asyncio.Event()
-    BOT.lobby_remove_trigger = asyncio.Event()
 
     BOT.loop.create_task(startup_process())
     BOT.loop.create_task(status_update_loop())

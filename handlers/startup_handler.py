@@ -106,7 +106,7 @@ async def set_new_presence(bot, old_count):
 
 async def start_status_update_loop(bot):
     """Permanently running loop while bot is up."""
-    while not bot.pool:
+    while not bot.database:
         await asyncio.sleep(1)
     count = 0
     while True:
@@ -116,7 +116,7 @@ async def start_status_update_loop(bot):
 async def start_lobby_removal_loop(bot):
     """Permanently running loop while bot is up."""
 
-    while not bot.pool:
+    while not bot.database:
         await asyncio.sleep(1)
 
     # Outer loop to wait on the event if no lobbies are present.
@@ -133,8 +133,8 @@ async def start_lobby_removal_loop(bot):
             # Refresh in 30 seconds if greater than one minute wait time.
             # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
             if cur_time < deletion_time:
-                if deletion_time_dif.total_seconds() > 30:
-                    await asyncio.sleep(30)
+                if deletion_time_dif.total_seconds() > 5:
+                    await asyncio.sleep(5)
                     continue
 
                 if deletion_time_dif.total_seconds() > 0:
@@ -150,7 +150,7 @@ async def start_lobby_removal_loop(bot):
         bot.lobby_remove_trigger.clear()
 
 async def start_applicant_loop(bot):
-    while not bot.pool:
+    while not bot.database:
         await asyncio.sleep(1)
 
     while True:
