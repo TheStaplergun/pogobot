@@ -7,12 +7,12 @@ import important
 
 class Database():
     def __init__(self):
-        self.pool = None
+        self.__pool = None
 
     async def init(self):
-        if self.pool:
+        if self.__pool:
             return
-        self.pool = await asyncpg.create_pool(database=important.DATABASE,
+        self.__pool = await asyncpg.create_pool(database=important.DATABASE,
                                               port=important.PORT,
                                               host=important.HOST,
                                               user=important.DB_USER,
@@ -20,67 +20,54 @@ class Database():
                                             
     async def execute(self, *args, **kwargs):
         """Wrapper for connection execute call"""
-        connection = await self.pool.acquire()
+        connection = await self.__pool.acquire()
         try:
             results = await connection.execute(*args, **kwargs)
         finally:
-            await self.pool.release(connection)
+            await self.__pool.release(connection)
 
         return results
 
 
     async def fetchrow(self, *args, **kwargs):
         """Wrapper for connection fetchrow call"""
-        connection = await self.pool.acquire()
+        connection = await self.__pool.acquire()
         try:
             results = await connection.fetchrow(*args, **kwargs)
         finally:
-            await self.pool.release(connection)
+            await self.__pool.release(connection)
 
         return results
 
     async def fetch(self, *args, **kwargs):
         """Wrapper for connection fetch call"""
-        connection = await self.pool.acquire()
+        connection = await self.__pool.acquire()
         try:
             results = await connection.fetch(*args, **kwargs)
         finally:
-            await self.pool.release(connection)
+            await self.__pool.release(connection)
 
         return results
 
-    # Set up context manager
+    # Return simplified context manager
     def connect(self):
-        return ConnectTo(self.pool)
+        return ConnectTo(self.__pool)
 
 class ConnectTo():
     def __init__(self, pool):
-        self.pool = pool
+        self.__pool = pool
+
     async def __aenter__(self):
-        self.connection = await self.pool.acquire()
+        self.__connection = await self.__pool.acquire()
         return self
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.pool.release(self.connection)
+        await self.__pool.release(self.__connection)
 
-    # async def batch(self, coro_list) -> list:
-    #     """Custom batch query wrapper for multiple database pool connection coroutines"""
+    async def execute(self, *args, **kwargs):
+        return await self.__connection.execute(*args, **kwargs)
 
-    #     async with BatchQuery(self.pool) as bq:
-
-    #         pass
-    #     return results_list
-
-
-
-# class DBConnection(object):
-#     """database connection"""
-#     def __init__(self, connection_string):
-#         self.connection_string = connection_string
-#         self.session = None
-#     def __enter__(self):
-#         engine = create_engine(self.connection_string)
-#         Session = sessionmaker()
-#         self.session = Session(bind=engine)
-#         return self
-#     def __exit__(self, exc_type, exc_val, exc_tb):
-#         self.session.close()
+    async def fetch(self, *args, **kwargs):
+        return await self.__connection.fetch(*args, **kwargs)
+        
+    async def fetchrow(self, *args, **kwargs):
+        return await self.__connection.fetchrow(*args, **kwargs)

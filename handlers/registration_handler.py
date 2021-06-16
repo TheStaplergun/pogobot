@@ -16,10 +16,10 @@ async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
     """Registers raid channel within database and initalizes guilds raid counter."""
     try:
         async with bot.database.connect() as c:
-            await c.connection.execute(ADD_RAID_CHANNEL,
+            await c.execute(ADD_RAID_CHANNEL,
                                        int(channel_id),
                                        int(guild_id))
-            await c.connection.execute(INIT_RAID_COUNTER,
+            await c.execute(INIT_RAID_COUNTER,
                                        int(guild_id))
     except asyncpg.PostgresError as error:
         print(f"[*] An exception occurred while registering a new raid channel. [{error}]")

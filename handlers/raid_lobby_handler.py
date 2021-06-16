@@ -272,8 +272,8 @@ REDUCE_APPLICANT_COUNT_BY_RAID_ID = """
 """
 async def remove_application_for_user(bot, member, raid_id):
     async with bot.database.connect() as c:
-        await c.connection.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
-        await c.connection.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
+        await c.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
+        await c.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
 
     try:
         new_embed = discord.Embed(title="System Notification", description="You have withdrawn your application to the selected raid.")
@@ -473,8 +473,8 @@ UDPATE_RECENT_PARTICIPATION = """
 """
 async def set_recent_participation(bot, user_id):
     async with bot.database.connect() as c:
-        await c.connection.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
-        await c.connection.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
+        await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
+        await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     role = discord.utils.get(guild.roles, name="Lobby Member")
