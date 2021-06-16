@@ -50,18 +50,17 @@ class Database():
         return results
 
     # Set up context manager
-    async def connect(self):
-        context = ConnectTo(self.pool)
-        return context
+    def connect(self):
+        return ConnectTo(self.pool)
 
 class ConnectTo():
     def __init__(self, pool):
         self.pool = pool
     async def __aenter__(self):
-        self.connection = self.pool.acquire()
+        self.connection = await self.pool.acquire()
         return self
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        self.pool.release(connection)
+        await self.pool.release(self.connection)
 
     # async def batch(self, coro_list) -> list:
     #     """Custom batch query wrapper for multiple database pool connection coroutines"""

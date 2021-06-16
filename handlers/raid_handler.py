@@ -34,15 +34,13 @@ GET_RAID_COUNT_STATEMENT = """
 """
 async def get_raid_count(bot, ctx, should_print):
     """Get raid count for server the command was called in."""
-    connection = await bot.pool.acquire()
     try:
-        count = await connection.fetchrow(GET_RAID_COUNT_STATEMENT,
-                                          int(ctx.guild.id))
+        count = await bot.database.fetchrow(GET_RAID_COUNT_STATEMENT,
+                                            int(ctx.guild.id))
     except asyncpg.Exception as error:
         print("[!] Error obtaining raid count for guild. [{}]".format(error))
         return
-    finally:
-        await bot.pool.release(connection)
+
     num = count.get("raid_counter")
     if should_print:
         msg = "Total raids sent within this server [`{}`]".format(num)
