@@ -92,9 +92,7 @@ GET_TOTAL_COUNT = """
 """
 async def set_new_presence(bot, old_count):
     """Gets total and sets presence to this new total."""
-    connection = await bot.acquire()
-    new_count = await connection.fetch(GET_TOTAL_COUNT)
-    await bot.release(connection)
+    new_count = await bot.database.fetch(GET_TOTAL_COUNT)
     total = (new_count.pop()).get("total")
     if total == old_count:
         return old_count

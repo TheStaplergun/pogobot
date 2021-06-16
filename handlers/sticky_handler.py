@@ -6,9 +6,7 @@ CHECK_FOR_RAIDS_IN_GUILD_CHANNEL = """
  SELECT * FROM raids where (channel_id = $1);
 """
 async def check_if_raids_remaining_in_channel(bot, channel_id):
-    connection = await bot.acquire()
-    results = await connection.fetchrow(CHECK_FOR_RAIDS_IN_GUILD_CHANNEL, int(channel_id))
-    await bot.release(connection)
+    results = await bot.database.fetchrow(CHECK_FOR_RAIDS_IN_GUILD_CHANNEL, int(channel_id))
     if not results:
         return False
     return True
@@ -17,9 +15,7 @@ RAID_PLACEHOLDER_STICKY_SELECT = """
  SELECT * FROM raid_placeholder_stickies where (channel_id = $1);
 """
 async def get_sticky_message(bot, channel_id):
-    connection = await bot.acquire()
-    record = await connection.fetchrow(RAID_PLACEHOLDER_STICKY_SELECT, int(channel_id))
-    await bot.release(connection)
+    record = await bot.database.fetchrow(RAID_PLACEHOLDER_STICKY_SELECT, int(channel_id))
     if not record:
         return (False, None)
 
@@ -41,21 +37,17 @@ INSERT INTO raid_placeholder_stickies(channel_id, message_id, guild_id)
 VALUES($1, $2, $3);
 """
 async def update_placeholder_database(bot, channel_id, message_id, guild_id):
-    connection = await bot.acquire()
-    await connection.execute(ADD_PLACEHOLDER_STICKY_MESSAGE,
-                             int(channel_id),
-                             int(message_id),
-                             int(guild_id))
-    await bot.release(connection)
+    await bot.database.execute(ADD_PLACEHOLDER_STICKY_MESSAGE,
+                               int(channel_id),
+                               int(message_id),
+                               int(guild_id))
 
 DELETE_PLACEHOLDER_STICKY_MESSAGE = """
 DELETE FROM raid_placeholder_stickies WHERE (channel_id = $1)
 RETURNING channel_id;
 """
 async def remove_old_sticky_message_from_table(bot, channel_id):
-    connection = await bot.acquire()
-    results = await connection.execute(DELETE_PLACEHOLDER_STICKY_MESSAGE, int(channel_id))
-    await bot.release(connection)
+    results = await bot.database.execute(DELETE_PLACEHOLDER_STICKY_MESSAGE, int(channel_id))
     print("[*] Table operation results [{}]".format(results))
 
 async def make_new_no_raids_placeholder_message(bot, channel_id):

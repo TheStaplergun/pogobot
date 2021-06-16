@@ -18,9 +18,9 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
         except discord.DiscordException:
             pass
         await RLH.alter_deletion_time_for_raid_lobby(bot, message_id)
-        conn = await bot.acquire()
-        await RH.remove_raid_from_table(conn, message.id)
-        await bot.release(conn)
+
+        await RH.remove_raid_from_table(bot, message.id)
+
         try:
             await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
         except discord.DiscordException as error:
@@ -37,9 +37,9 @@ async def handle_reaction_remove_raid_no_lobby(bot, ctx, message):
         message_to_send = "You are not the host. You cannot delete this raid!"
     else:
         message_to_send = "Your raid has been successfuly deleted."
-        conn = await bot.acquire()
-        await RH.remove_raid_from_table(conn, message.id)
-        await bot.release(conn)
+
+        await RH.remove_raid_from_table(bot, message.id)
+
         try:
             await message.delete()
         except discord.DiscordException:
@@ -116,9 +116,9 @@ async def raw_reaction_add_handle(ctx, bot):
 async def raid_delete_handle(ctx, bot):
     if not await RH.message_is_raid(ctx, bot, ctx.message_id):
         return
-    conn = await bot.acquire()
-    await RH.remove_raid_from_table(conn, ctx.message_id)
-    await bot.release(conn)
+
+    await RH.remove_raid_from_table(bot, ctx.message_id)
+
     lobby_data = await RLH.get_lobby_data_by_raid_id(bot, ctx.message_id)
     if not lobby_data:
         return

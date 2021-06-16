@@ -14,22 +14,18 @@ VALUES ($1);
 """
 async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
     """Registers raid channel within database and initalizes guilds raid counter."""
-    connection = await bot.acquire()
-    results = None
     try:
-        results = await connection.execute(ADD_RAID_CHANNEL,
-                                           int(channel_id),
-                                           int(guild_id))
+        async with bot.database.connect() as c:
+            await c.execute(ADD_RAID_CHANNEL,
+                                       int(channel_id),
+                                       int(guild_id))
+            await c.execute(INIT_RAID_COUNTER,
+                                       int(guild_id))
     except asyncpg.PostgresError as error:
-        print("[!] Error occured registering raid channel. [{}]".format(error))
-    try:
-        await connection.execute(INIT_RAID_COUNTER,
-                                 int(guild_id))
-    except asyncpg.PostgresError as error:
-        print("[!] Error occured registering raid counter. [{}]".format(error))
-    await bot.release(connection)
-    if results:
-        print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
+        print(f"[*] An exception occurred while registering a new raid channel. [{error}]")
+        return
+
+    print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
 
 async def register_request_channel_handle(ctx, bot):
     channel_id = ctx.channel.id
@@ -64,16 +60,14 @@ VALUES ($1, $2, $3);
 #"""
 async def database_register_raid_lobby_category(bot, ctx, guild_id, category_id, log_channel_id):
     """Registers raid lobby category within database and initalizes log."""
-    connection = await bot.acquire()
     results = None
     try:
-        results = await connection.execute(ADD_RAID_LOBBY_CATEGORY,
-                                           int(guild_id),
-                                           int(category_id),
-                                           int(log_channel_id))
+        results = await bot.database.execute(ADD_RAID_LOBBY_CATEGORY,
+                                             int(guild_id),
+                                             int(category_id),
+                                             int(log_channel_id))
     except asyncpg.PostgresError as error:
         print("[!] Error occured registering raid lobby category. [{}]".format(error))
-    await bot.release(connection)
     if results:
         print("[*][{}][{}] New raid lobby category registered.".format(ctx.guild.name, category_id))
 

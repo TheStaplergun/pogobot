@@ -10,15 +10,13 @@ GET_CATEGORY_BY_GUILD_ID = """
     SELECT * FROM raid_lobby_category WHERE (guild_id = $1) LIMIT 1;
 """
 async def get_raid_lobby_category_by_guild_id(bot, guild_id):
-    connection = await bot.acquire()
     try:
-        category_data = await connection.fetchrow(GET_CATEGORY_BY_GUILD_ID,
-                                                  int(guild_id))
+        category_data = await bot.database.fetchrow(GET_CATEGORY_BY_GUILD_ID,
+                                                    int(guild_id))
     except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby category data. [{}]".format(error))
         return
-    finally:
-        await bot.pool.release(connection)
+
 
     #category_id = category_data.get("category_id")
     if not category_data:
@@ -32,15 +30,13 @@ GET_LOBBY_BY_USER_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (host_user_id = $1);
 """
 async def get_lobby_channel_for_user_by_id(bot, user_id):
-    connection = await bot.acquire()
     try:
-        lobby_data = await connection.fetchrow(GET_LOBBY_BY_USER_ID,
-                                               int(user_id))
+        lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_USER_ID,
+                                                 int(user_id))
     except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
-    finally:
-        await bot.pool.release(connection)
+
 
     if not lobby_data:
         return
@@ -62,15 +58,13 @@ GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
 async def get_lobby_channel_by_lobby_id(bot, channel_id):
-    connection = await bot.acquire()
     try:
-        lobby_data = await connection.fetchrow(GET_LOBBY_BY_LOBBY_ID,
-                                               int(channel_id))
+        lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID,
+                                                 int(channel_id))
     except asyncpg.PostgresError as error:
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
-    finally:
-        await bot.pool.release(connection)
+
     if not lobby_data:
         return False
 
@@ -88,11 +82,7 @@ GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
     ORDER BY posted_at;
 """
 async def get_latest_lobby_data_by_timestamp(bot):
-    connection = await bot.acquire()
-    results = await connection.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
-    await bot.release(connection)
-
-    return results
+    return await bot.database.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
 
 async def log_message_in_raid_lobby_channel(bot, message):
     author = message.author
@@ -139,19 +129,17 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    connection = await bot.acquire()
-    await connection.execute(NEW_LOBBY_INSERT,
-                             int(lobby_channel_id),
-                             int(host_user_id),
-                             int(raid_id),
-                             int(guild_id),
-                             cur_time,
-                             delete_at,
-                             0,
-                             5,
-                             0,
-                             0)
-    await bot.release(connection)
+    await bot.database.execute(NEW_LOBBY_INSERT,
+                               int(lobby_channel_id),
+                               int(host_user_id),
+                               int(raid_id),
+                               int(guild_id),
+                               cur_time,
+                               delete_at,
+                               0,
+                               5,
+                               0,
+                               0)
 
 async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to_remove_lobby):
     guild = ctx.guild
@@ -235,11 +223,11 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
 
     users = lobby_data.get("user_count")
     new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
-    connection = await bot.acquire()
-    await connection.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
-                             new_delete_time,
-                             int(lobby_data.get("raid_message_id")))
-    await bot.release(connection)
+
+    await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
+                               new_delete_time,
+                               int(lobby_data.get("raid_message_id")))
+
     try:
         if lobby and not users == 0:
             new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
@@ -255,11 +243,7 @@ GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     LIMIT 1;
 """
 async def get_next_lobby_to_remove(bot):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
-    await bot.release(connection)
-
-    return result
+    return await bot.database.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
 
 UPDATE_APPLICATION_DATA_FOR_USER = """
     UPDATE raid_application_user_map
@@ -267,11 +251,10 @@ UPDATE_APPLICATION_DATA_FOR_USER = """
     WHERE (user_id = $2);
 """
 async def update_application_for_user(bot, member, raid_message_id):
-    connection = await bot.acquire()
-    await connection.execute(UPDATE_APPLICATION_DATA_FOR_USER,
-                             int(raid_message_id),
-                             int(member.id))
-    await bot.release(connection)
+    await bot.database.execute(UPDATE_APPLICATION_DATA_FOR_USER,
+                               int(raid_message_id),
+                               int(member.id))
+
     try:
         new_embed = discord.Embed(title="System Notification", description="You have updated your application to the selected raid.")
         await member.send(" ", embed=new_embed)
@@ -288,10 +271,10 @@ REDUCE_APPLICANT_COUNT_BY_RAID_ID = """
     WHERE (raid_message_id = $1);
 """
 async def remove_application_for_user(bot, member, raid_id):
-    connection = await bot.acquire()
-    await connection.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
-    await connection.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
-    await bot.release(connection)
+    async with bot.database.connect() as c:
+        await c.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
+        await c.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
+
     try:
         new_embed = discord.Embed(title="System Notification", description="You have withdrawn your application to the selected raid.")
         await member.send(" ", embed=new_embed)
@@ -308,16 +291,14 @@ UPDATE_LOBBY_APPLICANT_DATA = """
     WHERE (raid_message_id = $1);
 """
 async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight):
-    connection = await bot.acquire()
-    await connection.execute(INSERT_NEW_APPLICATION_DATA,
-                             int(user_id),
-                             int(raid_message_id),
-                             int(guild_id),
-                             is_requesting,
-                             speed_bonus_weight,
-                             False,
-                             False)
-    await bot.release(connection)
+    await bot.database.execute(INSERT_NEW_APPLICATION_DATA,
+                               int(user_id),
+                               int(raid_message_id),
+                               int(guild_id),
+                               is_requesting,
+                               speed_bonus_weight,
+                               False,
+                               False)
 
 async def calculate_speed_bonus(message, listing_duration):
     creation_time = message.created_at
@@ -355,10 +336,7 @@ QUERY_APPLICATION_DATA_FOR_USER = """
     SELECT * FROM raid_application_user_map WHERE (user_id = $1);
 """
 async def get_applicant_data_for_user(bot, user_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, user_id)
-    await bot.release(connection)
-    return result
+    return await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, user_id)
 
 async def handle_application_to_raid(bot, ctx, message, channel):
     guild = message.guild
@@ -384,29 +362,19 @@ QUERY_APPLICANT_BY_MESSAGE_ID = """
     SELECT * FROM raid_application_user_map WHERE (activity_check_message_id = $1);
 """
 async def get_applicant_data_by_message_id(bot, message_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_APPLICANT_BY_MESSAGE_ID, message_id)
-    await bot.release(connection)
-    return result
-
+    return await bot.database.fetchrow(QUERY_APPLICANT_BY_MESSAGE_ID, message_id)
 
 GET_USERS_BY_RAID_MESSAGE_ID = """
     SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1);
 """
 async def get_applicants_by_raid_id(bot, raid_message_id):
-    connection = await bot.acquire()
-    results = await connection.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
-    await bot.release(connection)
-
-    return results
+    return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
 
 QUERY_RECENT_PARTICIPATION = """
     SELECT * FROM raid_participation_table WHERE (user_id = $1)
 """
 async def calculate_weight(bot, user_data, member):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_RECENT_PARTICIPATION, int(member.id))
-    await bot.release(connection)
+    result = await bot.database.fetchrow(QUERY_RECENT_PARTICIPATION, int(member.id))
 
     recent_participation_weight = 100
     is_requesting = user_data.get("is_requesting")
@@ -428,9 +396,7 @@ UPDATE_LOBBY_APPLICANT_DATA = """
 """
 
 async def set_notified_flag(bot, message_id, user_id):
-    connection = await bot.acquire()
-    await connection.execute(UPDATE_LOBBY_APPLICANT_DATA, int(message_id), int(user_id))
-    await bot.release(connection)
+    await bot.database.execute(UPDATE_LOBBY_APPLICANT_DATA, int(message_id), int(user_id))
 
 INCREMENT_APPLICANT_COUNT = """
     UPDATE raid_lobby_user_map
@@ -438,9 +404,7 @@ INCREMENT_APPLICANT_COUNT = """
     WHERE (lobby_channel_id = $1)
 """
 async def increment_notified_users_for_raid_lobby(bot, lobby_id):
-    connection = await bot.acquire()
-    await connection.execute(INCREMENT_APPLICANT_COUNT, int(lobby_id))
-    await bot.release(connection)
+    await bot.database.execute(INCREMENT_APPLICANT_COUNT, int(lobby_id))
 
 async def process_user_list(bot, raid_lobby_data, sorted_users):
     counter = 1
@@ -481,11 +445,7 @@ QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
 """
 async def get_lobby_data_by_raid_id(bot, raid_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
-    await bot.release(connection)
-
-    return result
+    return await bot.database.fetchrow(QUERY_LOBBY_BY_RAID_ID, int(raid_id))
 
 UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
     UPDATE raid_lobby_user_map
@@ -494,9 +454,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
     WHERE (lobby_channel_id = $1);
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
-    connection = await bot.acquire()
-    await connection.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
-    await bot.release(connection)
+    await bot.database.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
 
 UPDATE_CHECKED_IN_FLAG = """
     UPDATE raid_application_user_map
@@ -504,9 +462,7 @@ UPDATE_CHECKED_IN_FLAG = """
     WHERE (user_id = $1);
 """
 async def set_checked_in_flag(bot, user_id):
-    connection = await bot.acquire()
-    await connection.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
-    await bot.release(connection)
+    await bot.database.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
 
 DELETE_RECENT_PARTICIPATION_RECORD = """
     DELETE FROM raid_participation_table WHERE (user_id = $1);
@@ -516,10 +472,9 @@ UDPATE_RECENT_PARTICIPATION = """
     VALUES ($1, $2);
 """
 async def set_recent_participation(bot, user_id):
-    connection = await bot.acquire()
-    await connection.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
-    await connection.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
-    await bot.release(connection)
+    async with bot.database.connect() as c:
+        await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
+        await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     role = discord.utils.get(guild.roles, name="Lobby Member")
@@ -547,9 +502,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         pass
 
 async def handle_activity_check_reaction(ctx, bot, message):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
-    await bot.release(connection)
+    result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
     if not result:
         return
 
@@ -574,19 +527,13 @@ GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
 async def get_lobby_data_by_lobby_id(bot, lobby_id):
-    connection = await bot.acquire()
-    result = await connection.fetchrow(GET_LOBBY_BY_LOBBY_ID, lobby_id)
-    await bot.release(connection)
-
-    return result
+    return await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, lobby_id)
 
 PURGE_APPLICANTS_FOR_RAID = """
     DELETE FROM raid_application_user_map WHERE (raid_message_id = $1);
 """
 async def remove_applicants_for_raid_by_raid_id(bot, raid_id):
-    connection = await bot.acquire()
-    await connection.execute(PURGE_APPLICANTS_FOR_RAID, raid_id)
-    await bot.release(connection)
+    await bot.database.execute(PURGE_APPLICANTS_FOR_RAID, raid_id)
 
 REMOVE_LOBBY_BY_ID = """
     DELETE FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
@@ -597,36 +544,25 @@ async def remove_lobby_by_lobby_id(bot, lobby_id):
         raid_id = lobby_data.get("raid_message_id")
         await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
-    connection = await bot.acquire()
-    await connection.execute(REMOVE_LOBBY_BY_ID, lobby_id)
-    await bot.release(connection)
+    await bot.database.execute(REMOVE_LOBBY_BY_ID, lobby_id)
 
 SELECT_ALL_LOBBIES = """
     SELECT * FROM raid_lobby_user_map;
 """
 async def get_all_lobbies(bot):
-    connection = await bot.acquire()
-    result = await connection.fetch(SELECT_ALL_LOBBIES)
-    await bot.release(connection)
-
-    return result
+    return await bot.database.fetch(SELECT_ALL_LOBBIES)
 
 SELECT_ALL_APPLICATIONS = """
     SELECT * FROM raid_application_user_map;
 """
 async def get_all_applications(bot):
-    connection = await bot.acquire()
-    result = await connection.fetch(SELECT_ALL_APPLICATIONS)
-    await bot.release(connection)
-    return result
+    return await bot.database.fetch(SELECT_ALL_APPLICATIONS)
 
 REMOVE_LOG_CHANNEL_BY_ID = """
     DELETE FROM raid_lobby_category WHERE (log_channel_id = $1);
 """
 async def check_if_log_channel_and_purge_data(bot, channel_id):
-    connection = await bot.acquire()
-    await connection.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
-    await bot.release(connection)
+    await bot.database.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
 
 DECREMENT_NOTIFIED_USERS = """
     UPDATE raid_lobby_user_map
@@ -634,9 +570,7 @@ DECREMENT_NOTIFIED_USERS = """
     WHERE (raid_message_id = $1)
 """
 async def decrement_notified_users_by_raid_id(bot, raid_id):
-    connection = await bot.acquire()
-    await connection.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
-    await bot.release(connection)
+    await bot.database.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
     
 async def handle_user_failed_checkin(bot, applicant_data):
     guild_id = applicant_data.get("guild_id")
