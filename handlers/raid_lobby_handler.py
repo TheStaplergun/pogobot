@@ -17,10 +17,8 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
         print("[!] Error retreiving raid lobby category data. [{}]".format(error))
         return
 
-
-    #category_id = category_data.get("category_id")
     if not category_data:
-        print("[!] Error retreiving raid lobby category data. [{}]".format("No category found. Passing."))
+        print("[!] Error retreiving raid lobby category data. [{}]".format("No category found. Ignoring."))
         return False
 
     return category_data
@@ -29,6 +27,11 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
 GET_LOBBY_BY_USER_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (host_user_id = $1);
 """
+async def get_lobby_data_by_user_id(bot, user_id):
+    return await bot.database.fetchrow(GET_LOBBY_BY_USER_ID,
+                                       int(user_id))
+
+
 async def get_lobby_channel_for_user_by_id(bot, user_id):
     try:
         lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_USER_ID,
@@ -37,16 +40,12 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
         print("[!] Error retreiving raid lobby data. [{}]".format(error))
         return
 
-
     if not lobby_data:
         return
     lobby_channel_id = lobby_data.get("lobby_channel_id")
 
-    #guild_id = lobby_data.get("guild_id")
-
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
-        #guild = bot.get_guild(lobby_data.get("guild_id"))
         try:
             lobby = await bot.fetch_channel(int(lobby_channel_id))
         except discord.DiscordException:
@@ -94,33 +93,6 @@ async def log_message_in_raid_lobby_channel(bot, message):
     new_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
     new_embed.set_footer(text="User ID: {}".format(author.id))
     await log_channel.send(" ", embed=new_embed)
-# async def set_up_management_channel(ctx, bot):
-#     channel = ctx.channel
-#     if not channel.category_id:
-#         embed = discord.Embed(title="Error", description="This channel is not in a category. A category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
-#         ctx.send(" ",embed=embed, delete_after=15)
-#         return False
-
-#     category_id = channel.category_id
-
-
-
-#async def user_lobby_management_reaction_handle(ctx, bot):
-
-# async def set_up_lobby_log_channel(ctx, bot):
-#     channel = ctx.channel
-#     if not channel.category_id:
-#         embed = discord.Embed(title="Error", description="This channel is not in a category. A category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
-#         ctx.send(" ",embed=embed, delete_after=15)
-#         return False
-
-#     try:
-#         await channel.edit(name="raid-lobby-logs", reason="Establishing log channel for raid lobbies.")
-#     except discord.DiscordException as error:
-#         print("[*][{}] An error occurred setting up the log channel for a raid category. [{}]".format(ctx.guild.name, error))
-#         return False
-
-#     return True
 
 NEW_LOBBY_INSERT = """
 INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
@@ -205,6 +177,11 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
     SET delete_at = $1
     WHERE (raid_message_id = $2);
 """
+async def update_delete_time_with_given_time(bot, new_time, raid_id):
+    return await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
+                                      new_time,
+                                      int(raid_id))
+
 async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     current_time = datetime.now()
     lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
