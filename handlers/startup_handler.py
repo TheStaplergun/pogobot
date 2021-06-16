@@ -23,8 +23,7 @@ GET_ALL_RAIDS = """
 """
 async def spin_up_message_deletions(bot):
     """Re-establishes raid message removal loop."""
-    connection = await bot.pool.acquire()
-    results = await connection.fetch(GET_ALL_RAIDS)
+    results = await bot.database.fetch(GET_ALL_RAIDS)
 
     if not results:
         print("[*] No pending raids found to delete.")
@@ -41,12 +40,11 @@ async def spin_up_message_deletions(bot):
             if channel_id not in to_delete.keys():
                 to_delete[channel_id] = []
             to_delete[channel_id].append(message_id)
-            await remove_raid_from_table(connection, message_id)
+            await remove_raid_from_table(bot, message_id)
         else:
             future_delete[ttr] = [channel_id, message_id]
 
     if len(to_delete) == 0 and len(future_delete) == 0:
-        await bot.pool.release(connection)
         return
 
     for channel_id, message_ids in to_delete.items():
@@ -58,8 +56,6 @@ async def spin_up_message_deletions(bot):
             await channel.delete_messages(delete_snowflakes)
         except discord.DiscordException as error:
             print("[!] Message(s) did not exist on server. [{}]".format(error))
-
-    await bot.pool.release(connection)
 
     if len(future_delete) == 0:
         return
