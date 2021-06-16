@@ -104,10 +104,9 @@ DELETE FROM raid_application_user_map WHERE (raid_message_id = $1)
 """
 async def remove_raid_from_table(bot, message_id):
     """Removes a raid from the table."""
-    queries = []
-    queries.append(bot.database.execute(RAID_TABLE_REMOVE_RAID, int(message_id)))
-    queries.append(bot.database.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id)))
-    await bot.database.batch(queries)
+    async with bot.database.connect() as connection:
+        await connection.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
+        await connection.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild

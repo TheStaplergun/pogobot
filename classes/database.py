@@ -44,14 +44,39 @@ class Database():
 
         return results
 
-    async def batch(self, coro_list) -> list:
-        """Custom batch query wrapper for multiple database pool connection coroutines"""
-        connection = await self.pool.acquire()
-        results_list = []
-        for coro in coro_list:
-            try:
-                results_list.append(await coro())
-            finally:
-                await self.pool.release(connection)
+    # Set up context manager
+    async def connect(self):
+        connection = self.__ConnectTo(self.pool)
+        return connection
 
-        return results_list
+    class __ConnectTo():
+        def __init__(self, pool):
+            self.pool = pool
+        async def __aenter__(self):
+            self.connection = self.pool.acquire()
+            return self.connection
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            self.pool.release(connection)
+
+    # async def batch(self, coro_list) -> list:
+    #     """Custom batch query wrapper for multiple database pool connection coroutines"""
+
+    #     async with BatchQuery(self.pool) as bq:
+
+    #         pass
+    #     return results_list
+
+
+
+# class DBConnection(object):
+#     """database connection"""
+#     def __init__(self, connection_string):
+#         self.connection_string = connection_string
+#         self.session = None
+#     def __enter__(self):
+#         engine = create_engine(self.connection_string)
+#         Session = sessionmaker()
+#         self.session = Session(bind=engine)
+#         return self
+#     def __exit__(self, exc_type, exc_val, exc_tb):
+#         self.session.close()

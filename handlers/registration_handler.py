@@ -14,17 +14,18 @@ VALUES ($1);
 """
 async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
     """Registers raid channel within database and initalizes guilds raid counter."""
-    results = None
-    queries = []
-    queries.append(bot.database.execute(ADD_RAID_CHANNEL,
-                                        int(channel_id),
-                                        int(guild_id)))
-    queries.append(bot.database.execute(INIT_RAID_COUNTER,
-                                        int(guild_id)))
-    results = bot.database.batch(queries)
+    try:
+        async with bot.database.connect() as connection:
+            await connection.execute(ADD_RAID_CHANNEL,
+                                     int(channel_id),
+                                     int(guild_id))
+            await connection.execute(INIT_RAID_COUNTER,
+                                     int(guild_id))
+    except asyncpg.PostgresError as error:
+        print(f"[*] An exception occurred while registering a new raid channel. [{error}]")
+        return
 
-    if results:
-        print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
+    print("[*][{}][{}] New raid channel registered.".format(ctx.guild.name, channel_id))
 
 async def register_request_channel_handle(ctx, bot):
     channel_id = ctx.channel.id

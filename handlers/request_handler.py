@@ -140,13 +140,9 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
         await ctx.message.delete()
     except discord.NotFound:
         pass
-    queries = []
-    queries.append(bot.database.fetch(GET_ALL_ROLES_FOR_GUILD, ctx.guild.id))
-    queries.append(bot.database.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, ctx.guild.id))
-
-    results = await bot.database.batch(queries)
-
-    query_results = results.pop(0)
+    async with bot.database.connect() as connection:
+        query_results = await connection.fetch(GET_ALL_ROLES_FOR_GUILD, ctx.guild.id)
+        await connection.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, ctx.guild.id)
 
     guild = ctx.guild
     channel_id = await get_request_channel(bot, guild.id)
