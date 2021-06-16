@@ -36,22 +36,3 @@ class Database():
         """Wrapper for single fetch call"""
         async with self.__pool.acquire() as c:
             return await c.fetch(*args, **kwargs)
-
-    # class __ConnectTo():
-    #     def __init__(self, pool):
-    #         self.__pool = pool
-
-    #     async def __aenter__(self):
-    #         self.__connection = await self.__pool.acquire()
-    #         return self
-    #     async def __aexit__(self, exc_type, exc_val, exc_tb):
-    #         await self.__pool.release(self.__connection)
-
-    #     async def execute(self, *args, **kwargs):
-    #         return await self.__connection.execute(*args, **kwargs)
-
-    #     async def fetch(self, *args, **kwargs):
-    #         return await self.__connection.fetch(*args, **kwargs)
-            
-    #     async def fetchrow(self, *args, **kwargs):
-    #         return await self.__connection.fetchrow(*args, **kwargs)
