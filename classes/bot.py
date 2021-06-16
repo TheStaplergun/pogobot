@@ -17,4 +17,4 @@ class Bot(commands.Bot):
         self.applicant_trigger = asyncio.Event()
         self.lobby_remove_trigger = asyncio.Event()
 
-        self.database = database.Database()
+        self.database = None

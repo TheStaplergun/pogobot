@@ -11,34 +11,29 @@ class Database():
     It can be directly used as a context manager through the connect method for batch queries,
     or individual queries can be made with the other methods.
     """
-    def __init__(self):
-        self.__pool = None
-
-    async def init(self):
-        if self.__pool:
-            return
-        self.__pool = await asyncpg.create_pool(database=important.DATABASE,
-                                              port=important.PORT,
-                                              host=important.HOST,
-                                              user=important.DB_USER,
-                                              password=important.PASSWORD)
+    def __init__(self, pool):
+        self.__pool = pool
 
     # Return simplified context manager
     def connect(self):
+        """
+        Allows multiple queries to be executed within a single connection under a
+        context manager.
+        """
         return self.__ConnectTo(self.__pool)
 
     async def execute(self, *args, **kwargs):
-        """Wrapper for connection execute call"""
+        """Wrapper for single execute call"""
         async with self.connect() as c:
             return await c.execute(*args, **kwargs)
 
     async def fetchrow(self, *args, **kwargs):
-        """Wrapper for connection fetchrow call"""
+        """Wrapper for single fetchrow call"""
         async with self.connect() as c:
             return await c.fetchrow(*args, **kwargs)
 
     async def fetch(self, *args, **kwargs):
-        """Wrapper for connection fetch call"""
+        """Wrapper for single fetch call"""
         async with self.connect() as c:
             return await c.fetch(*args, **kwargs)
 

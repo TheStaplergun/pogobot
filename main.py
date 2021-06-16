@@ -11,6 +11,7 @@ import discord
 #from discord.ext import commands
 
 import classes.bot as bot
+import classes.database as database
 import important
 #import raid_cog
 import handlers.event_handlers as EH
@@ -67,7 +68,12 @@ BOT.categories_allowed = True
 live=False
 async def startup_process():
     """Startup process. Linear process."""
-    await BOT.database.init()
+    pool = await asyncpg.create_pool(database=important.DATABASE,
+                                     port=important.PORT,
+                                     host=important.HOST,
+                                     user=important.DB_USER,
+                                     password=important.PASSWORD)
+    BOT.database = await database.Database(pool)
     await BOT.wait_until_ready()
     #BOT.pool = await init_pool()
     if live:

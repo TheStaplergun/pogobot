@@ -17,14 +17,14 @@ async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
             await message.delete()
         except discord.DiscordException:
             pass
-        await RLH.alter_deletion_time_for_raid_lobby(bot, message_id)
+        #await RLH.alter_deletion_time_for_raid_lobby(bot, message_id)
 
-        await RH.remove_raid_from_table(bot, message.id)
+        #await RH.remove_raid_from_table(bot, message.id)
 
-        try:
-            await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-        except discord.DiscordException as error:
-            print("[!] An error occurred [{}]".format(error))
+        #try:
+        #    await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
+        #except discord.DiscordException as error:
+        #    print("[!] An error occurred [{}]".format(error))
     else:
         message_to_send = "You are not the host. You cannot delete this raid!"
 
