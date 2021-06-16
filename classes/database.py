@@ -20,38 +20,38 @@ class Database():
         Allows multiple queries to be executed within a single connection under a
         context manager.
         """
-        return self.__ConnectTo(self.__pool)
+        return self.__pool.acquire()
 
     async def execute(self, *args, **kwargs):
         """Wrapper for single execute call"""
-        async with self.connect() as c:
+        async with self.__pool.acquire() as c:
             return await c.execute(*args, **kwargs)
 
     async def fetchrow(self, *args, **kwargs):
         """Wrapper for single fetchrow call"""
-        async with self.connect() as c:
+        async with self.__pool.acquire() as c:
             return await c.fetchrow(*args, **kwargs)
 
     async def fetch(self, *args, **kwargs):
         """Wrapper for single fetch call"""
-        async with self.connect() as c:
+        async with self.__pool.acquire() as c:
             return await c.fetch(*args, **kwargs)
 
-    class __ConnectTo():
-        def __init__(self, pool):
-            self.__pool = pool
+    # class __ConnectTo():
+    #     def __init__(self, pool):
+    #         self.__pool = pool
 
-        async def __aenter__(self):
-            self.__connection = await self.__pool.acquire()
-            return self
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            await self.__pool.release(self.__connection)
+    #     async def __aenter__(self):
+    #         self.__connection = await self.__pool.acquire()
+    #         return self
+    #     async def __aexit__(self, exc_type, exc_val, exc_tb):
+    #         await self.__pool.release(self.__connection)
 
-        async def execute(self, *args, **kwargs):
-            return await self.__connection.execute(*args, **kwargs)
+    #     async def execute(self, *args, **kwargs):
+    #         return await self.__connection.execute(*args, **kwargs)
 
-        async def fetch(self, *args, **kwargs):
-            return await self.__connection.fetch(*args, **kwargs)
+    #     async def fetch(self, *args, **kwargs):
+    #         return await self.__connection.fetch(*args, **kwargs)
             
-        async def fetchrow(self, *args, **kwargs):
-            return await self.__connection.fetchrow(*args, **kwargs)
+    #     async def fetchrow(self, *args, **kwargs):
+    #         return await self.__connection.fetchrow(*args, **kwargs)
