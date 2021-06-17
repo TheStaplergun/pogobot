@@ -6,6 +6,17 @@ import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 
+async def create_lobby_member_role_for_guild(guild):
+    try:
+        new_role = await guild.create_role(name="Lobby Member", reason="Setting up a lobby system role.")
+    except discord.DiscordException:
+        pass
+    try:
+        new_role = await guild.create_role(name="Raid Moderator", reason="Setting up a lobby system role.")
+    except discord.DiscordException:
+        pass
+
+
 GET_CATEGORY_BY_GUILD_ID = """
     SELECT * FROM raid_lobby_category WHERE (guild_id = $1) LIMIT 1;
 """
@@ -30,7 +41,6 @@ GET_LOBBY_BY_USER_ID = """
 async def get_lobby_data_by_user_id(bot, user_id):
     return await bot.database.fetchrow(GET_LOBBY_BY_USER_ID,
                                        int(user_id))
-
 
 async def get_lobby_channel_for_user_by_id(bot, user_id):
     try:
@@ -207,6 +217,7 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     try:
         if lobby and users > 0:
             new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+            new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
