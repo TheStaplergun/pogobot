@@ -106,6 +106,16 @@ async def remove_raid_from_table(bot, message_id):
         await c.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
         await c.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
 
+async def delete_raid(bot, raid_id):
+    raid_data = await retrieve_raid_data_by_message_id(None, bot, raid_id)
+    if not raid_data:
+        return
+    try:
+        await bot.http.delete_message(raid_data.get("channel_id"), raid_data.get("message_id"))
+    except discord.DiscordException:
+        return
+    
+
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
     member = guild.get_member(user_id)
