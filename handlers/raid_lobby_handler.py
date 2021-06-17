@@ -479,14 +479,13 @@ async def set_recent_participation(bot, user_id):
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
 async def check_if_lobby_full(bot, lobby_id):
-    lobby_data = await bot.database.execute(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
+    lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
     if lobby_data.get("user_count") == lobby_data.get("user_limit"):
         await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     role = discord.utils.get(guild.roles, name="Lobby Member")
     await increment_user_count_for_raid_lobby(bot, lobby.id)
-    await check_if_lobby_full(bot, lobby.id)
     await set_checked_in_flag(bot, member.id)
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
@@ -516,6 +515,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         await message.delete()
     except discord.DiscordException:
         pass
+    await check_if_lobby_full(bot, lobby.id)
 
 async def handle_activity_check_reaction(ctx, bot, message):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
