@@ -5,4 +5,4 @@ init_database.py
 /data/storage
 /data/storage_backup
 /tensorflow/training/
-*.vscode
+*.vscode/settings.json

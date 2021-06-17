@@ -216,7 +216,11 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
 
     try:
         if lobby and users > 0:
-            new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+            if users < lobby_data.get("user_limit"):
+                new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+            else:
+                new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
+
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
     except discord.DiscordException:
@@ -463,9 +467,15 @@ async def set_recent_participation(bot, user_id):
         await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
+async def check_if_lobby_full(bot, lobby_id):
+    lobby_data = await bot.database.execute(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
+    if lobby_data.get("user_count") == lobby_data.get("user_limit"):
+        await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
+
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     role = discord.utils.get(guild.roles, name="Lobby Member")
     await increment_user_count_for_raid_lobby(bot, lobby.id)
+    await check_if_lobby_full(bot, lobby.id)
     await set_checked_in_flag(bot, member.id)
     await lobby.set_permissions(member, read_messages=True,
                                         send_messages=True)
