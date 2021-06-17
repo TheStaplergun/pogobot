@@ -16,7 +16,7 @@ class MemberCommands(commands.Cog):
     async def request(self, ctx, tier=None, pokemon_name=None):
         """Processes a users pokemon request"""
         if not await REQH.check_if_valid_request_channel(self.__bot, ctx.channel.id):
-            await ctx.author.send(H.guild_member_dm("That channel is not a valid request channel."))
+            await ctx.author.send(H.guild_member_dm(ctx.guild.name, "That channel is not a valid request channel."))
             return
         await REQH.request_pokemon_handle(self.__bot, ctx, tier, pokemon_name)
 
