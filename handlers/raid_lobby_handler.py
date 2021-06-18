@@ -121,7 +121,7 @@ NEW_LOBBY_INSERT = """
 INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 """
-async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at):
+async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at, invite_slots):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
     await bot.database.execute(NEW_LOBBY_INSERT,
@@ -132,11 +132,11 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
                                cur_time,
                                delete_at,
                                0,
-                               5,
+                               int(invite_slots),
                                0,
                                0)
 
-async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to_remove_lobby):
+async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to_remove_lobby, invite_slots):
     guild = ctx.guild
     raid_lobby_category_channel_data = await get_raid_lobby_category_by_guild_id(bot, guild.id)
     if not raid_lobby_category_channel_data:
@@ -185,7 +185,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     except discord.DiscordException:
         pass
     try:
-        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby)
+        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby, invite_slots)
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()

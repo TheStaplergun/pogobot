@@ -143,7 +143,7 @@ async def create_dashboard_message(channel):
     return message
 
 controls = {
-    "⏱️":"Add 5 Minutes",
+    "⏱️":"Add 10 Minutes",
     "❌":"Close Lobby"
 }
 async def set_up_management_channel(ctx, bot, should_create_channel):
