@@ -18,3 +18,14 @@ class Bot(commands.Bot):
         self.lobby_remove_trigger = asyncio.Event()
 
         self.database = None
+
+    async def retrieve_channel(self, *args, **kwargs):
+        """
+        Automatically fetches channel if channel is not in local cache.
+        Virtually guarantees getting channel object if it does exist and bot can see it.
+        """
+        channel = self.get_channel(*args, **kwargs)
+        if not channel:
+            channel = await self.fetch_channel(*args, **kwargs)
+
+        return channel
