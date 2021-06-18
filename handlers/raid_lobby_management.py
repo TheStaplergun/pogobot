@@ -5,7 +5,6 @@ import discord
 
 from handlers import raid_handler as RH
 from handlers import raid_lobby_handler as RLH
-#import handlers.raid_lobby_handler as RLH
 
 async def notify_lobby_members_of_host_deleting_lobby(lobby):
     members = lobby.members
@@ -46,39 +45,43 @@ async def extend_duration_of_lobby(bot, ctx):
         
     lobby_delete_time = lobby_data.get("delete_at")
     extension_amount = 10
-    extension_measurement = "minutes"
+    extension_measurement = "minute"
     new_delete_time = lobby_delete_time + timedelta(minutes=extension_amount)
     old_total_duration = lobby_delete_time - lobby_data.get("posted_at")
     new_total_duration = new_delete_time - lobby_data.get("posted_at")
 
-    lobby = bot.get_channel(lobby_data.get("lobby_channel_id"))
+    try:
+        lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
+    except discord.DiscordException:
+        pass
+
     if not lobby:
-        try:
-            lobby = await bot.fetch_channel(lobby_data.get("lobby_channel_id"))
-        except discord.NotFound:
-            await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
-            return
-        except discord.DiscordException:
-            return
+        await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
+        return
+
+    max_remaining_extendable_time = 2700 - old_total_duration.total_seconds()
 
     if new_total_duration.total_seconds() > 2700:
-        new_time_extension = 2700 - old_total_duration.total_seconds()
+        new_time_extension = max_remaining_extendable_time
         new_delete_time = lobby_delete_time + timedelta(seconds=new_time_extension)
 
         if new_time_extension < 1:
-            embed = discord.Embed(title="Error", description="The lobby duration cannot be extended beyond 45 minutes.")
+            embed = discord.Embed(title="Error", description="The total lobby duration cannot be extended beyond 45 minutes.")
             await lobby.send(embed=embed)
             return
             
         if new_time_extension < 60:
             extension_amount = new_time_extension
-            extension_measurement = "seconds"
-      
+            extension_measurement = "second"
+
         elif new_time_extension > 60:
             extension_amount = math.trunc(new_time_extension / 60)
 
+    if extension_amount != 1:
+        extension_measurement = f"{extension_measurement}s"
+
     time_until_expiration_as_minutes = math.ceil((new_delete_time - datetime.now()).total_seconds()/60)
-    new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes} minutes.")
+    new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes} minutes.\n\nYou can add up to {max_remaining_extendable_time} more {max_remaining_extendable_time_type}")
     await RLH.update_delete_time_with_given_time(bot, new_delete_time, lobby_data.get("raid_message_id"))
     await lobby.send(embed=new_embed)
 
