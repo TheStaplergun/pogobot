@@ -19,6 +19,7 @@ import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
+import handlers.raid_lobby_management as RLM
 import handlers.registration_handler as REGH
 import handlers.request_handler as REQH
 import handlers.startup_handler as SH

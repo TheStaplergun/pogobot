@@ -2,6 +2,8 @@
 import asyncpg
 import discord
 import handlers.request_handler as REQH
+import handlers.raid_lobby_handler as RLH
+import handlers.raid_lobby_management as RLM
 import handlers.sticky_handler as SH
 
 ADD_RAID_CHANNEL = """
@@ -80,11 +82,21 @@ async def register_raid_lobby_category(ctx, bot):
 
     channel = ctx.channel
     if not channel.category_id:
-        embed = discord.Embed(title="Error", description="This channel is not in a category. A category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
+        embed = discord.Embed(title="Error", description="This channel is not in a category. A designated category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
         ctx.send(" ",embed=embed, delete_after=15)
         return False
 
     category_id = channel.category_id
     log_channel_id = channel.id
     #await RLH.set_up_lobby_log_channel(ctx, bot)
+    await RLM.set_up_management_channel(ctx, bot, True)
     await database_register_raid_lobby_category(bot, ctx, ctx.guild.id, category_id, log_channel_id)
+    await RLH.create_lobby_roles_for_guild(ctx.guild)
+
+async def register_raid_lobby_manager_channel(ctx, bot):
+    try:
+        await ctx.message.delete()
+    except discord.DiscordException:
+        pass
+
+    await RLM.set_up_management_channel(ctx, bot, False)
