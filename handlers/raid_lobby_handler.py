@@ -5,16 +5,24 @@ import discord
 import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
+import handlers.raid_lobby_management as RLM
+
+async def create_raid_host_role(guild):
+    try:
+        return await guild.create_role(name="Raid Host", reason="Setting up a lobby system role.")
+    except discord.DiscordException:
+        pass
 
 async def create_lobby_roles_for_guild(guild):
     try:
-        new_role = await guild.create_role(name="Lobby Member", reason="Setting up a lobby system role.")
+        await guild.create_role(name="Lobby Member", reason="Setting up a lobby system role.")
     except discord.DiscordException:
         pass
     try:
-        new_role = await guild.create_role(name="Raid Moderator", reason="Setting up a lobby system role.")
+        await guild.create_role(name="Raid Moderator", reason="Setting up a lobby system role.")
     except discord.DiscordException:
         pass
+    await create_raid_host_role(guild)
 
 
 GET_CATEGORY_BY_GUILD_ID = """
@@ -52,14 +60,19 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
 
     if not lobby_data:
         return
-    lobby_channel_id = lobby_data.get("lobby_channel_id")
 
+    lobby_channel_id = lobby_data.get("lobby_channel_id")
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
         try:
             lobby = await bot.fetch_channel(int(lobby_channel_id))
-        except discord.DiscordException:
-            return False
+            print(lobby)
+        except discord.NotFound:
+            await remove_lobby_by_lobby_id(bot, lobby_channel_id)
+            return
+        except discord.DiscordException as error:
+            print(f"[!] Error fetching channel [{error}]")
+            return
 
     return lobby
 
@@ -177,6 +190,16 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
         return False
+
+    role = discord.utils.get(guild.roles, name="Raid Host")
+    if not role:
+        role = await create_raid_host_role(guild)
+    try:
+        await raid_host_member.add_roles(role)
+    except discord.DiscordException:
+        pass
+        
+    #await RLM.give_member_management_channel_view_permissions(bot, raid_lobby_category_channel_data, raid_host_member)
 
     bot.lobby_remove_trigger.set()
 
@@ -488,7 +511,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     new_embed = discord.Embed(description="A player has checked in.")
     
     try:
-        await member.send(f"You have been selected for the raid and added to the lobby. Click this for a shortcut to the lobby: {lobby.mention}")
+        await member.send(f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}")
     except discord.DiscordException:
         pass
 
