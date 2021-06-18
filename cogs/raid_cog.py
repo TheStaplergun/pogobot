@@ -27,16 +27,15 @@ class RaidPost(commands.Cog):
         print("[*] Processing raid.")
         if not await RH.check_if_valid_raid_channel(self.__bot, ctx.channel.id):
             return
-
         try:
             await ctx.message.delete()
         except:
             pass
         if await RH.check_if_in_raid(ctx, self.__bot, ctx.author.id):
-            try:
-                await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
-            except discord.DiscordException:
-                pass
+            await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
+            return
+        if await RLH.get_lobby_data_by_user_id(self.__bot, ctx.author.id):
+            await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
             return
 
         async with ctx.channel.typing():
