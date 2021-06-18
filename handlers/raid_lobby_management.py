@@ -15,7 +15,7 @@ async def notify_lobby_members_of_host_deleting_lobby(lobby):
         RLH.recreate_lobby_member_role(guild.roles)
         return
 
-    new_embed = discord.Embed(title="Notification", description="The host has manually closed the lobby.")
+    new_embed = discord.Embed(title="Notification", description="The host has flagged the lobby for removal. It will be closed shortly.")
     for member in members:
         if lobby_member_role in member.roles:
             try:
@@ -97,25 +97,23 @@ async def host_manual_remove_lobby(bot, ctx):
         try:
             lobby = await bot.fetch_channel(lobby_data.get("lobby_channel_id"))
         except discord.NotFound:
-            await RLH.remove_lobby_by_lobby_id(lobby_data.get("lobby_channel_id"))
+            await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
         except discord.DiscordException:
             return
     
+    if not lobby:
+        return
+
     host = discord.utils.get(lobby.members, id=ctx.user_id)
     await notify_lobby_members_of_host_deleting_lobby(lobby)
-    await RLH.delete_lobby(lobby)
+    await RLH.update_delete_time_with_given_time(bot, datetime.now(), lobby_data.get("raid_message_id"))
+    #await RLH.delete_lobby(lobby)
     try:
-        embed = discord.Embed(title="Notification", description="Your lobby has been removed")
+        embed = discord.Embed(title="Notification", description="Your lobby has flagged for removal and will be deleted shortly.")
         await host.send(embed=embed)
     except discord.DiscordException:
         pass
-    
-    role = discord.utils.get(host.roles, name="Raid Host")
-    try:
-        await host.remove_roles(role, reason="Closing lobby")
-    except discord.DiscordException:
-        pass
-
+        
 INSERT_MANAGEMENT_DATA = """
     UPDATE raid_lobby_category
     SET management_channel_id = $1,

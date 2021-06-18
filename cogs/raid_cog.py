@@ -21,22 +21,21 @@ class RaidPost(commands.Cog):
                    tier = "`No tier provided`",
                    pokemon_name = "`No Pokemon Name provided`",
                    weather = "`No weather condition provided`",
-                   invite_slots = 5):
+                   invite_slots = "5"):
 
         """Post a raid"""
         print("[*] Processing raid.")
         if not await RH.check_if_valid_raid_channel(self.__bot, ctx.channel.id):
             return
-
         try:
             await ctx.message.delete()
         except:
             pass
         if await RH.check_if_in_raid(ctx, self.__bot, ctx.author.id):
-            try:
-                await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
-            except discord.DiscordException:
-                pass
+            await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
+            return
+        if await RLH.get_lobby_data_by_user_id(self.__bot, ctx.author.id):
+            await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
             return
 
         async with ctx.channel.typing():
@@ -80,7 +79,7 @@ class RaidPost(commands.Cog):
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
                 if await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
-                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, invite_slots)
+                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
                     await message.add_reaction("📝")
 
                 await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
