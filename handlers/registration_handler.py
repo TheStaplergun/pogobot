@@ -93,7 +93,7 @@ async def register_raid_lobby_category(ctx, bot):
     await database_register_raid_lobby_category(bot, ctx, ctx.guild.id, category_id, log_channel_id)
     await RLH.create_lobby_roles_for_guild(ctx.guild)
 
-async def register_raid_lobby_category(ctx, bot):
+async def register_raid_lobby_manager_channel(ctx, bot):
     try:
         await ctx.message.delete()
     except discord.DiscordException:
