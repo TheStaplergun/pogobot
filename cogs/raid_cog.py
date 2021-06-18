@@ -20,11 +20,8 @@ class RaidPost(commands.Cog):
                    ctx,
                    tier = "`No tier provided`",
                    pokemon_name = "`No Pokemon Name provided`",
-                   #gym_color = "`No gym color provided`",
                    weather = "`No weather condition provided`",
-                   #invite_slots = "`No invite slot count provided`",
-                   #time_to_start = "`No time to start provided`",
-                   time_to_expire = "0"):
+                   invite_slots = 5):
 
         """Post a raid"""
         print("[*] Processing raid.")
@@ -43,18 +40,13 @@ class RaidPost(commands.Cog):
             return
 
         async with ctx.channel.typing():
-            raid_is_valid, response, remove_after, suggestion = validate_and_format_message(ctx,
-                                                                                            tier,
-                                                                                            pokemon_name,
-                                                                                            #gym_color,
-                                                                                            weather,
-                                                                                            #invite_slots,
-                                                                                            #time_to_start,
-                                                                                            time_to_expire)
+            raid_is_valid, response, suggestion = validate_and_format_message(ctx,
+                                                                              tier,
+                                                                              pokemon_name,
+                                                                              weather,
+                                                                              invite_slots)
             if raid_is_valid:
-                if remove_after < 10:
-                    remove_after = 10
-                remove_after_seconds = int(remove_after) * 60 
+                remove_after_seconds = 600
                 channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
                 _, _, _, role_id = await REQH.check_if_request_message_exists(self.__bot, response.title, ctx.guild.id)
                 message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."
@@ -88,7 +80,7 @@ class RaidPost(commands.Cog):
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
                 if await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
-                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby)
+                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, invite_slots)
                     await message.add_reaction("📝")
 
                 await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)

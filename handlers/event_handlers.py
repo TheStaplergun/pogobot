@@ -91,6 +91,7 @@ async def raw_reaction_add_handle(ctx, bot):
 
     raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(bot, ctx.guild_id)
     if ctx.message_id == raid_lobby_category.get("management_message_id"):
+        print("[i] Handling user lobby management input")
         if ctx.emoji.name == "❌":
             await RLM.host_manual_remove_lobby(bot, ctx)
         if ctx.emoji.name == "⏱️":

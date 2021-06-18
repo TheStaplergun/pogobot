@@ -78,7 +78,7 @@ async def extend_duration_of_lobby(bot, ctx):
             extension_amount = math.trunc(new_time_extension / 60)
 
     time_until_expiration_as_minutes = math.ceil((new_delete_time - datetime.now()).total_seconds()/60)
-    new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes}")
+    new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes} minutes.")
     await RLH.update_delete_time_with_given_time(bot, new_delete_time, lobby_data.get("raid_message_id"))
     await lobby.send(embed=new_embed)
 
@@ -100,7 +100,7 @@ async def host_manual_remove_lobby(bot, ctx):
             await RLH.remove_lobby_by_lobby_id(lobby_data.get("lobby_channel_id"))
         except discord.DiscordException:
             return
-  
+    
     host = discord.utils.get(lobby.members, id=ctx.user_id)
     await notify_lobby_members_of_host_deleting_lobby(lobby)
     await RLH.delete_lobby(lobby)
@@ -143,7 +143,7 @@ async def create_dashboard_message(channel):
     return message
 
 controls = {
-    "⏱️":"Add 5 Minutes",
+    "⏱️":"Add 10 Minutes",
     "❌":"Close Lobby"
 }
 async def set_up_management_channel(ctx, bot, should_create_channel):
@@ -181,10 +181,12 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
     if old_management_message_id != dashboard_message.id:
         await update_message_database_info(bot, dashboard_message.id, lobby_category_data.get("guild_id"))
     
-    if lobby_category_data.get("management_channel_id") != channel.id:
+    old_management_message_id = lobby_category_data.get("management_message_id")
+    if old_management_message_id and old_management_message_id != channel.id:
         await remove_old_channel(bot, lobby_category_data.get("management_channel_id"))
-        await update_channel_database_info(bot, channel.id, lobby_category_data.get("guild_id"))
-    
+
+    await update_channel_database_info(bot, channel.id, lobby_category_data.get("guild_id"))
+
     #await insert_management_channel_data(bot, dashboard_message.id, channel.id)
 
 async def remove_old_channel(bot, channel_id):
@@ -209,7 +211,7 @@ UPDATE_MANAGEMENT_CHANNEL_ID = """
     WHERE (guild_id = $2);
 """
 async def update_channel_database_info(bot, channel_id, guild_id):
-    await bot.database.execute(UPDATE_MANAGEMENT_MESSAGE_ID,
+    await bot.database.execute(UPDATE_MANAGEMENT_CHANNEL_ID,
                                int(channel_id),
                                int(guild_id))
 
