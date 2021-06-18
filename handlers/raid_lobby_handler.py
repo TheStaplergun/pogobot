@@ -211,9 +211,10 @@ UPDATE_TIME_TO_REMOVE_LOBBY = """
     WHERE (raid_message_id = $2);
 """
 async def update_delete_time_with_given_time(bot, new_time, raid_id):
+    bot.lobby_remove_trigger.set()
     return await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
-                                      new_time,
-                                      int(raid_id))
+                                       new_time,
+                                       int(raid_id))
 
 async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     current_time = datetime.now()
@@ -620,9 +621,11 @@ async def delete_lobby(lobby):
     members = lobby.members
     guild = lobby.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
+    raid_host_role = discord.utils.get(guild.roles, name="Raid Host")
     for member in members:
         try:
             await member.remove_roles(lobby_member_role, reason="End of raid")
+            await member.remove_roles(raid_host_role, reason="End of raid")
         except discord.DiscordException:
             pass
         except AttributeError:
