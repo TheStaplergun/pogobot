@@ -366,7 +366,7 @@ def validate_invites_argument(invite_slots):
     return (is_valid, response)
 
 def format_invalid_invites_message():
-    return "**Invite slots** must be greater than " + backtick_and_bracket("0") + "."
+    return "**Invite slots** must be a number from `1` - `10`."
 
 """----------------------------------------------------------------"""
 """TIME TO START"""
