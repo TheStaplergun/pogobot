@@ -126,8 +126,6 @@ async def start_lobby_removal_loop(bot):
             cur_time = datetime.now()
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
-            # Refresh in 30 seconds if greater than one minute wait time.
-            # Time to delete can be altered dramatically if a user removes their post early, reordering the database.
             if cur_time < deletion_time:
                 if deletion_time_dif.total_seconds() > 5:
                     await asyncio.sleep(5)

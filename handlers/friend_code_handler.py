@@ -37,7 +37,7 @@ async def get_friend_code(bot, user_id):
         await bot.database.execute(UPDATE_LAST_RECALLED_TIME,
                                    datetime.now(),
                                    int(user_id))
-    return result.get("friend_code") if result else "Friend Code not found for member. To set your friend code, type `-fcreg <friend code>` in any lobby or appropriate channel.", True if result else False
+    return result.get("friend_code") if result else "Friend Code not found for member. To set your friend code, type `-fcreg friend code` in any lobby or appropriate channel.", True if result else False
 
 async def send_friend_code(ctx, bot):
     friend_code, _ = await get_friend_code(bot, ctx.author.id)
