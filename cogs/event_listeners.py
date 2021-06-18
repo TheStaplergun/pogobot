@@ -1,7 +1,7 @@
 """Cog containing event listeners"""
 from discord.ext import commands
 
-import handlers.event_handlers as EH
+import handlers.events as EH
 
 class Listeners(commands.Cog):
     """Event Listeners Cog"""
