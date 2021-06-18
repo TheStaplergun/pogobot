@@ -8,12 +8,9 @@
     ],
     "editor.renderWhitespace": "all",
     "git.autofetch": true,
-    "workbench.editorAssociations": [
-        {
-            "viewType": "jupyter.notebook.ipynb",
-            "filenamePattern": "*.ipynb"
-        }
-    ],
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter.notebook.ipynb"
+    },
     "editor.rulers": [
         80,
         100,

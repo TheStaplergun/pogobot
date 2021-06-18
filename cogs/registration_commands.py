@@ -28,8 +28,15 @@ class RegistrationCommands(commands.Cog):
     @commands.guild_only()
     @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
     async def register_raid_lobby_category(self, ctx):
-        """Mod Only - The channel this command is ran in is set as the log channel for all lobbies. Sets parent category to target for raid lobby creation."""
+        """Mod Only - The channel this command is ran in is set as the log channel for all lobbies. Sets parent category to target for raid lobby creation. A management channel will also be created."""
         await REGH.register_raid_lobby_category(ctx, self.__bot)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
+    async def register_raid_lobby_category(self, ctx):
+        """Mod Only - The channel this command is ran in will be set as a lobby management channel."""
+        await REGH.register_raid_lobby_manager_channel(ctx, self.__bot)
 
 def setup(bot):
     """Default setup function for file"""

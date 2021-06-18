@@ -6,7 +6,7 @@ import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 
-async def create_lobby_member_role_for_guild(guild):
+async def create_lobby_roles_for_guild(guild):
     try:
         new_role = await guild.create_role(name="Lobby Member", reason="Setting up a lobby system role.")
     except discord.DiscordException:
@@ -30,7 +30,7 @@ async def get_raid_lobby_category_by_guild_id(bot, guild_id):
 
     if not category_data:
         print("[!] Error retreiving raid lobby category data. [{}]".format("No category found. Ignoring."))
-        return False
+        return
 
     return category_data
 

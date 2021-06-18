@@ -5,6 +5,7 @@ import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
 import handlers.raid_lobby_handler as RLH
+import handlers.raid_lobby_management as RLM
 import handlers.sticky_handler as SH
 
 async def handle_reaction_remove_raid_with_lobby(bot, ctx, message):
@@ -55,7 +56,8 @@ WATCHED_EMOJIS = (
     "📬",
     "📪",
     "🗑️",
-    "⏱️"
+    "⏱️",
+    "❌"
 )
 
 async def raw_reaction_add_handle(ctx, bot):
@@ -86,10 +88,14 @@ async def raw_reaction_add_handle(ctx, bot):
     if bot.categories_allowed and ctx.emoji.name == "⏱️" and channel.type == discord.ChannelType.private:
         await RLH.handle_activity_check_reaction(ctx, bot, message)
         return
-    # if not len(message.embeds) == 1:
-    #     return
-    # if not raid_channel and not request_channel:
-    #     return
+
+    raid_lobby_category = RLH.get_raid_lobby_category_by_guild_id(bot, ctx.guild_id)
+    if ctx.message_id == raid_lobby_category.get("management_message_id"):
+        if ctx.emoji.name == "❌":
+            await RLM.host_manual_remove_lobby(bot, ctx)
+        if ctx.emoji.name == "⏱️":
+            await RLM.extend_duration_of_lobby(bot, ctx)
+
     if raid_channel or request_channel:
         #await message.remove_reaction(ctx.emoji, discord.Object(ctx.user_id))#ctx.guild.get_member(ctx.user_id))
         category_exists = await RLH.get_raid_lobby_category_by_guild_id(bot, message.guild.id)
