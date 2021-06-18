@@ -26,5 +26,8 @@
     "python.linting.maxNumberOfProblems": 500,
     "python.linting.pylintEnabled": true,
     "editor.suggestSelection": "first",
-
+    "python.pythonPath": "C:\\Users\\stapl\\AppData\\Local\\Microsoft\\WindowsApps\\python3.7.exe",
+    "python.autoComplete.extraPaths": ["C:\\Users\\stapl\\git\\pogobot"],
+    //"python.linting.pylintPath": "/path/to/virtualenv/bin/pylint",
+    "python.linting.pylintArgs": ["--load-plugins", "pylint_django"],
 }
