@@ -134,7 +134,13 @@ friend_code_table = """
     user_id BIGINT PRIMARY KEY,
     friend_code CHAR(12) NOT NULL,
     last_time_recalled TIMESTAMP NOT NULL
-  )
+  );
+"""
+
+ADD_MANAGEMENT_COLUMN = """
+  ALTER TABLE raid_lobby_category
+  ADD COLUMN management_channel_id BIGINT,
+  ADD COLUMN management_message_id BIGINT;
 """
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
@@ -147,7 +153,8 @@ async def main():
   #await conn.execute(RAID_LOBBY_USER_MAP)
   #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
   #await conn.execute(RAID_APPLICATION_USER_MAP)
-  await conn.execute(friend_code_table)
+  #await conn.execute(friend_code_table)
+  await conn.execute(ADD_MANAGEMENT_COLUMN)
 
 
 asyncio.get_event_loop().run_until_complete(main())
