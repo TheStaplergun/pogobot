@@ -65,6 +65,15 @@ async def insert_management_channel_data(bot, management_channel_id, management_
                                int(management_message_id),
                                int(guild_id))
 
+async def create_dashboard_message(channel):
+    new_embed = discord.Embed(title="Lobby Control Dashboard", description="Click one of the reactions below to control your lobby.")
+    control_message = "\n".join([f"{x}:{y}" for x, y in controls.items()])
+    new_embed.add_field(name="Options", value=control_message, inline=False)
+    try:
+        return await channel.send(embed=new_embed)
+    except discord.DiscordException:
+        return
+
 controls = {
     "Add 5 Minutes":"⏱️",
     "Close Lobby":"❌"
@@ -81,8 +90,12 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
         ctx.send(" ",embed=embed)
         return False
 
-    new_embed = discord.Embed(title="Lobby Control Dashboard", description="Click one of the reactions below to control your lobby.")
-    control_message = "\n".join([f"{x}:{y}" for x, y in controls.items()])
-    new_embed.add_field(name="Options", value="control_message", inline=False)
-    dashboard_message = await channel.send(embed=new_embed)
-    await insert_management_channel_data(bot, dashboard_message.id, channel.id)
+    dashboard_message = await create_dashboard_message(channel)
+    if not dashboard_message:
+        return
+
+    await dashboard_message.add_reaction("⏱️")
+    await dashboard_message.add_reaction("❌")
+
+    await insert_management_channel_data(bot, channel.id, dashboard_message.id, ctx.guild.id)
+
