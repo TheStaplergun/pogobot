@@ -28,7 +28,6 @@ async def status_update_loop(bot):
 async def lobby_removal_loop(bot):
     """Removes lobbies as their time expires."""
     await bot.wait_until_ready()
-    #await RLH.establish_lobby_removal_list(bot)
     await SH.start_lobby_removal_loop(bot)
 
 async def applicant_loop(bot):
