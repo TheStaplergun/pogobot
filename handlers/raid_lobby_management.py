@@ -97,7 +97,7 @@ async def host_manual_remove_lobby(bot, ctx):
         try:
             lobby = await bot.fetch_channel(lobby_data.get("lobby_channel_id"))
         except discord.NotFound:
-            await RLH.remove_lobby_by_lobby_id(lobby_data.get("lobby_channel_id"))
+            await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
         except discord.DiscordException:
             return
     
