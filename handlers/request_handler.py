@@ -201,8 +201,7 @@ async def increment_request_count(ctx, bot, channel_id, message_id):
     #        thumbnail_url = thumbnail_url[:len(thumbnail_url) - 4] + "_shiny" + thumbnail_url[len(thumbnail_url) - 4:]
     new_embed.set_thumbnail(url=thumbnail_url)
     new_embed.add_field(name=old_field.name, value=str(count))
-    new_embed.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to get pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
-
+    new_embed.add_field(name="Want to be pinged for raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
     try:
         await message.edit(embed=new_embed)
     except discord.DiscordException as error:
@@ -240,8 +239,7 @@ async def decrement_request_count(ctx, bot, channel_id, message_id):
     #        thumbnail_url = thumbnail_url[:len(thumbnail_url) - 4] + "_shiny" + thumbnail_url[len(thumbnail_url) - 4:]
     new_embed.set_thumbnail(url=thumbnail_url)
     new_embed.add_field(name=old_field.name, value=str(count))
-    new_embed.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to get pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
-
+    new_embed.add_field(name="Want to be pinged for raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
     try:
         await message.edit(embed=new_embed)
     except discord.DiscordException as error:
