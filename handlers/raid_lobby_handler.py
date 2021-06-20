@@ -495,7 +495,7 @@ async def check_if_lobby_full(bot, lobby_id):
     if lobby_data.get("user_count") == lobby_data.get("user_limit"):
         await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
 
-async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
+async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
     role = discord.utils.get(guild.roles, name="Lobby Member")
     await increment_user_count_for_raid_lobby(bot, lobby.id)
     await set_checked_in_flag(bot, member.id)
@@ -515,11 +515,13 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         pass
 
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
+    users = lobby_data.get("user_count")
+    limit = lobby_data.get("user_limit")
     if has_code:
-        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} checked in."
-        message_to_send = f"{message_to_send}```You can copy this message directly into the game.```\n-----"
+        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{users}/{limit}** checked in."
+        message_to_send = f"{message_to_send}```You can copy this message directly into the game.```-----"
     else:
-        message_to_send = f"{friend_code}\n{member.mention} checked in."
+        message_to_send = f"{friend_code}\n{member.mention} **{users}/{limit}** checked in.\n-----"
 
     await lobby.send(message_to_send)
     try:
@@ -548,7 +550,7 @@ async def handle_activity_check_reaction(ctx, bot, message):
     guild = lobby.guild
     user_id = ctx.user_id
     member = guild.get_member(int(user_id))
-    await process_and_add_user_to_lobby(bot, member, lobby, guild, message)
+    await process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data)
 
 GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
