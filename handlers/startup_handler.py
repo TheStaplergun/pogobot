@@ -82,9 +82,9 @@ async def spin_up_message_deletions(bot):
     print("[*] All pending deletions complete.")
 
 GET_TOTAL_COUNT = """
-  SELECT SUM(raid_counter) AS total
-  FROM guild_raid_counters
-  WHERE (raid_counter > 0);
+    SELECT SUM(raid_counter) AS total
+    FROM guild_raid_counters
+    WHERE (raid_counter > 0);
 """
 async def set_new_presence(bot, old_count):
     """Gets total and sets presence to this new total."""
@@ -109,6 +109,23 @@ async def start_status_update_loop(bot):
         count = await set_new_presence(bot, count)
         await asyncio.sleep(10*60)
 
+async def start_five_minute_warning_loop(bot):
+    while True:
+        while True:
+            cur_time = datetime.now()
+            bot.raid_lobby_cache = sorted(bot.raid_lobby_cache.items(), key=lambda item: item.value().get("delete_at"))
+            for lobby_id, lobby_data in bot.raid_lobby_cache.items():
+                delete_time = lobby_data.get("delete_at")
+            pass
+        await bot.five_minute_trigger.wait()
+        bot.five_minute_trigger.clear()
+
+async def add_lobby_for_five_minute_warning(bot, lobby_data):
+    lobby_id = lobby_data.get("lobby_channel_id")
+    if lobby_id not in bot.raid_lobby_cache.keys():
+        bot.raid_lobby_cache.update({lobby_id:lobby_data})
+        bot.five_minute_trigger.set()
+
 async def start_lobby_removal_loop(bot):
     """Permanently running loop while bot is up."""
 
@@ -127,6 +144,9 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
+                if deletion_time_dif.total_seconds() > 300:
+                    await add_lobby_for_five_minute_warning(bot, lobby_data)
+
                 if deletion_time_dif.total_seconds() > 5:
                     await asyncio.sleep(5)
                     continue

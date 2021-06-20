@@ -34,3 +34,7 @@ async def applicant_loop(bot):
     """Processes raid applicants and adds them to raids."""
     await bot.wait_until_ready()
     await SH.start_applicant_loop(bot)
+
+async def lobby_five_minute_warning(bot):
+    await bot.wait_until_ready()
+    await SH.start_five_minute_warning_loop(bot)
