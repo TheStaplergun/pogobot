@@ -82,14 +82,16 @@ class RaidPost(commands.Cog):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                     lobby = await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
                     await message.add_reaction("📝")
+
                 if request_channel_id:
                     try:
                         await message.add_reaction("📬")
                         await message.add_reaction("📪")
                     except discord.DiscordException as error:
                         print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
-                edited_message_content = f"{message.content}\n{lobby.mention} **<- lobby**"
-                await message.edit(content=edited_message_content)
+                if lobby:
+                    edited_message_content = f"{message.content}\n{lobby.mention} **<-lobby**"
+                    await message.edit(content=edited_message_content)
                 print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
 
                 try:

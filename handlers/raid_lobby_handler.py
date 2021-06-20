@@ -114,7 +114,7 @@ async def log_message_in_raid_lobby_channel(bot, message):
 
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
     new_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
-    new_embed.set_footer(text="User ID: {}".format(author.id))
+    new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
     await log_channel.send(" ", embed=new_embed)
 
 NEW_LOBBY_INSERT = """
@@ -177,7 +177,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         pass
 
     if has_code:
-        new_embed.set_footer(text="This message can be directly copied and pasted into the text box in game.")
+        new_embed.set_footer(text="You can copy this message directly into the game.")
 
     message = await new_raid_lobby.send(header_message_body, embed=new_embed)
     try:
@@ -519,7 +519,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     if has_code:
         message_to_send = f"{friend_code}\nFriend code for: {member.mention}"
-        new_embed.set_footer(text="This message can be directly copied and pasted into the text box in game.")
+        new_embed.set_footer(text="You can copy this message directly into the game.")
     else:
         message_to_send = f"{friend_code}\n{member.mention}"
 
