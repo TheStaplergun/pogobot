@@ -64,7 +64,7 @@ class RaidPost(commands.Cog):
                     start_string = f'{role.mention}'
                 end_string = ""
                 if raid_lobby_category:
-                    response.set_footer(text="To sign up for this raid, tap the 📝 below.")
+                    response.set_footer(text="📝 sign up")
                 else:
                     end_string = f' hosted by {ctx.author.mention}\n'
                 channel_message_body = start_string + end_string
@@ -79,17 +79,19 @@ class RaidPost(commands.Cog):
                 time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
                 if await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
-                    await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
+                    lobby = await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
                     await message.add_reaction("📝")
-
-                await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
-                print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
                 if request_channel_id:
                     try:
                         await message.add_reaction("📬")
                         await message.add_reaction("📪")
                     except discord.DiscordException as error:
                         print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
+                edited_message_content = f"{message.content}\n{lobby.mention} **<- lobby**"
+                await message.edit(content=edited_message_content)
+                await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
+                print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
+
                 try:
                     await SH.toggle_raid_sticky(self.__bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
                 except discord.DiscordException as error:

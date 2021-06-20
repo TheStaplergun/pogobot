@@ -96,7 +96,7 @@ def validate_and_format_message(ctx,
             embed.description = "Click the Pokemon name above for more in depth counter information."
         embed.set_thumbnail(url=embed_thumbnail)
         embed.add_field(name="Weather", value=embed_weather, inline=True)
-        embed.add_field(name="Invites Available", value=embed_invites, inline=False)
+        embed.add_field(name="Slots", value=embed_invites, inline=True)
         embed.set_footer(text="To join this raid, DM the host above.")
         if embed_pokemon in RAID_COUNTER_GUIDE:
             embed.set_image(url=RAID_COUNTER_GUIDE.get(embed_pokemon))
@@ -312,7 +312,7 @@ def validate_weather_argument(weather):
     suggestion = ""
     # Search for valid weather type (dictionary keys)
     if weather in WEATHER_TO_OUTPUT.keys():
-        response = WEATHER_TO_OUTPUT.get(weather) + " " + WEATHER_TO_EMOJI.get(weather)
+        response = f"{WEATHER_TO_EMOJI.get(weather)}"# {WEATHER_TO_OUTPUT.get(weather)}"
         is_valid = True
     else:
         response, suggestion = format_invalid_weather_message(weather)
@@ -354,7 +354,7 @@ def validate_invites_argument(invite_slots):
         invite_slots = int(invite_slots)
         if invite_slots > 0 and invite_slots <= 10:
             is_valid = True
-            response = str(invite_slots) + " slots"
+            response = str(invite_slots)
     except ValueError:
         response = backtick_and_bracket(invite_slots) + " is not a valid number."
         response += "\n"
