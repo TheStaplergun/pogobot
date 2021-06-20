@@ -158,7 +158,7 @@ async def start_applicant_loop(bot):
             checked_count = 0
             for raid_lobby_data in raid_lobby_data_list:
                 cur_time = datetime.now()
-                threshold_time = cur_time - timedelta(seconds=60)
+                threshold_time = cur_time - timedelta(seconds=45)
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
                     #raid_host_id = raid_lobby_data.get("host_user_id")
@@ -170,16 +170,13 @@ async def start_applicant_loop(bot):
                     guild = bot.get_guild(int(guild_id))
                     user_list = []
                     for user in users:
-                        has_been_notified = user.get("has_been_notified")
-                        if has_been_notified:
-                            continue
                         member_id = user.get("user_id")
                         member = guild.get_member(int(member_id))
                         user_data = {
                             "user_data":user,
                             "weight":await RLH.calculate_weight(bot, user, member),
                             "member_object":member,
-                            }
+                        }
                         user_list.append(user_data)
 
                     sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
