@@ -18,6 +18,7 @@ class Bot(commands.Bot):
         self.lobby_remove_trigger = asyncio.Event()
 
         self.database = None
+        self.raid_channel_cache = []
 
     async def retrieve_channel(self, *args, **kwargs):
         """
