@@ -56,7 +56,7 @@ class RaidPost(commands.Cog):
                     return
                 request_channel_id = await REQH.get_request_channel(self.__bot, ctx.guild.id)
                 if request_channel_id:
-                    response.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to be notified of future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
+                    response.add_field(name="Want to be pinged for future raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
                 raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id)
                 start_string = ""
                 if role_id:
