@@ -136,7 +136,7 @@ async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild
                                0,
                                0)
 
-async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to_remove_lobby, invite_slots):
+async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to_remove_lobby, invite_slots) -> discord.TextChannel:
     guild = ctx.guild
     raid_lobby_category_channel_data = await get_raid_lobby_category_by_guild_id(bot, guild.id)
     if not raid_lobby_category_channel_data:
@@ -189,7 +189,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
-        return False
+        return
 
     role = discord.utils.get(guild.roles, name="Raid Host")
     if not role:
@@ -203,7 +203,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     bot.lobby_remove_trigger.set()
 
-    return True
+    return new_raid_lobby
 
 UPDATE_TIME_TO_REMOVE_LOBBY = """
     UPDATE raid_lobby_user_map
