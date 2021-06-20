@@ -237,13 +237,13 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
                                new_delete_time,
                                int(lobby_data.get("raid_message_id")))
-
+    limit = lobby_data.get("user_limit")
     try:
         if lobby and users > 0:
-            if users < lobby_data.get("user_limit"):
-                new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+            if users < limit:
+                new_embed = discord.Embed(title=f"{users}/{limit}", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title="System Notification", description="This lobby will expire in 15 minutes.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
 
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
@@ -434,7 +434,6 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
         if counter > current_needed:
             break
         member = user["member_object"]
-        #user_data = user["user_data"]
         try:
             new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
             message = await member.send(" ", embed=new_embed, delete_after=30)
