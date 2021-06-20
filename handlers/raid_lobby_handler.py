@@ -519,7 +519,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     limit = lobby_data.get("user_limit")
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{users}/{limit}** checked in."
-        message_to_send = f"{message_to_send}```You can copy this message directly into the game.```-----"
+        message_to_send = f"{message_to_send}\n*Copy this message directly into the game.*\n-----"
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{users}/{limit}** checked in.\n-----"
 
