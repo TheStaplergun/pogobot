@@ -73,10 +73,11 @@ class RaidPost(commands.Cog):
                 except discord.DiscordException as error:
                     print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                     return
+                time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
+                await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
 
                 await message.add_reaction("🗑️")
 
-                time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
                 if await RLH.get_raid_lobby_category_by_guild_id(self.__bot, ctx.guild.id):
                     time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                     lobby = await RLH.create_raid_lobby(ctx, self.__bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
@@ -89,7 +90,6 @@ class RaidPost(commands.Cog):
                         print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
                 edited_message_content = f"{message.content}\n{lobby.mention} **<- lobby**"
                 await message.edit(content=edited_message_content)
-                await RH.add_raid_to_table(ctx, self.__bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
                 print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
 
                 try:
