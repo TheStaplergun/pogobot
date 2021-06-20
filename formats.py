@@ -67,7 +67,7 @@ def format_invalid_gym_message(gym_color):
 """WEATHER"""
 WEATHER_TO_EMOJI =\
 {
-  "saa Aunny":"☀️",
+  "sunny":"☀️",
   "clear":"☀️",
   "windy":"🪁",
   "partlycloudy":"⛅",
@@ -82,7 +82,7 @@ WEATHER_TO_OUTPUT =\
   "sunny":"Sunny/Clear",
   "clear":"Sunny/Clear",
   "windy":"Windy",
-  "partlycloudy":"Partially Cloudy",
+  "partlycloudy":"Partly Cloudy",
   "cloudy":"Cloudy",
   "rainy":"Rainy",
   "snow":"Snow",
