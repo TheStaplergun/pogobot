@@ -380,7 +380,7 @@ async def get_applicant_data_by_message_id(bot, message_id):
     return await bot.database.fetchrow(QUERY_APPLICANT_BY_MESSAGE_ID, message_id)
 
 GET_USERS_BY_RAID_MESSAGE_ID = """
-    SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1);
+    SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1 and has_been_notified = FALSE);
 """
 async def get_applicants_by_raid_id(bot, raid_message_id):
     return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
