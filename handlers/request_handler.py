@@ -104,7 +104,7 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     new_embed = discord.Embed(title=pokemon_name.title(), description="")
     new_embed.set_thumbnail(url=build_image_link_github(number))
     new_embed.add_field(name="Number of players requesting", value=str(1))
-    new_embed.add_field(name="Want to be notified for this pokemon in the future?", value="Click the 📬 reaction to get pinged for future raids.\nClick 📪 to remove yourself from notifications.", inline=False)
+    new_embed.add_field(name="Want to be pinged for raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
 
     request_channel_id = await get_request_channel(bot, guild.id)
     request_channel = guild.get_channel(request_channel_id)
