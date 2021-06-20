@@ -509,7 +509,6 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
         pass
     except AttributeError:
         pass
-    new_embed = discord.Embed(description="A player has checked in.")
     
     try:
         await member.send(f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}")
@@ -518,12 +517,12 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message):
 
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     if has_code:
-        message_to_send = f"{friend_code}\nFriend code for: {member.mention}"
-        new_embed.set_footer(text="You can copy this message directly into the game.")
+        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} checked in."
+        message_to_send = f"{message_to_send}```You can copy this message directly into the game.```\n-----"
     else:
-        message_to_send = f"{friend_code}\n{member.mention}"
+        message_to_send = f"{friend_code}\n{member.mention} checked in."
 
-    await lobby.send(message_to_send, embed=new_embed)
+    await lobby.send(message_to_send)
     try:
         await message.delete()
     except discord.DiscordException:
