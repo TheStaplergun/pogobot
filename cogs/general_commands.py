@@ -30,6 +30,11 @@ class GeneralCommands(commands.Cog):
         """Sends registered friend code to the channel the command was typed in."""
         await FCH.send_friend_code(ctx, self.__bot)
 
+    @commands.command()
+    async def dex(self, ctx, arg1="None", arg2="None", arg3="None"):
+        """Retrieves Pokedex information for a given Pokedex number or Pokemon Name"""
+        await PBH.retrieve_pokedex_data(self.__bot, ctx, arg1="None", arg2="None")
+
 def setup(bot):
     """Default setup function for file"""
     bot.add_cog(GeneralCommands(bot))
