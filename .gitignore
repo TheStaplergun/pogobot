@@ -6,3 +6,4 @@ init_database.py
 /data/storage_backup
 /tensorflow/training/
 *.vscode/settings.json
+*.webcache
