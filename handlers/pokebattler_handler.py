@@ -39,16 +39,22 @@ def handle_get_pokemon_by_name(tier="None", name="None"):
             return entry
 
 async def retrieve_pokedex_data(bot, ctx, arg1="None", arg2="None"):
+    print(arg1, arg2)
+    result = None
     if arg1 == "Mega" and not arg2 == "None":
         result = handle_get_pokemon_by_name(arg1, arg2)
+    if not result:
+        result = handle_get_pokemon_by_name(None, arg1)
     
     if arg1.isnumeric():
         result = handle_get_pokemon_by_number(int(arg1))
     
+    if not result:
+        return
     embed = discord.Embed(title=result.get("pokemonId"))
     for key, value in result.items():
         if key == "pokemonId":
             continue
         embed.add_field(name=key, value=value)
     
-    await ctx.send(embed)
+    await ctx.send(embed=embed)
