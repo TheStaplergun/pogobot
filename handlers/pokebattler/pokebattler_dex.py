@@ -33,10 +33,5 @@ async def retrieve_pokedex_data(bot, ctx, arg1="None", arg2="None"):
     
     if not result:
         return
-    embed = discord.Embed(title=result.get("pokemonId"))
-    for key, value in result.items():
-        if key == "pokemonId":
-            continue
-        embed.add_field(name=key, value=value)
     
-    await ctx.send(embed=embed)
+    return result
