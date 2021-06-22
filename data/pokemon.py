@@ -388,7 +388,7 @@ NATIONAL_DEX =\
   "383_00":"Groudon",
   "384_00":"Rayquaza",
   "385_00":"Jirachi",
-  "386_00":"Deoxys",
+  "386_11":"Deoxys",
   "387_00":"Turtwig",
   "388_00":"Grotle",
   "389_00":"Torterra",
@@ -868,7 +868,7 @@ NATIONAL_DEX =\
   "863_00":"Perrserker",
   "864_00":"Cursola",
   "865_00":"Sirfetch’d",
-  "866_00":"Mr.-Rime",
+  "866_00":"Mr-Rime",
   "867_00":"Runerigus",
   "868_00":"Milcery",
   "869_00":"Alcremie",
@@ -995,6 +995,9 @@ GALARIAN_DEX =\
 
 ALTERNATE_FORME_DEX =\
 {
+  "386_12":"Deoxys-Attack",
+  "386_13":"Deoxys-Defense",
+  "386_14":"Deoxys-Speed",
   "487_12":"Giratina-Origin",
   "487_11":"Giratina-Altered",
   "645_11":"Landorus-Incarnate",
@@ -1028,4 +1031,15 @@ POKEBATTLER_LINK =\
   "Terrakion":"https://www.pokebattler.com/raids/Terrakion",
   "Cobalion":"https://www.pokebattler.com/raids/Cobalion",
   "Kyurem":"https://www.pokebattler.com/raids/Kyurem"
+}
+
+NAME_TO_POKEBATTLER_ID =\
+{
+  "Charizard-X":"CHARIZARD_MEGA_X",
+  "Charizard-Y":"CHARIZARD_MEGA_Y",
+  "Mewtwo-X":"MEWTWO_MEGA_X",
+  "Mewtwo-Y":"MEWTWO_MEGA_Y",
+  "Nidoran-M":"NIDORAN_MALE",
+  "Nidoran-F":"NIDORAN_FEMALE",
+  "Giratina-Altered":"GIRATINA",
 }

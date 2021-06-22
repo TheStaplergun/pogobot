@@ -3,11 +3,13 @@ Pokedex class that wraps pokebattler API
 """
 import asyncio
 
-from classes import database
+import discord
 from discord.ext import commands
 
+from data import formats as F
+from data import pokemon as DEX
+from handlers.pokebattler import api_helper as AH
 from handlers.pokebattler import pokebattler_api as API
-from handlers.pokebattler import pokebattler_calc as PBC
 
 class Pokedex():
     def __init__(self):
@@ -58,10 +60,86 @@ class Pokedex():
     def get_ranking(self, name, tier):
         pokemon_rankings = self.rankings.get(name)
         return pokemon_rankings.get(tier)
-    
-    def get_counter_data(self, name, weather):
-        API.get_counter_for(name, weather)
-    
+
     def get_move_data(self, name):
-        move = next(move for move in self.moves if move.get("moveId") == name)
+        move = next((move for move in self.moves if move.get("moveId") == name), None)
         return move
+
+    def get_counter_data(self, name, tier, weather):
+        """
+        Returns in format:
+        list[
+            {
+                key: pokemonId
+                key: byMove
+                {
+                    key: move1
+                    key: move2
+                }
+            },
+        ]
+        """
+        params = {
+            b"sort":b"ESTIMATOR",
+            b"weatherCondition":f"{weather}".encode(),
+            b"dodgeStrategy":b"DODGE_REACTION_TIME",
+            b"aggregation":b"AVERAGE",
+            b"includeLegendary":b"true",
+            b"includeShadow":b"true",
+            b"includeMegas":b"true",
+            b"attackerTypes":b"POKEMON_TYPE_ALL",
+        }
+        result = API.retrieve_data_from_api(API.link_builder(name, tier, weather), params)
+        result = result.get("attackers").pop().get("randomMove").get("defenders")[-1:-7:-1]
+        for defender in result:
+            moves = defender.get("byMove").pop()
+            moves.pop("result")
+            for movenum, move in moves.items():
+                moves[movenum] = self.get_move_data(move)
+            defender["byMove"] = moves
+        return result
+
+    def get_counter_for(self, bot, name, tier, weather):
+        name_id = convert_name_to_id(name)
+        tier = tier.replace("T","")
+        tier_id = f"RAID_LEVEL_{tier}".upper()
+        weather_id = F.WEATHER_TO_POKEBATTLER.get(weather)
+        result = self.get_counter_data(name_id, tier_id, weather_id)
+        embed = discord.Embed(title=name.replace("-", " "), description="Recommended counters and moves")
+        embed.add_field(name="Weather", value=F.WEATHER_TO_EMOJI.get(weather))
+        name_getter = AH.value_from_arg.get("name")
+        for pokemon in result:
+            moves = pokemon.get("byMove")
+            moves.pop("legacyDate")
+            moves.pop("elite")
+            value = "\n".join([AH.move_to_readable(bot, movenum, move) for movenum,move in moves.items()])
+            embed.add_field(name=name_getter(pokemon), value=value)
+
+        return embed
+
+    def convert_name_to_id(self, name, tier):
+        spec_name = DEX.NAME_TO_POKEBATTLER_ID.get("name")
+        if spec_name:
+            return spec_name
+
+        if name in DEX.MEGA_DEX.values():
+            name = f"{name}_mega".upper()
+            return name
+        
+        if name in DEX.ALOLAN_DEX.values():
+            name = "_".join(name.split("-")[1:])
+            name = f"{name}_alola_form".upper()
+            return name
+        
+        if name in DEX.GALARIAN_DEX.values():
+            name = "_".join(name.split("-")[1:])
+            name = f"{name}_galarian_form".upper()
+            return name
+        
+        if name in DEX.ALTERNATE_FORME_DEX.values():
+            name = name.replace("-", "_")
+            name = f"{name}_form".upper()
+            return name
+        
+        name = name.replace("-","_").upper()
+        return name

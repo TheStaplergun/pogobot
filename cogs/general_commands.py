@@ -5,7 +5,7 @@ import time
 from discord.ext import commands
 
 import handlers.friend_code_handler as FCH
-import handlers.pokebattler_handler as PBH
+import handlers.pokebattler.api_helper as APIH
 
 class GeneralCommands(commands.Cog):
     """General Commands Cog"""
@@ -34,7 +34,13 @@ class GeneralCommands(commands.Cog):
     @commands.command()
     async def dex(self, ctx, arg1="None", arg2="None"):
         """Retrieves Pokedex information for a given Pokedex number or Pokemon Name"""
-        await PBH.retrieve_pokedex_data(self.__bot, ctx, arg1, arg2)
+        await APIH.retrieve_pokedex_data(self.__bot, ctx, arg1, arg2)
+    
+    @commands.command()
+    async def c(self, ctx, tier="None", name="None", weather="Clear"):
+        await APIH.get_counter(self.__bot, ctx, tier, name, weather)
+
+    #@commands.command()
 
 def setup(bot):
     """Default setup function for file"""

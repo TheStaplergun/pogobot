@@ -3,9 +3,10 @@ Bot class that wraps discord client
 """
 import asyncio
 
-from classes import database
 from discord.ext import commands
 
+from classes import database
+from classes import pokedex
 class Bot(commands.Bot):
     """
     Subclasses commands.Bot from discord.
@@ -18,6 +19,7 @@ class Bot(commands.Bot):
         self.lobby_remove_trigger = asyncio.Event()
 
         self.database = None
+        self.dex = pokedex.Pokedex()
         self.raid_channel_cache = []
 
     async def retrieve_channel(self, *args, **kwargs):

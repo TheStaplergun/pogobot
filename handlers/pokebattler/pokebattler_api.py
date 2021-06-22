@@ -5,7 +5,7 @@ from cachecontrol import CacheControl
 from cachecontrol.caches import FileCache
 import discord
 
-import api_helper as AH
+import handlers.pokebattler.api_helper as AH
 
 def retrieve_data_from_api(link, params):
     sess = CacheControl(requests.Session(),
@@ -41,32 +41,12 @@ valid_tiers = [
 def current_tier_valid(tier):
     return tier in valid_tiers
 
-form_converter = {
-    "ALOLA":"Alolan",
-    "GALARIAN":"Galarian",
-    "ORIGIN":"Origin",
-}
-
-def format_pokemon_name(name):
-    name = name.split("_")
-    form = None
-    if "FORM" in name:
-        name.pop(-1)
-        form = form_converter.get(name.pop(-1))
-        name.insert(0, form)
-
-    if "MEGA" in name:
-        name.insert(0, name.pop(-1))
-
-    name = " ".join(name).title()
-    return name
-
 def add_tier_to_raid_data(raid, tier):
     raid.update({"tier":tier})
     return raid
 
 def filter_current_raids(raids):
-    return {format_pokemon_name(raid.get("pokemon")):add_tier_to_raid_data(raid, tier.get("tier"))
+    return {AH.format_pokemon_name(raid.get("pokemon")):add_tier_to_raid_data(raid, tier.get("tier"))
                 for tier in raids.get("tiers") 
                     if current_tier_valid(tier.get("tier"))
                         for raid in tier.get("raids")}
@@ -74,19 +54,12 @@ def filter_current_raids(raids):
 def fetch_raids_filtered():
     return filter_current_raids(fetch_raids())
 
-"""CLEAR,
-RAINY,
-PARTLY_CLOUDY,
-OVERCAST,
-WINDY,
-SNOW,
-FOG"""
-def get_move_data():
-    pass
 def link_builder(name, tier, weather):
     return f"https://fight.pokebattler.com/raids/defenders/{name}/levels/{tier}/attackers/levels/40/strategies/CINEMATIC_ATTACK_WHEN_POSSIBLE/DEFENSE_RANDOM_MC"
-
-def get_counter_for(dex, name, tier, weather):
+def get_move_data(name):
+    move = next((move for move in fetch_moves() if move.get("moveId") == name), None)
+    return move
+def get_counter_for(name, tier, weather):
     params = {
         b"sort":b"ESTIMATOR",
         b"weatherCondition":f"{weather}".encode(),
@@ -102,7 +75,11 @@ def get_counter_for(dex, name, tier, weather):
     for defender in result:
         moves = defender.get("byMove").pop()
         moves.pop("result")
-        for movenum, move in moves:
-            moves[movenum] = dex.get_move_data(move)
+        print(moves)
+        for movenum, move in moves.items():
+            moves[movenum] = get_move_data(move)
         defender["byMove"] = moves
     return result
+
+with open("./output", "w+") as f:
+    AH.unwind(f, get_counter_for("REGIGIGAS","RAID_LEVEL_5","CLEAR"))
