@@ -54,6 +54,7 @@ WEATHER_TO_OUTPUT =\
 
 WEATHER_TO_POKEBATTLER =\
 {
+  "clear":"CLEAR",
   "sunny":"CLEAR",
   "rainy":"RAINY",
   "partlycloudy":"PARTLY_CLOUDY",

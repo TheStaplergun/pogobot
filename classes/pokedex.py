@@ -68,7 +68,7 @@ class Pokedex():
     def get_counter_data(self, name, tier, weather):
         """
         Returns in format:
-        list[
+        [
             {
                 key: pokemonId
                 key: byMove
@@ -80,7 +80,7 @@ class Pokedex():
         ]
         """
         params = {
-            b"sort":b"ESTIMATOR",
+            b"sort":b"TIME",
             b"weatherCondition":f"{weather}".encode(),
             b"dodgeStrategy":b"DODGE_REACTION_TIME",
             b"aggregation":b"AVERAGE",
@@ -89,7 +89,7 @@ class Pokedex():
             b"includeMegas":b"true",
             b"attackerTypes":b"POKEMON_TYPE_ALL",
         }
-        result = API.retrieve_data_from_api(API.link_builder(name, tier, weather), params)
+        result, url = API.retrieve_data_from_api(API.link_builder(name, tier, weather), params)
         result = result.get("attackers").pop().get("randomMove").get("defenders")[-1:-7:-1]
         for defender in result:
             moves = defender.get("byMove").pop()
@@ -97,31 +97,36 @@ class Pokedex():
             for movenum, move in moves.items():
                 moves[movenum] = self.get_move_data(move)
             defender["byMove"] = moves
-        return result
+        return result, url
 
     def get_counter_for(self, bot, name, tier, weather):
-        name_id = convert_name_to_id(name)
+        name_id = self.convert_name_to_id(name, tier)
         tier = tier.replace("T","")
         tier_id = f"RAID_LEVEL_{tier}".upper()
-        weather_id = F.WEATHER_TO_POKEBATTLER.get(weather)
-        result = self.get_counter_data(name_id, tier_id, weather_id)
-        embed = discord.Embed(title=name.replace("-", " "), description="Recommended counters and moves")
-        embed.add_field(name="Weather", value=F.WEATHER_TO_EMOJI.get(weather))
+        weather_id = F.WEATHER_TO_POKEBATTLER.get(weather.lower())
+        print(f"{name_id}, {tier_id}, {weather_id}")
+        result, link = self.get_counter_data(name_id, tier_id, weather_id)
+        link = link.replace("fight.", "www.")
+        embed = discord.Embed(title=name.replace("-", " ").title(), description="Recommended counters and moves ", url=link)
+        embed.add_field(name="Weather", value=F.WEATHER_TO_EMOJI.get(weather.lower()), inline=False)
+        embed.add_field(name="Counters", value="With a **random moveset** and the above weather, here are the recommended counters.", inline=False)
         name_getter = AH.value_from_arg.get("name")
+        counter = 1
         for pokemon in result:
             moves = pokemon.get("byMove")
-            moves.pop("legacyDate")
-            moves.pop("elite")
-            value = "\n".join([AH.move_to_readable(bot, movenum, move) for movenum,move in moves.items()])
-            embed.add_field(name=name_getter(pokemon), value=value)
+            value = "\n".join([AH.move_to_readable(bot, movenum, move) for movenum,move in moves.items() if movenum == "move1" or movenum == "move2"])
+            name = name_getter(pokemon)
+            embed.add_field(name=f"{counter}) {name}", value=value, inline=True)
 
         return embed
 
     def convert_name_to_id(self, name, tier):
-        spec_name = DEX.NAME_TO_POKEBATTLER_ID.get("name")
+        print(name, tier)
+        spec_name = DEX.NAME_TO_POKEBATTLER_ID.get(name.title())
         if spec_name:
             return spec_name
 
+        name = name.title()
         if name in DEX.MEGA_DEX.values():
             name = f"{name}_mega".upper()
             return name

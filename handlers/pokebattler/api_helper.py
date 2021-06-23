@@ -1,5 +1,10 @@
+import discord
+
 from data import formats as F
+from handlers import raid_handler as RH
+from handlers import request_handler as REQH
 from pogo_raid_lib import *
+
 tab_count = -1
 recurse_limit = 2
 def unwind(f, itera):
@@ -61,7 +66,7 @@ root_key_convert = {
 }
 
 value_from_arg ={
-    "name":lambda entry: " ".join(entry.get("pokemonId").split("_")).title(),
+    "name":lambda entry: " ".join(entry.get("pokemonId").replace("_FORM","").split("_")).title(),
     "dex_num":lambda entry: entry.get("pokedex").get("pokemonNum"),
     "form":lambda entry: entry.get("pokedex").get("form"),
     "type":lambda entry: entry.get("type").split("_").pop(2).title(),
@@ -71,17 +76,12 @@ value_from_arg ={
 }
 
 def move_to_readable(bot, movenum, move):
-    move_category = {
-        "move1":"<Fast",
-        "move2":"<Charge"
-    }.get(movenum)
-
     move_name = move.get("moveId").replace("_FAST","")
     move_name = move_name.replace("_", " ").title()
 
     move_type = move.get("type").split("_").pop()
-    move_type = bot.get_emoji(F.TYPE_TO_EMOJI.get(move_type))
-    return f"{move_type} {move_name} {move_category}"
+    move_type = bot.get_emoji(int(F.TYPE_TO_EMOJI.get(move_type)))
+    return f"{move_type} {move_name}"
 
 form_converter = {
     "ALOLA":"Alolan",
@@ -106,30 +106,45 @@ def format_pokemon_name(name):
 
 async def get_counter(bot, ctx, tier, name, weather):
     author = ctx.author
+    message = ctx.message
+    raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
+    request_channel = await REQH.check_if_valid_request_channel(bot, message.channel.id)
+    try:
+        await message.delete()
+    except discord.DiscordException:
+        pass
     if not tier or (tier.lower() == "mega" and not name):
         await author.send("No pokemon given to get counters for.")
         return
 
+    valid_data = True
     message_to_send = ""
     is_valid, response = validate_tier(tier)
     if not is_valid:
+        valid_data = False
         message_to_send = f"{message_to_send}{response}\n"
 
     is_valid, response, suggestion, dex_num = validate_pokemon(name, tier)
-    if tier.lower() == "mega" and not name.startswith("Mega ", 0, 5):
-        name = "Mega " + name
-    
     if not is_valid:
-        message_to_send = f"{message_to_send}{response}\nDid you mean **{suggestion}**\n"
-        return
+        valid_data = False
+        message_to_send = f"{message_to_send}{response}\n"
 
     is_valid, response, suggestion = validate_weather_argument(weather)
     if not is_valid:
-        message_to_send = f"{message_to_send}{response}\nDid you mean **{suggestion}**"
+        valid_data = False
+        message_to_send = f"{message_to_send}{response}Did you mean **{suggestion}**"
     
-    if not is_valid:
+    if not valid_data:
         await author.send(message_to_send)
         return
     
-    embed = bot.dex.get_counter_for(name, tier, weather)
-    await ctx.send(embed=embed)
+    embed = bot.dex.get_counter_for(bot, name, tier, weather)
+    embed_thumbnail = build_image_link_github(dex_num)
+    embed.set_thumbnail(url=embed_thumbnail)
+    if raid_channel or request_channel:
+        try:
+            await author.send(embed=embed)
+        except discord.DiscordException:
+            pass
+    else:
+        await ctx.send(embed=embed)
