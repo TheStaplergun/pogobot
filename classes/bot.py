@@ -20,7 +20,8 @@ class Bot(commands.Bot):
 
         self.database = None
         self.dex = pokedex.Pokedex()
-        self.raid_channel_cache = []
+        self.raid_channel_cache = set()
+        self.request_channel_cache = set()
 
     async def retrieve_channel(self, *args, **kwargs):
         """

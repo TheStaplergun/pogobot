@@ -10,7 +10,15 @@ check_valid_request_channel = """
 """
 
 async def check_if_valid_request_channel(bot, channel_id):
-    results = await bot.database.fetchrow(check_valid_request_channel, int(channel_id))
+    channel_id = int(channel_id)
+    if channel_id in bot.request_channel_cache:
+        return True
+
+    results = await bot.database.fetchrow(check_valid_request_channel, channel_id)
+
+    if results:
+        bot.request_channel_cache.add(channel_id)
+
     if not results:
         return False
     return True

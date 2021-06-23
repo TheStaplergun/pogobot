@@ -153,14 +153,14 @@ CHECK_VALID_RAID_CHANNEL = """
 """
 async def check_if_valid_raid_channel(bot, channel_id):
     """Checks if the channel is registered as a valid raid channel."""
-
+    channel_id = int(channel_id)
     if channel_id in bot.raid_channel_cache:
         return True
 
-    results = await bot.database.fetchrow(CHECK_VALID_RAID_CHANNEL, int(channel_id))
+    results = await bot.database.fetchrow(CHECK_VALID_RAID_CHANNEL, channel_id)
 
     if results:
-        bot.raid_channel_cache.append(channel_id)
+        bot.raid_channel_cache.add(channel_id)
 
     if not results:
         return False
