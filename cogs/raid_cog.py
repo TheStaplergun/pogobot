@@ -14,7 +14,7 @@ class RaidPost(commands.Cog):
     def __init__(self, bot):
         self.__bot = bot
 
-    @commands.command(aliases=["r", "Raid"])
+    @commands.command(aliases=["r", "Raid", "R"])
     @commands.guild_only()
     async def raid(self,
                    ctx,
@@ -45,7 +45,7 @@ class RaidPost(commands.Cog):
                                                                               weather,
                                                                               invite_slots)
             if raid_is_valid:
-                remove_after_seconds = 600
+                remove_after_seconds = 900
                 channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
                 _, _, _, role_id = await REQH.check_if_request_message_exists(self.__bot, response.title, ctx.guild.id)
                 # message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."

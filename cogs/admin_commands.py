@@ -3,6 +3,7 @@
 from discord.ext import commands
 
 import handlers.raid_handler as RH
+import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
 
 class AdminCommands(commands.Cog):
@@ -23,6 +24,19 @@ class AdminCommands(commands.Cog):
     async def clear_requests(self, ctx):
         """Mod Only - Clears all requests for this guild."""
         await REQH.handle_clear_all_requests_for_guild(ctx, self.__bot)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_messages=True, manage_roles=True)
+    async def clear_application(self, ctx, user_id):
+        """Mod Only - Clears an application for a specific user by ID"""
+        await RLH.handle_manual_clear_application(ctx, user_id, self.__bot)
+        
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
+    async def a_close(self, ctx, channel_id=""):
+        await RLH.handle_admin_close_lobby(ctx, self.__bot, channel_id)
 
 def setup(bot):
     """Default setup function for file"""

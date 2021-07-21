@@ -296,6 +296,14 @@ async def remove_application_for_user(bot, member, raid_id):
     except discord.DiscordException:
         pass
 
+
+async def handle_manual_clear_application(ctx, user_id, bot):
+    await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
+    try:
+        await ctx.send("Application removed")
+    except discord.DiscordException:
+        pass
+
 INSERT_NEW_APPLICATION_DATA = """
     INSERT INTO raid_application_user_map (user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight, has_been_notified, checked_in)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -334,7 +342,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
             return False
         else:
             new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
-            await member.send(" ", embed=new_embed)
+            #await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
@@ -518,10 +526,10 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
     if has_code:
-        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{users}/{limit}** checked in."
+        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{users+1}/{limit}** checked in."
         message_to_send = f"{message_to_send}\n*Copy this message directly into the game.*\n-----"
     else:
-        message_to_send = f"{friend_code}\n{member.mention} **{users}/{limit}** checked in.\n-----"
+        message_to_send = f"{friend_code}\n{member.mention} **{users+1}/{limit}** checked in.\n-----"
 
     await lobby.send(message_to_send)
     try:
@@ -556,7 +564,7 @@ GET_LOBBY_BY_LOBBY_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
 async def get_lobby_data_by_lobby_id(bot, lobby_id):
-    return await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, lobby_id)
+    return await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
 
 PURGE_APPLICANTS_FOR_RAID = """
     DELETE FROM raid_application_user_map WHERE (raid_message_id = $1);
@@ -622,15 +630,52 @@ async def delete_lobby(lobby):
     guild = lobby.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
     raid_host_role = discord.utils.get(guild.roles, name="Raid Host")
+    new_embed = discord.Embed(title="System Notification", description="This lobby has been flagged for removal or has expired and is in the process of being shut down.")
+    try:
+        await lobby.send(embed=new_embed)
+    except discord.DiscordException:
+        pass
     for member in members:
-        try:
-            await member.remove_roles(lobby_member_role, reason="End of raid")
-            await member.remove_roles(raid_host_role, reason="End of raid")
-        except discord.DiscordException:
-            pass
-        except AttributeError:
-            pass
+        if discord.utils.get(member.roles, name="Lobby Member"):
+            try:
+                await member.remove_roles(lobby_member_role, reason="End of raid")
+            except discord.DiscordException:
+                pass
+            except AttributeError:
+                pass
+        if discord.utils.get(guild.roles, name="Raid Host"):
+            try:
+                await member.remove_roles(raid_host_role, reason="End of raid")
+            except discord.DiscordException:
+                pass
+            except AttributeError:
+                pass
     try:
         await lobby.delete()
     except discord.DiscordException:
         pass
+
+async def handle_admin_close_lobby(ctx, bot, lobby_id):
+      if lobby_id == "":
+          lobby_id = ctx.channel.id
+      lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
+      if lobby_data and lobby_id == ctx.channel.id:
+          lobby = ctx.channel
+      else:
+          lobby = await bot.retrieve_channel(lobby_id)
+      if not lobby:
+          try:
+              await ctx.send("The given channel id is not a valid lobby.")
+          except discord.DiscordException:
+              return
+      try:
+          embed = discord.Embed(title="", description="The lobby is being shut down.")
+          message = await ctx.send(embed=embed)
+      except discord.DiscordException:
+          pass
+      await delete_lobby(lobby)
+      try:
+          embed = discord.Embed(title="", description="The requested lobby has been removed.")
+          await message.edit(embed=embed)
+      except discord.DiscordException:
+          pass

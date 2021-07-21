@@ -91,15 +91,18 @@ form_converter = {
 
 def format_pokemon_name(name):
     name = name.split("_")
-    form = None
+    form = ""
     if "FORM" in name:
         name.pop(-1)
         form = form_converter.get(name.pop(-1))
-        name.insert(0, form)
+        if form is not None:
+            name.insert(0, form)
 
     if "MEGA" in name:
         name.insert(0, name.pop(-1))
-
+    
+    if not name or len(name) < 1:
+        return ""
     name = " ".join(name).title()
     return name
 
