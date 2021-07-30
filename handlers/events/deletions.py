@@ -58,9 +58,9 @@ async def raw_message_delete_handle(ctx, bot):
             await RLH.handle_user_failed_checkin(bot, applicant_data)
 
 async def on_guild_channel_delete(channel, bot):
-    lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, channel.id)
-    if lobby_channel:
-        RLH.remove_lobby_by_lobby_id(bot, lobby_channel.id)
+    lobby_data = await RLH.get_lobby_data_by_lobby_id(bot, channel.id)
+    if lobby_data:
+        RLH.remove_lobby_by_lobby_id(bot, lobby_data)
         return
 
     await RLH.check_if_log_channel_and_purge_data(bot, channel.id)

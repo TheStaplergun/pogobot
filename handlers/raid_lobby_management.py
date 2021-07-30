@@ -169,7 +169,7 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
         raid_host_role: discord.PermissionOverwrite(read_messages=True, send_messages=False)
     }
 
-    if should_create_channel and category_id == lobby_category_data.get("category_id"):
+    if should_create_channel and lobby_category_data and category_id == lobby_category_data.get("category_id"):
         channel = await ctx.channel.category.create_text_channel(name="lobby-management", overwrites=overwrites)
     else:
         await channel.set_permissions(raid_host_role, read_messages=True, send_messages=False)

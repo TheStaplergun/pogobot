@@ -22,6 +22,9 @@ async def on_message_handle(message, bot):
 
     #if message.author.id == bot.user.id:
         #return False
+    
+    if message.channel.permissions_for(message.author).manage_messages:
+        return False
 
     if discord.utils.get(message.author.roles, name="Mods"):
         return False

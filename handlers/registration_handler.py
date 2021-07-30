@@ -89,7 +89,7 @@ async def register_raid_lobby_category(ctx, bot):
     category_id = channel.category_id
     log_channel_id = channel.id
     #await RLH.set_up_lobby_log_channel(ctx, bot)
-    await RLM.set_up_management_channel(ctx, bot, True)
+    #await RLM.set_up_management_channel(ctx, bot, True)
     await database_register_raid_lobby_category(bot, ctx, ctx.guild.id, category_id, log_channel_id)
     await RLH.create_lobby_roles_for_guild(ctx.guild)
 

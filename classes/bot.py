@@ -3,6 +3,7 @@ Bot class that wraps discord client
 """
 import asyncio
 
+import discord
 from discord.ext import commands
 
 from classes import database
@@ -30,6 +31,8 @@ class Bot(commands.Bot):
         """
         channel = self.get_channel(*args, **kwargs)
         if not channel:
-            channel = await self.fetch_channel(*args, **kwargs)
-
+            try:
+                channel = await self.fetch_channel(*args, **kwargs)
+            except discord.DiscordException:
+                pass
         return channel
