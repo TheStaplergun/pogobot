@@ -1,4 +1,6 @@
 """Cog containing member commands"""
+import asyncio
+
 import discord
 from discord.ext import commands
 
@@ -18,17 +20,15 @@ class MemberCommands(commands.Cog):
         if not await REQH.check_if_valid_request_channel(self.__bot, ctx.channel.id):
             await ctx.author.send(H.guild_member_dm(ctx.guild.name, "That channel is not a valid request channel."))
             return
-        await REQH.request_pokemon_handle(self.__bot, ctx, tier, pokemon_name)
+        await asyncio.gather(REQH.request_pokemon_handle(self.__bot, ctx, tier, pokemon_name),
+                             self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
     @commands.guild_only()
     async def raid_count(self, ctx):
         """Show total raids hosted in this server"""
-        try:
-            await ctx.message.delete()
-        except discord.NotFound as error:
-            print(f'[!] Message already gone. [{error}]')
-        await RH.get_raid_count(self.__bot, ctx, True)
+        await asyncio.gather(RH.get_raid_count(self.__bot, ctx, True),
+                             self.__bot.delete_ignore_error(ctx.message))
 
 
 def setup(bot):

@@ -1,7 +1,9 @@
+import asyncio
 from datetime import datetime, timedelta
 
 import asyncpg
 import discord
+
 import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
@@ -250,8 +252,6 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     except discord.DiscordException:
         pass
 
-
-
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     SELECT * FROM raid_lobby_user_map
     ORDER BY delete_at
@@ -298,9 +298,9 @@ async def remove_application_for_user(bot, member, raid_id):
 
 
 async def handle_manual_clear_application(ctx, user_id, bot):
-    await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
+    result = await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
     try:
-        await ctx.send("Application removed")
+        await ctx.send(result)
     except discord.DiscordException:
         pass
 
@@ -396,8 +396,8 @@ async def get_applicants_by_raid_id(bot, raid_message_id):
 QUERY_RECENT_PARTICIPATION = """
     SELECT * FROM raid_participation_table WHERE (user_id = $1)
 """
-async def calculate_weight(bot, user_data, member):
-    result = await bot.database.fetchrow(QUERY_RECENT_PARTICIPATION, int(member.id))
+async def calculate_weight(bot, user_data, member_id):
+    result = await bot.database.fetchrow(QUERY_RECENT_PARTICIPATION, int(member_id))
 
     recent_participation_weight = 100
     is_requesting = user_data.get("is_requesting")
@@ -505,23 +505,6 @@ async def check_if_lobby_full(bot, lobby_id):
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
     role = discord.utils.get(guild.roles, name="Lobby Member")
-    await increment_user_count_for_raid_lobby(bot, lobby.id)
-    await set_checked_in_flag(bot, member.id)
-    await lobby.set_permissions(member, read_messages=True,
-                                        send_messages=True)
-    await set_recent_participation(bot, member.id)
-    try:
-        await member.add_roles(role, reason="Member of lobby")
-    except discord.DiscordException:
-        pass
-    except AttributeError:
-        pass
-    
-    try:
-        await member.send(f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}")
-    except discord.DiscordException:
-        pass
-
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
@@ -531,12 +514,17 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{users+1}/{limit}** checked in.\n-----"
 
-    await lobby.send(message_to_send)
-    try:
-        await message.delete()
-    except discord.DiscordException:
-        pass
-    await check_if_lobby_full(bot, lobby.id)
+    await asyncio.gather(increment_user_count_for_raid_lobby(bot, lobby.id),
+                         set_checked_in_flag(bot, member.id),
+                         lobby.set_permissions(member, read_messages=True,
+                                                       send_messages=True),
+                         set_recent_participation(bot, member.id),
+                         bot.add_role_ignore_error(member, role, "Member of lobby"),
+                         bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}", None),
+                         bot.send_ignore_error(lobby, message_to_send, None),
+                         bot.delete_ignore_error(message),
+                         check_if_lobby_full(bot, lobby.id))
+
 
 async def handle_activity_check_reaction(ctx, bot, message):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
@@ -617,15 +605,12 @@ async def handle_user_failed_checkin(bot, applicant_data):
     if not member:
         return False
     raid_id = applicant_data.get("raid_message_id")
-    await remove_application_for_user(bot, member, raid_id)
-    await decrement_notified_users_by_raid_id(bot, raid_id)
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
-    try:
-        await member.send(" ", embed=new_embed)
-    except discord.DiscordException:
-        pass
+    await asyncio.gather(remove_application_for_user(bot, member, raid_id),
+                         decrement_notified_users_by_raid_id(bot, raid_id),
+                         bot.send_ignore_error(member, " ", new_embed))
 
-async def delete_lobby(lobby):
+async def delete_lobby(bot, lobby):
     members = lobby.members
     guild = lobby.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
@@ -635,47 +620,39 @@ async def delete_lobby(lobby):
         await lobby.send(embed=new_embed)
     except discord.DiscordException:
         pass
+
+    tasks = []
     for member in members:
         if discord.utils.get(member.roles, name="Lobby Member"):
-            try:
-                await member.remove_roles(lobby_member_role, reason="End of raid")
-            except discord.DiscordException:
-                pass
-            except AttributeError:
-                pass
+            tasks.append(bot.remove_role_ignore_error(member, lobby_member_role, "End of Raid"))
         if discord.utils.get(guild.roles, name="Raid Host"):
-            try:
-                await member.remove_roles(raid_host_role, reason="End of raid")
-            except discord.DiscordException:
-                pass
-            except AttributeError:
-                pass
-    try:
-        await lobby.delete()
-    except discord.DiscordException:
-        pass
+            tasks.append(bot.remove_role_ignore_error(member, raid_host_role, "End of Raid"))
+    tasks.append(bot.delete_ignore_error(lobby))
+
+    await asyncio.gather(*tasks)
 
 async def handle_admin_close_lobby(ctx, bot, lobby_id):
-      if lobby_id == "":
-          lobby_id = ctx.channel.id
-      lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
-      if lobby_data and lobby_id == ctx.channel.id:
-          lobby = ctx.channel
-      else:
-          lobby = await bot.retrieve_channel(lobby_id)
-      if not lobby:
-          try:
-              await ctx.send("The given channel id is not a valid lobby.")
-          except discord.DiscordException:
-              return
-      try:
-          embed = discord.Embed(title="", description="The lobby is being shut down.")
-          message = await ctx.send(embed=embed)
-      except discord.DiscordException:
-          pass
-      await delete_lobby(lobby)
-      try:
-          embed = discord.Embed(title="", description="The requested lobby has been removed.")
-          await message.edit(embed=embed)
-      except discord.DiscordException:
-          pass
+    if lobby_id == "":
+        lobby_id = ctx.channel.id
+    lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
+    if lobby_data and lobby_id == ctx.channel.id:
+        lobby = ctx.channel
+    else:
+        lobby = await bot.retrieve_channel(lobby_id)
+    if not lobby:
+        try:
+            await ctx.send("The given channel id is not a valid lobby.")
+        except discord.DiscordException:
+            return
+    try:
+        embed = discord.Embed(title="", description="The lobby is being shut down.")
+        message = await ctx.send(embed=embed)
+    except discord.DiscordException:
+        pass
+    await delete_lobby(bot, lobby)
+    if lobby_data and lobby_id != ctx.channel.id:
+            try:
+                embed = discord.Embed(title="", description="The requested lobby has been removed.")
+                await message.edit(embed=embed)
+            except discord.DiscordException:
+                pass

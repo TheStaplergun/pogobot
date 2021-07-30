@@ -3,6 +3,7 @@ Bot class that wraps discord client
 """
 import asyncio
 
+import discord
 from discord.ext import commands
 
 from classes import database
@@ -33,3 +34,48 @@ class Bot(commands.Bot):
             channel = await self.fetch_channel(*args, **kwargs)
 
         return channel
+
+    async def retrieve_user(self, *args, **kwargs):
+        """
+        Automatically fetches a user if the user is not in the local cache.
+        Virtually guarantees getting user object if it does exist and the bot can see it.
+        """
+        user = self.get_user(*args, **kwargs)
+        if not user:
+            user = await self.fetch_user(*args, **kwargs)
+        
+        return user
+    
+    async def delete_ignore_error(self, item):
+        try:
+            await item.delete()
+        except discord.DiscordException:
+            return
+        except AttributeError:
+            # Ignore if item doesn't have delete method
+            return
+
+    async def remove_role_ignore_error(self, member, role, reason):
+        try:
+            await member.remove_roles(role, reason=reason)
+        except discord.DiscordException:
+            pass
+        except AttributeError:
+            #Ignore if object doesn't have "remove_roles" method
+            pass
+
+    async def add_role_ignore_error(self, member, role, reason):
+        try:
+            await member.add_roles(role, reason=reason)
+        except discord.DiscordException:
+            pass
+        except AttributeError:
+            pass
+
+    async def send_ignore_error(self, messageable, text, embed):
+        try:
+            await messageable.send(text, embed=embed)
+        except discord.DiscordException:
+            pass
+        except AttributeError:
+            pass

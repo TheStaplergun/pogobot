@@ -287,10 +287,6 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         return
 
     channel_id = ctx.channel.id
-    try:
-        await ctx.message.delete()
-    except:
-        pass
 
     if not pokemon_name:
         pokemon_name = tier

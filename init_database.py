@@ -142,19 +142,21 @@ ADD_MANAGEMENT_COLUMN = """
   ADD COLUMN management_channel_id BIGINT,
   ADD COLUMN management_message_id BIGINT;
 """
+
+friend_code_table_update = """
+  ALTER TABLE friend_codes
+  RENAME TO trainer_data,
+  ADD COLUMN name VARCHAR(15),
+  ADD COLUMN level INT,
+  ALTER COLUMN friend_code DROP NOT NULL;
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
                                host='localhost',
                                user='pi',
                                password=PASSWORD)
-  #await conn.execute(UPDATE_DATA_TYPE)
-  #await conn.execute(RAID_LOBBY_CATEGORY)
-  #await conn.execute(RAID_LOBBY_USER_MAP)
-  #await conn.execute(RAID_RECENT_PARTICIPATION_TABLE)
-  #await conn.execute(RAID_APPLICATION_USER_MAP)
-  #await conn.execute(friend_code_table)
-  await conn.execute(ADD_MANAGEMENT_COLUMN)
 
+  await conn.execute(friend_code_table_update)
 
 asyncio.get_event_loop().run_until_complete(main())
