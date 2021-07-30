@@ -152,9 +152,18 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     count = await RH.get_raid_count(bot, ctx, False)
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
-        mod_role: discord.PermissionOverwrite(read_messages=True),
-        raid_host_member: discord.PermissionOverwrite(read_messages=True)
+        raid_host_member: discord.PermissionOverwrite(read_messages=True,
+                                                      send_messages=True),
+        bot.user: discord.PermissionOverwrite(read_messages=True, 
+                                              send_messages=True,
+                                              embed_links=True,
+                                              manage_channels=True,
+                                              manage_permissions=True)
     }
+    if lobby_member_role:
+        overwrites.update({guild.default_role: discord.PermissionOverwrite(read_messages=False)})
+    if mod_role:
+        overwrites.update({mod_role: discord.PermissionOverwrite(read_messages=True)})
     if raid_moderator_role:
         overwrites.update({raid_moderator_role: discord.PermissionOverwrite(read_messages=True)})
     channel_name = "raid-lobby-{}".format(count)
@@ -163,7 +172,14 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         new_raid_lobby = await raid_lobby_category_channel.create_text_channel(channel_name, reason=reason, overwrites=overwrites)
     except discord.DiscordException as error:
         try:
-            await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error))
+            await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error), delete_after=15)
+        except discord.DiscordException:
+            pass
+        print("[!] An error occurred creating a raid lobby. [{}]".format(error))
+        return False
+    except AttributeError as error:
+        try:
+            await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error), delete_after=15)
         except discord.DiscordException:
             pass
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
@@ -196,11 +212,13 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     role = discord.utils.get(guild.roles, name="Raid Host")
     if not role:
         role = await create_raid_host_role(guild)
+    
     try:
         await raid_host_member.add_roles(role)
     except discord.DiscordException:
         pass
-        
+    except AttributeError:
+        pass
     #await RLM.give_member_management_channel_view_permissions(bot, raid_lobby_category_channel_data, raid_host_member)
 
     bot.lobby_remove_trigger.set()
@@ -563,13 +581,13 @@ async def remove_applicants_for_raid_by_raid_id(bot, raid_id):
 REMOVE_LOBBY_BY_ID = """
     DELETE FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
-async def remove_lobby_by_lobby_id(bot, lobby_id):
-    lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
+async def remove_lobby_by_lobby_id(bot, lobby_data):
+    #lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
     if lobby_data:
         raid_id = lobby_data.get("raid_message_id")
         await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
-    await bot.database.execute(REMOVE_LOBBY_BY_ID, lobby_id)
+    await bot.database.execute(REMOVE_LOBBY_BY_ID, int(lobby_data.get("lobby_channel_id")))
 
 SELECT_ALL_LOBBIES = """
     SELECT * FROM raid_lobby_user_map;

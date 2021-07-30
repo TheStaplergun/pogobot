@@ -31,7 +31,10 @@ class Bot(commands.Bot):
         """
         channel = self.get_channel(*args, **kwargs)
         if not channel:
-            channel = await self.fetch_channel(*args, **kwargs)
+            try:
+                channel = await self.fetch_channel(*args, **kwargs)
+            except discord.DiscordException:
+                pass
 
         return channel
 
@@ -42,7 +45,10 @@ class Bot(commands.Bot):
         """
         user = self.get_user(*args, **kwargs)
         if not user:
-            user = await self.fetch_user(*args, **kwargs)
+            try:
+                user = await self.fetch_user(*args, **kwargs)
+            except discord.DiscordException:
+                pass
         
         return user
     

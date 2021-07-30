@@ -38,6 +38,13 @@ class AdminCommands(commands.Cog):
         await asyncio.gather(RLH.handle_manual_clear_application(ctx, user_id, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
         
+    #@commands.command()
+    #@commands.guild_only()
+    #@commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
+    #async def clear_lobby(self, ctx, user_id):
+    #    """Mod Only - Clears an application for a specific user by ID"""
+    #    await RLH.handle_manual_clear_lobby(ctx, user_id, self.__bot)
+    
     @commands.command()
     @commands.guild_only()
     @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
