@@ -60,12 +60,10 @@ async def raw_reaction_add_handle(ctx, bot):
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
-    channel = bot.get_channel(int(ctx.channel_id))
+    channel = await bot.retrieve_channel(int(ctx.channel_id))
     if not channel:
-        try:
-            bot.fetch_channel(int(ctx.channel_id))
-        except discord.DiscordException:
-            return
+        return
+
     try:
         message = await channel.fetch_message(int(ctx.message_id))
     except discord.DiscordException:
@@ -103,8 +101,3 @@ async def raw_reaction_add_handle(ctx, bot):
                 await handle_reaction_remove_raid_no_lobby(bot, ctx, message)
             else:
                 await handle_reaction_remove_raid_with_lobby(bot, ctx, message)
-        # elif len(message.mentions) == 1:
-        #     no_emoji = bot.get_emoji(743179437054361720)
-        #     if ctx.emoji == no_emoji:
-        #         await handle_reaction_remove_raid(bot, ctx, message, no_emoji)
-        #         return

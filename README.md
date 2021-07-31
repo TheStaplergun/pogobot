@@ -18,18 +18,25 @@ This is used to attempt to provide corrections for typos and suggest it back to 
 
 ## Use
 ### Bot Hosting
-Host the bot and restrict the channels it can see on discord. This will be changed at a later date to allow for setting it dynamically. It will respond to any user and post the raid message in the channel it sees the command in.
+To set up the bot to work in your discord server, set up a designated raid channel and run the command `register_raid_channel`.
+
+To register the request module, set up a designated request channel and run `register_request_channel`.
+
+The bot will automatically remove any posts that are not proper, ignoring users with moderator permissions, from the two channels above.
+
+To register a lobby category, open an empty channel in a category and run `register_raid_lobby_category`.
+
+If you want to use the management channel system, add a new channel to the above category and run the command `register_lobby_management_channel`.
 
 ### Posting a raid
 The hosting user would type the following in the preferred raid channel:
 
-`<command prefix>post_raid <tier> <pokemon name> <gym team control/color> <weather type> <invite slots avaialable> <time to start (minutes)> <time to end (minutes)>`
-
-An example of this would be:
-
-`$post_raid T5 Giratina-Altered Red(Or you can type valor) Sunny 5 0 10`
+`<prefix>(r, R, raid, Raid) Tier Name Weather Invites`
+An example would be:
+`-r mega gengar clear` (The invite slots default to five if not provided)
+`-r 5 charizard rainy`
 
 ## Notes
 Any part that the user gets wrong will be pointed out specifically and sent to the raid host in a DM, along with valid options pulled directly from what it uses to check again.
 
-For the pokemon name, team name, and weather, it will attempt to perform a fuzzy search and suggest a correction. This correction along with the rest of the command that was given will be sent back to the user so they can copy and paste it back into the channel after verifying.
+For the pokemon name and weather, it will attempt to perform a fuzzy search and suggest a correction. This correction along with the rest of the command that was given will be sent back to the user so they can copy and paste it back into the channel after verifying.

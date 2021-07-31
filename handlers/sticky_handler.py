@@ -1,6 +1,8 @@
 """Sticky message handler"""
 import discord
-import handlers.raid_handler as RH
+
+from . import raid_handler as RH
+#import handlers.raid_handler as RH
 
 CHECK_FOR_RAIDS_IN_GUILD_CHANNEL = """
  SELECT * FROM raids where (channel_id = $1);
@@ -87,7 +89,8 @@ async def edit_to_raids_remaining_placeholder(message):
     await message.edit(embed=embed)
 
 async def toggle_raid_sticky(bot, ctx, channel_id, guild_id):
-    if not await RH.check_if_valid_raid_channel(bot, channel_id):
+    from handlers.raid_handler import check_if_valid_raid_channel
+    if not await check_if_valid_raid_channel(bot, channel_id):
         return
     try:
 

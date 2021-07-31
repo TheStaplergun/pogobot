@@ -144,10 +144,12 @@ DELETE_ALL_ROLE_DATA_FOR_GUILD = """
   WHERE (guild_id = $1)
 """
 async def handle_clear_all_requests_for_guild(ctx, bot):
-    try:
-        await ctx.message.delete()
-    except discord.NotFound:
-        pass
+    if not ctx.message.channel.permissions_for(ctx.author).manage_roles or\
+       not ctx.message.channel.permissions_for(ctx.author).manage_messages:
+        embed = discord.Embed(title="", description="You do not have permission to manage channels in the target guild.")
+        await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
+        return False
+
     async with bot.database.connect() as c:
         query_results = await c.fetch(GET_ALL_ROLES_FOR_GUILD, ctx.guild.id)
         await c.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, ctx.guild.id)
@@ -287,10 +289,6 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         return
 
     channel_id = ctx.channel.id
-    try:
-        await ctx.message.delete()
-    except:
-        pass
 
     if not pokemon_name:
         pokemon_name = tier

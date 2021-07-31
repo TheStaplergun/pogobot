@@ -1,8 +1,8 @@
 import discord
 
-from data import formats as F
-from handlers import raid_handler as RH
-from handlers import request_handler as REQH
+import data.formats as F
+from handlers.raid_handler import check_if_valid_raid_channel
+from handlers.request_handler import check_if_valid_request_channel
 from pogo_raid_lib import *
 
 tab_count = -1
@@ -110,14 +110,16 @@ def format_pokemon_name(name):
 async def get_counter(bot, ctx, tier, name, weather):
     author = ctx.author
     message = ctx.message
-    raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
-    request_channel = await REQH.check_if_valid_request_channel(bot, message.channel.id)
-    try:
-        await message.delete()
-    except discord.DiscordException:
-        pass
+    raid_channel = await check_if_valid_raid_channel(bot, message.channel.id)
+    request_channel = await check_if_valid_request_channel(bot, message.channel.id)
+
+    if raid_channel or request_channel:
+        target = author
+    else:
+        target = ctx
+
     if not tier or (tier.lower() == "mega" and not name):
-        await author.send("No pokemon given to get counters for.")
+        await target.send("No pokemon given to get counters for.", delete_after=None if target == author else 15)
         return
 
     valid_data = True
@@ -138,16 +140,14 @@ async def get_counter(bot, ctx, tier, name, weather):
         message_to_send = f"{message_to_send}{response}Did you mean **{suggestion}**"
     
     if not valid_data:
-        await author.send(message_to_send)
+        await target.send(message_to_send)
         return
     
     embed = bot.dex.get_counter_for(bot, name, tier, weather)
     embed_thumbnail = build_image_link_github(dex_num)
     embed.set_thumbnail(url=embed_thumbnail)
-    if raid_channel or request_channel:
-        try:
-            await author.send(embed=embed)
-        except discord.DiscordException:
-            pass
-    else:
-        await ctx.send(embed=embed)
+    try:
+        await target.send(embed=embed)
+    except discord.DiscordException:
+        pass
+

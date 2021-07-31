@@ -107,7 +107,7 @@ async def start_status_update_loop(bot):
     count = 0
     while True:
         count = await set_new_presence(bot, count)
-        await asyncio.sleep(10*60)
+        await asyncio.sleep(600)
 
 async def start_lobby_removal_loop(bot):
     """Permanently running loop while bot is up."""
@@ -127,8 +127,8 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
-                if deletion_time_dif.total_seconds() > 5:
-                    await asyncio.sleep(5)
+                if deletion_time_dif.total_seconds() > 1:
+                    await asyncio.sleep(1)
                     continue
 
                 if deletion_time_dif.total_seconds() > 0:
@@ -140,7 +140,7 @@ async def start_lobby_removal_loop(bot):
             if not lobby:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
                 continue
-            await RLH.delete_lobby(lobby)
+            await RLH.delete_lobby(bot, lobby)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 
@@ -157,9 +157,10 @@ async def start_applicant_loop(bot):
 
             total_lobbies_to_handle = len(raid_lobby_data_list)
             checked_count = 0
+            cur_time = datetime.now()
+            threshold_time = cur_time - timedelta(seconds=45)
+
             for raid_lobby_data in raid_lobby_data_list:
-                cur_time = datetime.now()
-                threshold_time = cur_time - timedelta(seconds=45)
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
                     #raid_host_id = raid_lobby_data.get("host_user_id")
@@ -170,17 +171,13 @@ async def start_applicant_loop(bot):
                     guild_id = raid_lobby_data.get("guild_id")
                     guild = bot.get_guild(int(guild_id))
                     user_list = []
-                    for user in users:
-                        member_id = user.get("user_id")
-                        member = guild.get_member(int(member_id))
-                        user_data = {
+                    sorted_users = sorted([{
                             "user_data":user,
-                            "weight":await RLH.calculate_weight(bot, user, member),
-                            "member_object":member,
-                        }
-                        user_list.append(user_data)
+                            "weight":await RLH.calculate_weight(bot, user, user.get("user_id")),
+                            "member_object":guild.get_member(int(user.get("user_id"))),
+                        } for user in users], key=itemgetter('weight'), reverse=True)
 
-                    sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
+                    #sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     await RLH.process_user_list(bot, raid_lobby_data, sorted_users)
             if checked_count == total_lobbies_to_handle:
                 # Prevents infinitely looping when there's just no users for any of the lobbies.

@@ -117,7 +117,7 @@ class Pokedex():
             value = "\n".join([AH.move_to_readable(bot, movenum, move) for movenum,move in moves.items() if movenum == "move1" or movenum == "move2"])
             name = name_getter(pokemon)
             embed.add_field(name=f"{counter}) {name}", value=value, inline=True)
-
+            counter += 1
         return embed
 
     def convert_name_to_id(self, name, tier):

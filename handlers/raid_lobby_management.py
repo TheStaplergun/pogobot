@@ -22,25 +22,20 @@ async def notify_lobby_members_of_host_deleting_lobby(lobby):
             except discord.DiscordException:
                 pass
 
-async def notify_user_cannot_alter_lobby_while_in_raid(bot, guild_id, user_id):
-    guild = bot.get_guild(guild_id)
-    member = guild.get_member(user_id)
-    if not member:
-        member = guild.fetch_member(user_id)
+async def notify_user_cannot_alter_lobby_while_in_raid(bot, user_id):
+    user = await bot.retrieve_user(user_id)
     embed = discord.Embed(title="Error", description="You cannot modify your lobby while the raid listing still exists. Please remove the listing and try again.")
-    try:
-        await member.send(embed=embed)
-    except discord.DiscordException:
-        pass
+    await bot.send_ignore_error(user, "", embed=embed)
 
-async def extend_duration_of_lobby(bot, ctx):        
+
+async def extend_duration_of_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, ctx.user_id)
     if not lobby_data:
         return
     
     raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
-        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.guild_id, ctx.user_id)
+        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
         return
         
     lobby_delete_time = lobby_data.get("delete_at")
@@ -96,36 +91,20 @@ async def extend_duration_of_lobby(bot, ctx):
 async def host_manual_remove_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, ctx.user_id)
     if not lobby_data:
+        if ctx.author:
+            new_embed = discord.Embed(title="Error", description="You are not hosting a lobby.")
+            await bot.send_ignore_error(ctx.author, "", embed=new_embed)
         return
 
     raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
-        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.guild_id, ctx.user_id)
+        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
         return
         
-    lobby = bot.get_channel(lobby_data.get("lobby_channel_id"))
-    if not lobby:
-        try:
-            lobby = await bot.fetch_channel(lobby_data.get("lobby_channel_id"))
-        except discord.NotFound:
-            await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
-            return
-        except discord.DiscordException:
-            return
-    
-    if not lobby:
-        return
+    lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
 
-    host = discord.utils.get(lobby.members, id=ctx.user_id)
-    await notify_lobby_members_of_host_deleting_lobby(lobby)
-    await RLH.update_delete_time_with_given_time(bot, datetime.now(), lobby_data.get("raid_message_id"))
-    #await RLH.delete_lobby(lobby)
-    try:
-        embed = discord.Embed(title="Notification", description="Your lobby has flagged for removal and will be deleted shortly.")
-        await host.send(embed=embed)
-    except discord.DiscordException:
-        pass
-        
+    await RLH.delete_lobby(bot, lobby)
+
 INSERT_MANAGEMENT_DATA = """
     UPDATE raid_lobby_category
     SET management_channel_id = $1,
@@ -147,8 +126,10 @@ async def create_dashboard_message(channel):
     except discord.DiscordException:
         return
 
-    await message.add_reaction("⏱️")
-    await message.add_reaction("❌")
+    for react, name in controls.items():
+        await message.add_reaction(react)
+    #await message.add_reaction("⏱️")
+    #await message.add_reaction("❌")
 
     return message
 
@@ -191,8 +172,8 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
     if old_management_message_id != dashboard_message.id:
         await update_message_database_info(bot, dashboard_message.id, lobby_category_data.get("guild_id"))
     
-    old_management_message_id = lobby_category_data.get("management_message_id")
-    if old_management_message_id and old_management_message_id != channel.id:
+    old_management_channel_id = lobby_category_data.get("management_channel_id")
+    if old_management_channel_id and old_management_channel_id != channel.id:
         await remove_old_channel(bot, lobby_category_data.get("management_channel_id"))
 
     await update_channel_database_info(bot, channel.id, lobby_category_data.get("guild_id"))
@@ -200,20 +181,11 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
     #await insert_management_channel_data(bot, dashboard_message.id, channel.id)
 
 async def remove_old_channel(bot, channel_id):
-    channel_to_remove = bot.get_channel(channel_id)
-    if not channel_to_remove:
-        try:
-            channel_to_remove = await bot.fetch_channel(channel_id)
-        except discord.DiscordException:
-            return
-    
+    channel_to_remove = await bot.retrieve_channel(channel_id)
     if not channel_to_remove:
         return
 
-    try:
-        await channel_to_remove.delete()
-    except discord.DiscordException:
-        pass
+    await bot.delete_ignore_error(channel_to_remove)
 
 UPDATE_MANAGEMENT_CHANNEL_ID = """
     UPDATE raid_lobby_category
