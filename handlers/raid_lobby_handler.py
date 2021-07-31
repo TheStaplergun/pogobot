@@ -146,7 +146,6 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     raid_lobby_category_channel_id = raid_lobby_category_channel_data.get("category_id")
     raid_lobby_category_channel = bot.get_channel(int(raid_lobby_category_channel_id))
 
-    mod_role = discord.utils.get(guild.roles, name="Mods")
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
     count = await RH.get_raid_count(bot, ctx, False)
@@ -160,10 +159,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
                                               manage_channels=True,
                                               manage_messages=True)
     }
-    if lobby_member_role:
-        overwrites.update({guild.default_role: discord.PermissionOverwrite(read_messages=False)})
-    if mod_role:
-        overwrites.update({mod_role: discord.PermissionOverwrite(read_messages=True)})
+
     if raid_moderator_role:
         overwrites.update({raid_moderator_role: discord.PermissionOverwrite(read_messages=True)})
 
@@ -188,7 +184,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
 
-    friend_code, has_code = await FCH.get_friend_code(bot, raid_host_member.id)
+    friend_code, has_code = await FCH.get_friend_code(bot, raid_host_member.id, host=True)
     header_message_body = f"{friend_code}\n{raid_host_member.mention}\n"
 
     try:
@@ -321,7 +317,7 @@ async def handle_manual_clear_application(ctx, user_id, bot):
         pass
 
 INSERT_NEW_APPLICATION_DATA = """
-    INSERT INTO raid_application_user_map (user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight, has_been_notified, checked_in)
+    INSERT INTO raid_application_user_map (user_id, raid_message_id, guild_id, is_requesting, app_weight, has_been_notified, checked_in)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
 """
 UPDATE_LOBBY_APPLICANT_DATA = """
@@ -329,13 +325,13 @@ UPDATE_LOBBY_APPLICANT_DATA = """
     SET applied_users = applied_users + 1
     WHERE (raid_message_id = $1);
 """
-async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_requesting, speed_bonus_weight):
+async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_requesting, app_weight):
     await bot.database.execute(INSERT_NEW_APPLICATION_DATA,
                                int(user_id),
                                int(raid_message_id),
                                int(guild_id),
                                is_requesting,
-                               speed_bonus_weight,
+                               app_weight,
                                False,
                                False)
 
@@ -368,7 +364,8 @@ async def handle_new_application(ctx, bot, member, message, channel):
     time_to_end = raid_data.get("time_to_remove")
     listing_duration = time_to_end - message.created_at
     speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
-    await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), speed_bonus)
+    app_weight = await calculate_weight(bot, True if role else False, speed_bonus, member.id)
+    await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), app_weight)
     bot.applicant_trigger.set()
 
 QUERY_APPLICATION_DATA_FOR_USER = """
@@ -404,28 +401,40 @@ async def get_applicant_data_by_message_id(bot, message_id):
     return await bot.database.fetchrow(QUERY_APPLICANT_BY_MESSAGE_ID, message_id)
 
 GET_USERS_BY_RAID_MESSAGE_ID = """
-    SELECT * FROM raid_application_user_map WHERE (raid_message_id = $1 and has_been_notified = FALSE);
+    SELECT * FROM raid_application_user_map
+    WHERE (raid_message_id = $1 and has_been_notified = FALSE)
+    ORDER BY app_weight;
 """
-async def get_applicants_by_raid_id(bot, raid_message_id):
-    return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))
+"""
+    LIMIT $2;
+"""
+async def get_applicants_by_raid_id(bot, raid_message_id, user_limit):
+    return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id), int(user_limit))
 
 QUERY_RECENT_PARTICIPATION = """
-    SELECT * FROM raid_participation_table WHERE (user_id = $1)
+    SELECT * FROM raid_participation_table WHERE (user_id = $1);
 """
-async def calculate_weight(bot, user_data, member_id):
-    result = await bot.database.fetchrow(QUERY_RECENT_PARTICIPATION, int(member_id))
+GET_PERSISTENCE_BONUS = """
+    SELECT persistence FROM trainer_data WHERE (user_id = $1);
+"""
+async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
+#async def calculate_weight(bot, user_data, member_id):
+    async with bot.database.connect() as c:
+        result = await c.fetchrow(QUERY_RECENT_PARTICIPATION, int(member_id))
+        persistence = await c.fetchrow(GET_PERSISTENCE_BONUS, int(member_id))
 
     recent_participation_weight = 100
-    is_requesting = user_data.get("is_requesting")
-    speed_bonus_weight = user_data.get("speed_bonus_weight")
-
+    #is_requesting = user_data.get("is_requesting")
+    #speed_bonus_weight = user_data.get("speed_bonus_weight")
+    persistence_weight = persistence.get("persistence")
+    persistence_weight = persistence_weight+(5*persistence_weight**2)
     if result:
         last_participation_time = result.get("last_participation_time")
         current_time = datetime.now()
         time_difference = current_time - last_participation_time
         if time_difference.total_seconds() < 3600:
             recent_participation_weight = (time_difference.total_seconds()/3600) * 100
-    return recent_participation_weight + (100 if is_requesting else 0) + speed_bonus_weight
+    return recent_participation_weight + (100 if is_requesting else 0) + speed_bonus_weight + persistence_weight
 
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_application_user_map
@@ -445,7 +454,7 @@ INCREMENT_APPLICANT_COUNT = """
 async def increment_notified_users_for_raid_lobby(bot, lobby_id):
     await bot.database.execute(INCREMENT_APPLICANT_COUNT, int(lobby_id))
 
-async def process_user_list(bot, raid_lobby_data, sorted_users):
+async def process_user_list(bot, raid_lobby_data, users, guild):
     counter = 1
     current_count = raid_lobby_data.get("user_count")
     user_limit = raid_lobby_data.get("user_limit")
@@ -454,10 +463,10 @@ async def process_user_list(bot, raid_lobby_data, sorted_users):
     total_pending = notified_count + current_count
     current_needed = user_limit - total_pending
 
-    for user in sorted_users:
+    for user in users:
         if counter > current_needed:
             break
-        member = user["member_object"]
+        member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         try:
             new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
             message = await member.send(" ", embed=new_embed, delete_after=30)
@@ -499,8 +508,16 @@ UPDATE_CHECKED_IN_FLAG = """
     SET checked_in = true
     WHERE (user_id = $1);
 """
+RESET_PERSISTENCE_INCREMENT_PARTICPATED = """
+    UPDATE trainer_data
+    SET persistence = 0,
+        raids_participated_in = raids_participated_in + 1
+    WHERE (user_id = $1);
+"""
 async def set_checked_in_flag(bot, user_id):
-    await bot.database.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
+    async with bot.database.connect() as c:
+        await c.execute(UPDATE_CHECKED_IN_FLAG, int(user_id))
+        await c.execute(RESET_PERSISTENCE_INCREMENT_PARTICPATED, int(user_id))
 
 DELETE_RECENT_PARTICIPATION_RECORD = """
     DELETE FROM raid_participation_table WHERE (user_id = $1);
@@ -581,7 +598,6 @@ REMOVE_LOBBY_BY_ID = """
     DELETE FROM raid_lobby_user_map WHERE (lobby_channel_id = $1);
 """
 async def remove_lobby_by_lobby_id(bot, lobby_data):
-    #lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
     if lobby_data:
         raid_id = lobby_data.get("raid_message_id")
         await remove_applicants_for_raid_by_raid_id(bot, raid_id)

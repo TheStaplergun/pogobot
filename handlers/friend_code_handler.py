@@ -48,14 +48,30 @@ UPDATE_LAST_RECALLED_TIME = """
     SET last_time_recalled = $1
     WHERE (user_id = $2);
 """
-async def get_friend_code(bot, user_id):
+UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT = """
+    UPDATE trainer_data
+    SET last_time_recalled = $1,
+        raids_hosted = raids_hosted + 1
+    WHERE (user_id = $2);
+"""
+INSERT_BLANK_RECORD = """
+    INSERT INTO trainer_data(last_time_recalled, user_id, raids_hosted)
+    VALUES($1, $2, $3)
+"""
+async def get_friend_code(bot, user_id, host=False):
     async with bot.database.connect() as c:
         result = await c.fetchrow(GET_FC_BY_USER_ID,
                                   int(user_id))
         if result:
-            await c.execute(UPDATE_LAST_RECALLED_TIME,
+            # This is a bit strange, but it's a step I can perform a combined query all together.
+            await c.execute(UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT if host else UPDATE_LAST_RECALLED_TIME,
                             datetime.now(),
                             int(user_id))
+        else:
+            await c.execute(INSERT_BLANK_RECORD,
+                            datetime.now(),
+                            int(user_id),
+                            1 if host else 0)
     return result.get("friend_code") if result and result.get("friend_code") else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if result else False
 
 async def send_friend_code(ctx, bot):
