@@ -162,5 +162,6 @@ async def main():
                                password=PASSWORD)
 
   await conn.execute(friend_code_table_update)
+  await conn.execute(UPDATE_WEIGHT_COLUMN)
 
 asyncio.get_event_loop().run_until_complete(main())
