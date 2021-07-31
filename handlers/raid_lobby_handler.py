@@ -157,7 +157,8 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
         bot.user: discord.PermissionOverwrite(read_messages=True,
                                               send_messages=True,
                                               embed_links=True,
-                                              manage_channels=True)
+                                              manage_channels=True,
+                                              manage_messages=True)
     }
     if lobby_member_role:
         overwrites.update({guild.default_role: discord.PermissionOverwrite(read_messages=False)})
@@ -357,7 +358,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
             return False
         else:
             new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
-            #await member.send(" ", embed=new_embed)
+            await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
@@ -537,8 +538,9 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                          bot.add_role_ignore_error(member, role, "Member of lobby"),
                          bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}"),
                          bot.send_ignore_error(lobby, message_to_send),
-                         bot.delete_ignore_error(message),
-                         check_if_lobby_full(bot, lobby.id))
+                         bot.delete_ignore_error(message))
+                         
+    await check_if_lobby_full(bot, lobby.id)
 
 
 async def handle_activity_check_reaction(ctx, bot, message):

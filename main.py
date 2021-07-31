@@ -14,6 +14,7 @@ import classes.bot as bot
 import important
 #import raid_cog
 
+#from . import handlers
 from tasks import *
 
 DESCRIPTION = '''Pokemon Go Raid Bot'''

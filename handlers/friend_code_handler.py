@@ -3,6 +3,9 @@ from datetime import datetime
 
 import discord
 
+from . import raid_handler as RH
+from . import request_handler as REQH
+
 INSERTED = 0
 NO_UPDATE = 1
 UPDATED = 2
@@ -88,6 +91,9 @@ async def get_args_list_from_message(message):
 
 async def set_friend_code(ctx, bot):
     author = ctx.author
+    raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.message.channel.id)
+    request_channel = await REQH.check_if_valid_request_channel(bot, ctx.message.channel.id)
+
     if raid_channel or request_channel:
         target = author
     else:
@@ -146,12 +152,22 @@ async def add_trainer_level_to_table(bot, user_id, level):
 
 async def set_trainer_level(ctx, bot, level):
     author = ctx.author
+    raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.message.channel.id)
+    request_channel = await REQH.check_if_valid_request_channel(bot, ctx.message.channel.id)
+
     if raid_channel or request_channel:
         target = author
     else:
         target = ctx
-
+    
     async with ctx.channel.typing():
+        try:
+            level = int(level)
+        except ValueError:
+            embed = discord.Embed(title="Error", description="The given level is invalid. It must be between 1 and 50.")
+            await bot.send_ignore_error(target, "", embed=embed, delete_after=15)
+            return
+            
         if level < 1 or level > 50:
             embed = discord.Embed(title="Error", description="The given level is invalid. It must be between 1 and 50.")
             await bot.send_ignore_error(target, "", embed=embed, delete_after=15)
@@ -205,6 +221,9 @@ SPECIAL_CHARACTERS = "!@#$%^&*()[]{};:,./<>?\|`~-=_+\"\'"
 
 async def set_trainer_name(ctx, bot, name):
     author = ctx.author
+    raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.message.channel.id)
+    request_channel = await REQH.check_if_valid_request_channel(bot, ctx.message.channel.id)
+
     if raid_channel or request_channel:
         target = author
     else:
@@ -254,7 +273,7 @@ async def send_trainer_information(ctx, bot):
         return
 
     result = await bot.database.fetchrow(GET_TRAINER_DATA_BY_USER_ID,
-                                         int(user_id))
+                                         int(author.id))
 
     new_embed = discord.Embed(title=ctx.author.name, description="Trainer information")
     if result:
@@ -262,8 +281,8 @@ async def send_trainer_information(ctx, bot):
         level = result.get("level")
         fc = result.get("friend_code")
 
-    new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn` or `-setname`.")
-    new_embed.add_field(name="Level", value=level if level else "To set your trainer level, use `-sl` or `-setlevel`.")
-    new_embed.add_field(name="Friend Code", value=fc if fc else "To set your trainer friend code, use `-sf` or `-setfc`.")
+    new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn ANameOrSomething` or `-setname ANameOrSomething`.", inline=False)
+    new_embed.add_field(name="Level", value=level if level else "To set your trainer level, use `-sl 39` or `-setlevel 39`.", inline=False)
+    new_embed.add_field(name="Friend Code", value=fc if fc else "To set your trainer friend code, use `-sf` or `-setfc`.", inline=False)
 
     await bot.send_ignore_error(ctx, "", embed=new_embed)

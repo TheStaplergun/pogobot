@@ -101,9 +101,9 @@ async def host_manual_remove_lobby(bot, ctx):
         await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
         return
         
-    lobby = bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
+    lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
 
-    await RLH.delete_lobby(lobby)
+    await RLH.delete_lobby(bot, lobby)
 
 INSERT_MANAGEMENT_DATA = """
     UPDATE raid_lobby_category

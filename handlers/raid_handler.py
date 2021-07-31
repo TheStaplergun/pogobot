@@ -5,8 +5,7 @@ import asyncpg
 import discord
 
 import handlers.helpers as H
-import handlers.raid_handler as RH
-import handlers.raid_lobby_handler as RLH
+#import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
 import handlers.sticky_handler as SH
 from pogo_raid_lib import validate_and_format_message
@@ -176,6 +175,8 @@ async def check_if_valid_raid_channel(bot, channel_id):
 
 
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
+    from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
+
     try:
         await ctx.message.delete()
     except:
@@ -186,7 +187,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     if await check_if_in_raid(ctx, bot, ctx.author.id):
         await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You are already in a raid."))
         return
-    if await RLH.get_lobby_data_by_user_id(bot, ctx.author.id):
+    if await get_lobby_data_by_user_id(bot, ctx.author.id):
         await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
         return
 
@@ -209,7 +210,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             request_channel_id = await REQH.get_request_channel(bot, ctx.guild.id)
             if request_channel_id:
                 response.add_field(name="Want to be pinged for future raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
-            raid_lobby_category = await RLH.get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
+            raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
             start_string = ""
             if role_id:
                 role = discord.utils.get(ctx.guild.roles, id=role_id)
@@ -230,9 +231,9 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
 
             await message.add_reaction("🗑️")
 
-            if await RLH.get_raid_lobby_category_by_guild_id(bot, ctx.guild.id):
+            if raid_lobby_category:
                 time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
-                lobby = await RLH.create_raid_lobby(ctx, bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
+                lobby = await create_raid_lobby(ctx, bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
                 await message.add_reaction("📝")
 
             if request_channel_id:

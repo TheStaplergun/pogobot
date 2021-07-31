@@ -60,7 +60,7 @@ async def raw_reaction_add_handle(ctx, bot):
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.channel_id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.channel_id)
 
-    channel = bot.retrieve_channel(int(ctx.channel_id))
+    channel = await bot.retrieve_channel(int(ctx.channel_id))
     if not channel:
         return
 

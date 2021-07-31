@@ -1,8 +1,8 @@
 import discord
 
-from data import formats as F
-from handlers import raid_handler as RH
-from handlers import request_handler as REQH
+import data.formats as F
+from handlers.raid_handler import check_if_valid_raid_channel
+from handlers.request_handler import check_if_valid_request_channel
 from pogo_raid_lib import *
 
 tab_count = -1
@@ -110,8 +110,8 @@ def format_pokemon_name(name):
 async def get_counter(bot, ctx, tier, name, weather):
     author = ctx.author
     message = ctx.message
-    raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
-    request_channel = await REQH.check_if_valid_request_channel(bot, message.channel.id)
+    raid_channel = await check_if_valid_raid_channel(bot, message.channel.id)
+    request_channel = await check_if_valid_request_channel(bot, message.channel.id)
 
     if raid_channel or request_channel:
         target = author

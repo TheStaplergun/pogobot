@@ -144,12 +144,11 @@ ADD_MANAGEMENT_COLUMN = """
 """
 
 friend_code_table_update = """
-  ALTER TABLE friend_codes
-  RENAME TO trainer_data,
+  ALTER TABLE trainer_data
   ADD COLUMN name VARCHAR(15),
-  ADD COLUMN level INT,
-  ALTER COLUMN friend_code DROP NOT NULL;
+  ADD COLUMN level INT;
 """
+
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,

@@ -6,8 +6,12 @@ import asyncio
 import discord
 from discord.ext import commands
 
-from classes import database
-from classes import pokedex
+import classes.database as database
+import classes.pokedex as pokedex
+#from classes import database
+#from classes import pokedex
+
+
 class Bot(commands.Bot):
     """
     Subclasses commands.Bot from discord.
@@ -85,3 +89,5 @@ class Bot(commands.Bot):
             pass
         except AttributeError:
             pass
+
+    

@@ -33,13 +33,13 @@ class GeneralCommands(commands.Cog):
     @commands.command(aliases=["sn", "Sn", "Setname"])
     async def setname(self, ctx, name=""):
         """Allows a user to register their Pokemon Go trainer name."""
-        await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot),
+        await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot, name),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command(aliases=["sl", "Sl", "Setlevel"])
     async def setlevel(self, ctx, level):
         """Allows a user to register their Pokemon Go trainer level."""
-        await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot),
+        await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
