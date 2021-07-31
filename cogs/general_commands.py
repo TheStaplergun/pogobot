@@ -7,7 +7,8 @@ from discord.ext import commands
 
 import handlers.friend_code_handler as FCH
 import handlers.pokebattler.api_helper as APIH
-import handlers.raid_lobby_handler as RLM
+import handlers.raid_lobby_handler as RLH
+import handlers.raid_lobby_management as RLM
 
 class GeneralCommands(commands.Cog):
     """General Commands Cog"""
@@ -23,16 +24,22 @@ class GeneralCommands(commands.Cog):
         await msg.edit(
             content=f'🏓 Pong! Latency is {round((time.time() - curr) * 1000.0, 2)}ms. API latency is {latency}ms.')
 
-    @commands.command(aliases=["fcreg", "set_fc"])
+    @commands.command(aliases=["fcreg", "set_fc", "sf", "Setfc"])
     async def setfc(self, ctx):
         """Allows a user to register their Pokemon Go friend code."""
         await asyncio.gather(FCH.set_friend_code(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["set_name"])
+    @commands.command(aliases=["sn", "Sn", "Setname"])
     async def setname(self, ctx, name=""):
         """Allows a user to register their Pokemon Go trainer name."""
         await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot),
+                             self.__bot.delete_ignore_error(ctx.message))
+
+    @commands.command(aliases=["sl", "Sl", "Setlevel"])
+    async def setlevel(self, ctx, level):
+        """Allows a user to register their Pokemon Go trainer level."""
+        await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
@@ -41,13 +48,17 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.send_friend_code(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-
     @commands.command(aliases=["t", "T"])
     async def trainer(self, ctx):
         """Sends trainer information to current channel."""
         await asyncio.gather(FCH.send_trainer_information(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
+    @commands.command()
+    async def set_level(self, ctx, level):
+        """Sets the trainer's level in the database"""
+        await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
+                             self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
     async def dex(self, ctx, arg1="None", arg2="None"):
@@ -66,7 +77,7 @@ class GeneralCommands(commands.Cog):
         ctx.user_id = ctx.author.id
         await asyncio.gather(RLM.host_manual_remove_lobby(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
-    
+
     @commands.command(aliases=["Extend"])
     async def extend(self, ctx):
         """Allows a user to manually extend the time of their lobby via command."""
@@ -78,8 +89,9 @@ class GeneralCommands(commands.Cog):
     async def list_names(self, ctx):
         """Shows all trainer names in a copy/paste format for searching in game."""
         ctx.user_id = ctx.author.id
-        await asyncio.gather(RLM.show_raider_names(self.__bot, ctx),
+        await asyncio.gather(RLH.show_raider_names(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
+
 
 def setup(bot):
     """Default setup function for file"""

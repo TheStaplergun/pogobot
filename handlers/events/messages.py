@@ -32,11 +32,11 @@ async def on_message_handle(message, bot):
     if message.content.startswith(bot.command_prefix, 0, 1):
         for command in bot.commands:
             if message.content.startswith("-{}".format(command.name), 0, len(command.name) + 1):
-                await bot.delete_ignore_error(message)
+                #await bot.delete_ignore_error(message)
                 return
             for alias in command.aliases:
                 if message.content.startswith("-{}".format(alias), 0, len(alias) + 1):
-                    await bot.delete_ignore_error(message)
+                    #await bot.delete_ignore_error(message)
                     return
 
     content = message.content

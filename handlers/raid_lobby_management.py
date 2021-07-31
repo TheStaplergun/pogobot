@@ -25,7 +25,7 @@ async def notify_lobby_members_of_host_deleting_lobby(lobby):
 async def notify_user_cannot_alter_lobby_while_in_raid(bot, user_id):
     user = await bot.retrieve_user(user_id)
     embed = discord.Embed(title="Error", description="You cannot modify your lobby while the raid listing still exists. Please remove the listing and try again.")
-    await bot.send_ignore_error(user, "", embed)
+    await bot.send_ignore_error(user, "", embed=embed)
 
 
 async def extend_duration_of_lobby(bot, ctx):
@@ -93,7 +93,7 @@ async def host_manual_remove_lobby(bot, ctx):
     if not lobby_data:
         if ctx.author:
             new_embed = discord.Embed(title="Error", description="You are not hosting a lobby.")
-            bot.send_ignore_error(ctx.author, "", new_embed)
+            await bot.send_ignore_error(ctx.author, "", embed=new_embed)
         return
 
     raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
@@ -126,8 +126,10 @@ async def create_dashboard_message(channel):
     except discord.DiscordException:
         return
 
-    await message.add_reaction("⏱️")
-    await message.add_reaction("❌")
+    for react, name in controls.items():
+        await message.add_reaction(react)
+    #await message.add_reaction("⏱️")
+    #await message.add_reaction("❌")
 
     return message
 

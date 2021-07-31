@@ -78,9 +78,9 @@ class Bot(commands.Bot):
         except AttributeError:
             pass
 
-    async def send_ignore_error(self, messageable, text, embed):
+    async def send_ignore_error(self, messageable, text, embed=None, delete_after=None):
         try:
-            await messageable.send(text, embed=embed)
+            await messageable.send(text, embed=embed, delete_after=delete_after)
         except discord.DiscordException:
             pass
         except AttributeError:
