@@ -255,9 +255,9 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
     try:
         if lobby and users > 0:
             if users < limit:
-                new_embed = discord.Embed(title=f"{users}/{limit}", description="This lobby will expire in 15 minutes.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+                new_embed = discord.Embed(title=f"{users}/{limit}", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
 
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
@@ -408,14 +408,14 @@ GET_USERS_BY_RAID_MESSAGE_ID = """
 """
     LIMIT $2;
 """
-async def get_applicants_by_raid_id(bot, raid_message_id, user_limit):
-    return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id), int(user_limit))
+async def get_applicants_by_raid_id(bot, raid_message_id):#, user_limit):
+    return await bot.database.fetch(GET_USERS_BY_RAID_MESSAGE_ID, int(raid_message_id))#, int(user_limit))
 
 QUERY_RECENT_PARTICIPATION = """
     SELECT * FROM raid_participation_table WHERE (user_id = $1);
 """
 GET_PERSISTENCE_BONUS = """
-    SELECT persistence FROM trainer_data WHERE (user_id = $1);
+    SELECT * FROM trainer_data WHERE (user_id = $1);
 """
 async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
 #async def calculate_weight(bot, user_data, member_id):
@@ -426,7 +426,7 @@ async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
     recent_participation_weight = 100
     #is_requesting = user_data.get("is_requesting")
     #speed_bonus_weight = user_data.get("speed_bonus_weight")
-    persistence_weight = persistence.get("persistence")
+    persistence_weight = persistence.get("persistence") if persistence else 0
     persistence_weight = persistence_weight+(5*persistence_weight**2)
     if result:
         last_participation_time = result.get("last_participation_time")

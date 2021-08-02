@@ -145,9 +145,9 @@ ADD_MANAGEMENT_COLUMN = """
 
 friend_code_table_update = """
   ALTER TABLE trainer_data
-  ADD COLUMN raids_hosted INT SET DEFAULT 0,
-  ADD COLUMN raids_participated_in INT SET DEFAULT 0,
-  ADD COLUMN persistence INT SET DEFAULT 0;
+  ADD COLUMN raids_hosted INT DEFAULT 0,
+  ADD COLUMN raids_participated_in INT DEFAULT 0,
+  ADD COLUMN persistence INT DEFAULT 0;
 """
 
 UPDATE_WEIGHT_COLUMN = """
@@ -161,7 +161,7 @@ async def main():
                                user='pi',
                                password=PASSWORD)
 
-  await conn.execute(friend_code_table_update)
-  await conn.execute(UPDATE_WEIGHT_COLUMN)
+  #await conn.execute(friend_code_table_update)
+  #await conn.execute(UPDATE_WEIGHT_COLUMN)
 
 asyncio.get_event_loop().run_until_complete(main())

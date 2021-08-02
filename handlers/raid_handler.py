@@ -105,11 +105,9 @@ DELETE FROM raids WHERE (message_id = $1)
 RETURNING message_id
 """
 UPDATE_PERSISTENCE_BONUS_BY_RAID_ID = """
-    UPDATE trainer_data as td
-    SET
-    td.persistence = td.persistence + 1
-    FROM raid_application_user_map 
-    AS raum
+    UPDATE trainer_data td
+    SET persistence = persistence + 1
+    FROM raid_application_user_map raum
     WHERE
     (raum.raid_message_id = $1 and raum.has_been_notified = FALSE and td.user_id = raum.user_id);
 """
