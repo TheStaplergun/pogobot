@@ -25,9 +25,8 @@ async def on_message_handle(message, bot):
     
     if message.channel.permissions_for(message.author).manage_messages:
         return False
-
-    if discord.utils.get(message.author.roles, name="Mods"):
-        return False
+    elif raid_channel or request_channel:
+        await message.delete()
     
     if message.content.startswith(bot.command_prefix, 0, 1):
         for command in bot.commands:

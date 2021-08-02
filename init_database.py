@@ -145,10 +145,15 @@ ADD_MANAGEMENT_COLUMN = """
 
 friend_code_table_update = """
   ALTER TABLE trainer_data
-  ADD COLUMN name VARCHAR(15),
-  ADD COLUMN level INT;
+  ADD COLUMN raids_hosted INT DEFAULT 0,
+  ADD COLUMN raids_participated_in INT DEFAULT 0,
+  ADD COLUMN persistence INT DEFAULT 0;
 """
 
+UPDATE_WEIGHT_COLUMN = """
+  ALTER TABLE raid_application_user_map
+  RENAME COLUMN speed_bonus_weight TO app_weight;
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
@@ -156,6 +161,7 @@ async def main():
                                user='pi',
                                password=PASSWORD)
 
-  await conn.execute(friend_code_table_update)
+  #await conn.execute(friend_code_table_update)
+  #await conn.execute(UPDATE_WEIGHT_COLUMN)
 
 asyncio.get_event_loop().run_until_complete(main())

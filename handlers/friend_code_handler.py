@@ -48,14 +48,30 @@ UPDATE_LAST_RECALLED_TIME = """
     SET last_time_recalled = $1
     WHERE (user_id = $2);
 """
-async def get_friend_code(bot, user_id):
+UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT = """
+    UPDATE trainer_data
+    SET last_time_recalled = $1,
+        raids_hosted = raids_hosted + 1
+    WHERE (user_id = $2);
+"""
+INSERT_BLANK_RECORD = """
+    INSERT INTO trainer_data(last_time_recalled, user_id, raids_hosted)
+    VALUES($1, $2, $3)
+"""
+async def get_friend_code(bot, user_id, host=False):
     async with bot.database.connect() as c:
         result = await c.fetchrow(GET_FC_BY_USER_ID,
                                   int(user_id))
         if result:
-            await c.execute(UPDATE_LAST_RECALLED_TIME,
+            # This is a bit strange, but it's a step I can perform a combined query all together.
+            await c.execute(UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT if host else UPDATE_LAST_RECALLED_TIME,
                             datetime.now(),
                             int(user_id))
+        else:
+            await c.execute(INSERT_BLANK_RECORD,
+                            datetime.now(),
+                            int(user_id),
+                            1 if host else 0)
     return result.get("friend_code") if result and result.get("friend_code") else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if result else False
 
 async def send_friend_code(ctx, bot):
@@ -276,13 +292,22 @@ async def send_trainer_information(ctx, bot):
                                          int(author.id))
 
     new_embed = discord.Embed(title=ctx.author.name, description="Trainer information")
+    name=None
+    level=None
+    fc=None
+    rh=0
+    rp=0
     if result:
         name = result.get("name")
         level = result.get("level")
         fc = result.get("friend_code")
+        rh = result.get("raids_hosted")
+        rp = result.get("raids_participated_in")
 
     new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn ANameOrSomething` or `-setname ANameOrSomething`.", inline=False)
     new_embed.add_field(name="Level", value=level if level else "To set your trainer level, use `-sl 39` or `-setlevel 39`.", inline=False)
     new_embed.add_field(name="Friend Code", value=fc if fc else "To set your trainer friend code, use `-sf` or `-setfc`.", inline=False)
+    new_embed.add_field(name="Raids Hosted", value=rh, inline=True)
+    new_embed.add_field(name="Raids Participated In", value=rp, inline=True)
 
     await bot.send_ignore_error(ctx, "", embed=new_embed)

@@ -104,6 +104,13 @@ RAID_TABLE_REMOVE_RAID = """
 DELETE FROM raids WHERE (message_id = $1)
 RETURNING message_id
 """
+UPDATE_PERSISTENCE_BONUS_BY_RAID_ID = """
+    UPDATE trainer_data td
+    SET persistence = persistence + 1
+    FROM raid_application_user_map raum
+    WHERE
+    (raum.raid_message_id = $1 and raum.has_been_notified = FALSE and td.user_id = raum.user_id);
+"""
 CLEAR_APPLICANTS_FOR_RAID = """
 DELETE FROM raid_application_user_map WHERE (raid_message_id = $1)
 """
@@ -111,6 +118,7 @@ async def remove_raid_from_table(bot, message_id):
     """Removes a raid from the table."""
     async with bot.database.connect() as c:
         await c.execute(RAID_TABLE_REMOVE_RAID, int(message_id))
+        await c.execute(UPDATE_PERSISTENCE_BONUS_BY_RAID_ID, int(message_id))
         await c.execute(CLEAR_APPLICANTS_FOR_RAID, int(message_id))
 
 async def delete_raid(bot, raid_id):
