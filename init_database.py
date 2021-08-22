@@ -2,92 +2,23 @@ import asyncio
 import asyncpg
 from important import PASSWORD
 
-player_table_create = """
-CREATE TABLE IF NOT EXISTS players (
-  user_id BIGINT PRIMARY KEY,
-  friend_code CHAR(12) NOT NULL,
-  Level SMALLINT NOT NULL,
+RAIDS = """
+CREATE TABLE IF NOT EXISTS raids(
+  message_id BIGINT PRIMARY KEY,
   time_registered TIMESTAMP NOT NULL,
-  raids_posted INT NOT NULL,
-  restricted BOOL NOT NULL
-);
-"""
-
-raid_table_create = """
-CREATE TABLE IF NOT EXISTS raids (
-  raid_message_id BIGINT PRIMARY KEY,
-  host_user_id BIGINT NOT NULL,
   guild_id BIGINT NOT NULL,
-  time_to_remove TIMESTAMP NOT NULL,
-  FOREIGN KEY (host_user_id)
-    REFERENCES players (user_id)
+  channel_id BIGINT NOT NULL,
+  user_id BIGINT NOT NULL,
+  time_to_remove TIMESTAMP NOT NULL
 );
 """
 
-raid_anonymous_tracker = """
-CREATE TABLE IF NOT EXISTS tracker (
-  applicant_id BIGINT PRIMARY KEY,
-  host_dm_message_id BIGINT NOT NULL,
-  host_id BIGINT NOT NULL,
-  raid_message_id BIGINT NOT NULL,
-  FOREIGN KEY (host_id)
-    REFERENCES players (user_id),
-  FOREIGN KEY (applicant_id)
-    REFERENCES players (user_id),
-  FOREIGN KEY (raid_message_id)
-    REFERENCES raids (raid_message_id)
-);
-"""
-
-placeholder_database = """
-CREATE TABLE IF NOT EXISTS raid_placeholder_stickies (
-  channel_id BIGINT PRIMARY KEY,
-  message_id BIGINT NOT NULL,
-  guild_id BIGINT NOT NULL
-);
-"""
-
-valid_raid_channels = """
-CREATE TABLE IF NOT EXISTS valid_raid_channels (
-  channel_id BIGINT PRIMARY KEY,
-  guild_id BIGINT NOT NULL
-);
-"""
-raid_counter_table = """
-DROP TABLE IF EXISTS guild_raid_counters;
-CREATE TABLE IF NOT EXISTS guild_raid_counters (
+RAID_COUNTERS = """
+CREATE TABLE IF NOT EXISTS guild_raid_counters(
   guild_id BIGINT PRIMARY KEY,
-  raid_counter BIGINT DEFAULT 0
+  raid_counter INT DEFAULT 0
 );
 """
-
-request_channel_table = """
-DROP TABLE IF EXISTS valid_request_channels;
-CREATE TABLE IF NOT EXISTS valid_request_channels (
-  guild_id BIGINT PRIMARY KEY,
-  channel_id BIGINT NOT NULL
-);
-"""
-
-request_role_to_id_map = """
-DROP TABLE IF EXISTS request_role_id_map;
-CREATE TABLE IF NOT EXISTS request_role_id_map (
-  role_id BIGINT PRIMARY KEY,
-  message_id BIGINT NOT NULL,
-  guild_id BIGINT NOT NULL,
-  role_name VARCHAR(32)
-)
-"""
-
-RAID_LOBBY_CATEGORY = """
-DROP TABLE IF EXISTS raid_lobby_category;
-CREATE TABLE IF NOT EXISTS raid_lobby_category (
-  guild_id BIGINT PRIMARY KEY,
-  category_id BIGINT NOT NULL,
-  log_channel_id BIGINT NOT NULL
-)
-"""
-
 RAID_LOBBY_USER_MAP = """
 DROP TABLE IF EXISTS raid_lobby_user_map;
 CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
@@ -101,58 +32,71 @@ CREATE TABLE IF NOT EXISTS raid_lobby_user_map (
   user_limit INT NOT NULL,
   applied_users INT NOT NULL,
   notified_users INT NOT NULL
-)
+);
 """
 
-RAID_RECENT_PARTICIPATION_TABLE = """
-DROP TABLE IF EXISTS raid_participation_table;
-CREATE TABLE IF NOT EXISTS raid_participation_table (
+TRAINER_DATA = """
+CREATE TABLE IF NOT EXISTS trainer_data(
   user_id BIGINT PRIMARY KEY,
-  last_participation_time TIMESTAMP NOT NULL
-)
+  last_time_recalled TIMESTAMP NOT NULL,
+  raids_hosted INT DEFAULT 0,
+  friend_code CHAR(12),
+  level INT,
+  name VARCHAR(15),
+  persistence INT DEFAULT 0,
+  raids_participated_in INT DEFAULT 0
+);
 """
 
-RAID_APPLICATION_USER_MAP = """
-DROP TABLE IF EXISTS raid_application_user_map;
-CREATE TABLE IF NOT EXISTS raid_application_user_map (
+RAID_APPLICATIONS = """
+CREATE TABLE IF NOT EXISTS raid_application_user_map(
   user_id BIGINT PRIMARY KEY,
   raid_message_id BIGINT NOT NULL,
   guild_id BIGINT NOT NULL,
-  is_requesting BOOL NOT NULL,
-  speed_bonus_weight INT NOT NULL,
-  has_been_notified BOOL NOT NULL,
-  checked_in BOOL NOT NULL,
+  is_requesting BOOLEAN NOT NULL,
+  app_weight INT NOT NULL,
+  has_been_notified BOOLEAN NOT NULL,
+  checked_in BOOLEAN NOT NULL,
   activity_check_message_id BIGINT
+);
+"""
+
+RAID_LOBBY_CATEGORY = """
+CREATE TABLE IF NOT EXISTS raid_lobby_category(
+  guild_id BIGINT PRIMARY KEY,
+  category_id BIGINT NOT NULL,
+  log_channel_id BIGINT NOT NULL
+);
+"""
+
+REQUEST_CHANNELS = """
+CREATE TABLE IF NOT EXISTS valid_requeset_channels(
+  channel_id BIGINT PRIMARY KEY,
+  guild_id BIGINT NOT NULL
+);
+"""
+RECENT_PARTICIPATION_TABLE = """
+CREATE TABLE IF NOT EXISTS raid_participation_table(
+  user_id BIGINT PRIMARY KEY,
+  last_participation_time TIMESTAMP NOT NULL
+);
+"""
+
+REQUEST_TABLE = """
+CREATE TABLE IF NOT EXISTS request_role_id_map(
+  role_id BIGINT PRIMARY KEY,
+  message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL,
+  role_name VARCHAR(20)
+);
+"""
+
+RAID_STICKIES = """
+CREATE TABLE IF NOT EXISTS raid_placeholder_stickies(
+  channel_id BIGINT PRIMARY KEY,
+  message_id BIGINT NOT NULL,
+  guild_id BIGINT NOT NULL
 )
-"""
-UPDATE_DATA_TYPE = """
-    ALTER TABLE raid_application_user_map
-    ALTER COLUMN speed_bonus_weight TYPE DOUBLE PRECISION;
-"""
-friend_code_table = """
-  CREATE TABLE IF NOT EXISTS friend_codes (
-    user_id BIGINT PRIMARY KEY,
-    friend_code CHAR(12) NOT NULL,
-    last_time_recalled TIMESTAMP NOT NULL
-  );
-"""
-
-ADD_MANAGEMENT_COLUMN = """
-  ALTER TABLE raid_lobby_category
-  ADD COLUMN management_channel_id BIGINT,
-  ADD COLUMN management_message_id BIGINT;
-"""
-
-friend_code_table_update = """
-  ALTER TABLE trainer_data
-  ADD COLUMN raids_hosted INT DEFAULT 0,
-  ADD COLUMN raids_participated_in INT DEFAULT 0,
-  ADD COLUMN persistence INT DEFAULT 0;
-"""
-
-UPDATE_WEIGHT_COLUMN = """
-  ALTER TABLE raid_application_user_map
-  RENAME COLUMN speed_bonus_weight TO app_weight;
 """
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
