@@ -94,7 +94,7 @@ class GeneralCommands(commands.Cog):
 
     @commands.command(aliases=["raids", "bosses"])
     async def raid_bosses(self, ctx):
-        current_raids = APIH.fetch_raids_filtered()
+        current_raids = await APIH.get_raid_bosses()
         await asyncio.gather(self.__bot.send_ignore_error(ctx, current_raids),
                              self.__bot.delete_ignore_error(ctx.message))
 

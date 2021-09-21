@@ -151,3 +151,7 @@ async def get_counter(bot, ctx, tier, name, weather):
     except discord.DiscordException:
         pass
 
+async def get_raid_bosses():
+    from handlers.pokebattler.pokebattler_api import fetch_raids_filtered
+    current_raids = fetch_raids_filtered()
+    return [boss for boss in current_raids.keys()]
