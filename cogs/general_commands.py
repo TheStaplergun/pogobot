@@ -92,6 +92,11 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(RLH.show_raider_names(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
+    @commands.command(aliases=["raids", "bosses"])
+    async def raid_bosses(self, ctx):
+        current_raids = APIH.fetch_raids_filtered()
+        await asyncio.gather(self.__bot.send_ignore_error(ctx, current_raids),
+                             self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):
     """Default setup function for file"""
