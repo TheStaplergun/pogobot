@@ -73,7 +73,7 @@ async def register_raid_lobby_category(ctx, bot):
     channel = ctx.channel
     if not channel.category_id:
         embed = discord.Embed(title="Error", description="This channel is not in a category. A designated category is necessary to set up a raid lobby system. Create a category and place a channel in there, then run this command again.", color=0xff8c00)
-        ctx.send(" ",embed=embed, delete_after=15)
+        await ctx.send(" ",embed=embed, delete_after=15)
         return False
 
     category_id = channel.category_id
