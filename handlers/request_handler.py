@@ -287,7 +287,6 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
     if not tier or (tier.lower() == "mega" and not pokemon_name):
         await author.send(format_request_failed_dm(ctx.guild.name, "No pokemon given to request."))
         return
-
     channel_id = ctx.channel.id
 
     if not pokemon_name:
@@ -310,6 +309,10 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         await ctx.author.send(correction_suggestion)
     else:
         pokemon_name = pokemon_name.title()
+        if pokemon_name not in bot.dex.current_raid_bosses():
+            embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
+            bot.send_ignore_error(ctx.author, " ", embed=embed)
+            return
         does_exist, request_channel_id, message_id, role_id = await check_if_request_message_exists(bot, pokemon_name, guild_id)
         if not does_exist:
             await set_up_request_role_and_message(bot, ctx, pokemon_name, dex_num)

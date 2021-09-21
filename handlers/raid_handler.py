@@ -129,7 +129,7 @@ async def delete_raid(bot, raid_id):
         await bot.http.delete_message(raid_data.get("channel_id"), raid_data.get("message_id"))
     except discord.DiscordException:
         return
-    
+
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
@@ -206,6 +206,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                                                                           weather,
                                                                           invite_slots)
         if raid_is_valid:
+            if response.title() not in bot.dex.current_raid_bosses():
+                embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
+                bot.send_ignore_error(ctx.author, " ", embed=embed)
+                return
             remove_after_seconds = 900
             channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
             _, _, _, role_id = await REQH.check_if_request_message_exists(bot, response.title, ctx.guild.id)

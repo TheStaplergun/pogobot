@@ -16,14 +16,14 @@ def unwind(f, itera):
         print_list(f, itera)
         if tab_count < recurse_limit:
             f.write("--EXIT LIST--\n")
-    
+
     if isinstance(itera, dict):
         if tab_count < recurse_limit:
             f.write("--ENTER DICT--\n")
         print_dict(f, itera)
         if tab_count < recurse_limit:
             f.write("--EXIT DICT--\n")
-    
+
     if isinstance(itera, (int, str)):
         to_print = tab_count * "\t"
         if tab_count < recurse_limit + 1:
@@ -100,7 +100,7 @@ def format_pokemon_name(name):
 
     if "MEGA" in name:
         name.insert(0, name.pop(-1))
-    
+
     if not name or len(name) < 1:
         return ""
     name = " ".join(name).title()
@@ -138,11 +138,11 @@ async def get_counter(bot, ctx, tier, name, weather):
     if not is_valid:
         valid_data = False
         message_to_send = f"{message_to_send}{response}Did you mean **{suggestion}**"
-    
+
     if not valid_data:
         await target.send(message_to_send)
         return
-    
+
     embed = bot.dex.get_counter_for(bot, name, tier, weather)
     embed_thumbnail = build_image_link_github(dex_num)
     embed.set_thumbnail(url=embed_thumbnail)
@@ -154,4 +154,4 @@ async def get_counter(bot, ctx, tier, name, weather):
 async def get_raid_bosses():
     from handlers.pokebattler.pokebattler_api import fetch_raids_filtered
     current_raids = fetch_raids_filtered()
-    return [boss for boss in current_raids.keys()]
+    return [boss.title() for boss in current_raids.keys()]

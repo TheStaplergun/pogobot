@@ -30,6 +30,10 @@ class Pokedex():
     def update_rankings_cache(self):
         self.rankings = API.fetch_rankings()
 
+    def current_raid_bosses(self):
+        current_raids = AH.get_raid_bosses()
+        return current_raids
+
     def calculate_players_power_percent(self, player_level, boss_name):
         raid_data = self.raids.get(boss_name)
 
@@ -130,21 +134,21 @@ class Pokedex():
         if name in DEX.MEGA_DEX.values():
             name = f"{name}_mega".upper()
             return name
-        
+
         if name in DEX.ALOLAN_DEX.values():
             name = "_".join(name.split("-")[1:])
             name = f"{name}_alola_form".upper()
             return name
-        
+
         if name in DEX.GALARIAN_DEX.values():
             name = "_".join(name.split("-")[1:])
             name = f"{name}_galarian_form".upper()
             return name
-        
+
         if name in DEX.ALTERNATE_FORME_DEX.values():
             name = name.replace("-", "_")
             name = f"{name}_form".upper()
             return name
-        
+
         name = name.replace("-","_").upper()
         return name

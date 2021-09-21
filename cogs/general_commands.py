@@ -2,7 +2,7 @@
 import asyncio
 import time
 
-#import discord
+import discord
 from discord.ext import commands
 
 import handlers.friend_code_handler as FCH
@@ -94,8 +94,10 @@ class GeneralCommands(commands.Cog):
 
     @commands.command(aliases=["raids", "bosses"])
     async def raid_bosses(self, ctx):
-        current_raids = await APIH.get_raid_bosses()
-        await asyncio.gather(self.__bot.send_ignore_error(ctx, current_raids),
+        """Gives a list of all raid bosses as per the Pokebattler API"""
+        current_raids = self.__bot.dex.current_raid_bosses()
+        embed = discord.Embed(title="Raid Bosses", description=f"The current raid bosses are {'\n'.join(current_raids)}")
+        await asyncio.gather(self.__bot.send_ignore_error(ctx, " ", embed=embed),
                              self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):
