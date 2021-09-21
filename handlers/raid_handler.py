@@ -238,7 +238,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             await add_raid_to_table(ctx, bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
 
             await message.add_reaction("🗑️")
-
+            lobby = None
             if raid_lobby_category:
                 time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                 lobby = await create_raid_lobby(ctx, bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
