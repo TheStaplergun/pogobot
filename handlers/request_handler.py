@@ -311,7 +311,7 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         pokemon_name = pokemon_name.title()
         if pokemon_name not in bot.dex.current_raid_bosses():
             embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
-            bot.send_ignore_error(ctx.author, " ", embed=embed)
+            await bot.send_ignore_error(ctx.author, " ", embed=embed)
             return
         does_exist, request_channel_id, message_id, role_id = await check_if_request_message_exists(bot, pokemon_name, guild_id)
         if not does_exist:

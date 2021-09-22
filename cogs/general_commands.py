@@ -95,8 +95,10 @@ class GeneralCommands(commands.Cog):
     @commands.command(aliases=["raids", "bosses"])
     async def raid_bosses(self, ctx):
         """Gives a list of all raid bosses as per the Pokebattler API"""
-        current_raids = self.__bot.dex.current_raid_bosses()
-        embed = discord.Embed(title="Raid Bosses", description=f"The current raid bosses are {'\n'.join(current_raids)}")
+        print(self.__bot.dex.current_raid_bosses())
+        current_raids = '\n'.join(self.__bot.dex.current_raid_bosses())
+        print(current_raids)
+        embed = discord.Embed(title="Raid Bosses", description=f"The current raid bosses are\n{current_raids}")
         await asyncio.gather(self.__bot.send_ignore_error(ctx, " ", embed=embed),
                              self.__bot.delete_ignore_error(ctx.message))
 
