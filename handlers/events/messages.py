@@ -11,7 +11,7 @@ async def on_message_handle(message, bot):
     # Handle this first because it's a logging function.
     raid_lobby_channel = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
     if bot.categories_allowed and raid_lobby_channel:
-    #    await RLH.log_message_in_raid_lobby_channel(bot, message)
+        await RLH.log_message_in_raid_lobby_channel(bot, message)
         return True
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)

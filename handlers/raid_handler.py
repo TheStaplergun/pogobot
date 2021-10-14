@@ -206,8 +206,12 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                                                                           weather,
                                                                           invite_slots)
         if raid_is_valid:
-            if response.title not in bot.dex.current_raid_bosses():
-                embed = discord.Embed(title="Error", description=f"That pokemon ({response.title}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
+            temp = response.title
+            temp = temp.replace("-Altered", "")
+            temp = temp.replace("-Origin","")
+            temp = temp.replace("-", " ")
+            if temp not in bot.dex.current_raid_bosses():
+                embed = discord.Embed(title="Error", description=f"That pokemon ({temp}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
             remove_after_seconds = 900

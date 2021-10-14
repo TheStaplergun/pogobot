@@ -326,14 +326,17 @@ UPDATE_LOBBY_APPLICANT_DATA = """
     WHERE (raid_message_id = $1);
 """
 async def insert_new_application(bot, user_id, raid_message_id, guild_id, is_requesting, app_weight):
-    await bot.database.execute(INSERT_NEW_APPLICATION_DATA,
-                               int(user_id),
-                               int(raid_message_id),
-                               int(guild_id),
-                               is_requesting,
-                               app_weight,
-                               False,
-                               False)
+    try:
+        await bot.database.execute(INSERT_NEW_APPLICATION_DATA,
+                                   int(user_id),
+                                   int(raid_message_id),
+                                   int(guild_id),
+                                   is_requesting,
+                                   app_weight,
+                                   False,
+                                   False)
+    except asyncpg.PostgresError as error:
+        pass
 
 async def calculate_speed_bonus(message, listing_duration):
     creation_time = message.created_at
@@ -403,7 +406,7 @@ async def get_applicant_data_by_message_id(bot, message_id):
 GET_USERS_BY_RAID_MESSAGE_ID = """
     SELECT * FROM raid_application_user_map
     WHERE (raid_message_id = $1 and has_been_notified = FALSE)
-    ORDER BY app_weight;
+    ORDER BY app_weight DESC;
 """
 """
     LIMIT $2;
@@ -467,6 +470,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         if counter > current_needed:
             break
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
+        if not member:
+            continue
         try:
             new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
             message = await member.send(" ", embed=new_embed, delete_after=30)

@@ -309,7 +309,9 @@ async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
         await ctx.author.send(correction_suggestion)
     else:
         pokemon_name = pokemon_name.title()
-        if pokemon_name not in bot.dex.current_raid_bosses():
+        temp = pokemon_name.replace("-Altered", "")
+        temp = temp.replace("-Origin","")
+        if temp.replace("-", " ") not in bot.dex.current_raid_bosses():
             embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
             await bot.send_ignore_error(ctx.author, " ", embed=embed)
             return
