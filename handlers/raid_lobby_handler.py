@@ -343,22 +343,6 @@ async def remove_lobby_member_by_command(bot, ctx, user):
         return
 
     host_id = lobby_data.get("host_user_id")
-    if host_id == ctx.author.id:
-        embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
-        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
-        return
-    else:
-        if user and user.id == ctx.author.id:
-            await user_remove_self_from_lobby(bot, ctx, user, lobby_data)
-            return
-
-        embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
-        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
-
-        if channel and not channel.permissions_for(ctx.author).manage_channels:
-            embed = discord.Embed(title="", description="You do not have permission to manage this lobby.")
-            await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
-            return
 
     try:
         user_id = int(user)
@@ -386,6 +370,24 @@ async def remove_lobby_member_by_command(bot, ctx, user):
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
+
+    if member == ctx.author:
+        embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    if host_id != ctx.author.id:
+        if user and user.id == ctx.author.id:
+            await user_remove_self_from_lobby(bot, ctx, user, lobby_data)
+            return
+
+        embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+
+        if channel and not channel.permissions_for(ctx.author).manage_channels:
+            embed = discord.Embed(title="", description="You do not have permission to manage this lobby.")
+            await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
+            return
 
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
