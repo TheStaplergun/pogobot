@@ -7,7 +7,7 @@ import classes.database as database
 import important
 from handlers import startup_handler as SH
 
-async def startup_process(bot, live):
+async def startup_process(bot):
     """Startup process. Linear process."""
     pool = await asyncpg.create_pool(database=important.DATABASE,
                                      port=important.PORT,
@@ -17,8 +17,9 @@ async def startup_process(bot, live):
     bot.database = database.Database(pool)
     await bot.wait_until_ready()
     #bot.pool = await init_pool()
-    if live:
-        await SH.set_up_guild_raid_counters(bot)
+    await SH.set_up_guild_raid_counters(bot)
+
+    if bot.live:
         await SH.spin_up_message_deletions(bot)
 
 async def status_update_loop(bot):

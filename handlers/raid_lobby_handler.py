@@ -8,7 +8,7 @@ import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_management as RLM
-from pogobot.handlers.raid_handler import increment_raid_counter
+from handlers.raid_handler import increment_raid_counter
 
 async def create_raid_host_role(guild):
     try:
@@ -98,8 +98,8 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
     lobby = bot.get_channel(int(lobby_channel_id))
     if not lobby:
         return False
-
-    return lobby, lobby_data
+    lobby.lobby_data = lobby_data
+    return lobby
 
 GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
     SELECT * FROM raid_lobby_user_map
@@ -116,7 +116,7 @@ async def log_message_in_raid_lobby_channel(bot, message, lobby_channel, lobby_d
     log_channel = bot.get_channel(int(log_channel_id))
 
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
-    new_embed.set_author(name=author.mention, icon_url=author.avatar_url)
+    new_embed.set_author(name=author.name, icon_url=author.avatar_url)
     new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
     host_user_id = lobby_data.get("host_user_id")
     guild = lobby_channel.guild

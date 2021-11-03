@@ -33,8 +33,7 @@ BOT = bot.Bot(COMMAND_PREFIX, description=DESCRIPTION, activity=GAME, intents=in
 
 BOT.pool = None
 BOT.categories_allowed = True
-
-live=False
+BOT.live = False
 
 def initialize_cogs():
     cog_list = []
@@ -60,13 +59,13 @@ if __name__ == "__main__":
         print("[!] An error occurred during cog initialization. Exiting.")
         sys.exit()
 
-    BOT.loop.create_task(startup_process(BOT, live))
+    BOT.loop.create_task(startup_process(BOT))
     BOT.loop.create_task(status_update_loop(BOT))
     BOT.loop.create_task(applicant_loop(BOT))
     BOT.loop.create_task(lobby_removal_loop(BOT))
     if args.l:
         print("[!] Running bot live.")
-        live=True
+        BOT.live=True
         BOT.run(important.LIVE_TOKEN)
     else:
         print("[i] Running bot in test mode")

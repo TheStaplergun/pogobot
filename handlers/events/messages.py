@@ -9,9 +9,13 @@ async def on_message_handle(message, bot):
     if message.author.bot:
         return True
     # Handle this first because it's a logging function.
-    raid_lobby_channel, lobby_data = await RLH.get_lobby_channel_by_lobby_id(bot, message.channel.id)
+    raid_lobby_channel_data = await RLH.get_lobby_data_by_lobby_id(bot, message.channel.id)
+    raid_lobby_channel = None
+    if raid_lobby_channel_data:
+        raid_lobby_channel = await bot.retrieve_channel(message.channel.id)
+
     if bot.categories_allowed and raid_lobby_channel:
-        await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel, lobby_data)
+        await RLH.log_message_in_raid_lobby_channel(bot, message, raid_lobby_channel, raid_lobby_channel_data)
         return True
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, message.channel.id)
