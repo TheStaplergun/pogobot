@@ -147,7 +147,7 @@ async def start_lobby_removal_loop(bot):
             if not lobby:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
                 continue
-            await RLH.delete_lobby(bot, lobby)
+            await RLH.delete_lobby(bot, lobby, lobby_data)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 

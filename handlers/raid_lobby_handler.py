@@ -632,10 +632,9 @@ async def set_recent_participation(bot, user_id):
         await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
-async def update_raid_removal_and_lobby_removal_times(bot, raid_id):
-    cur_time = datetime.now()
-    await update_delete_time_with_given_time(bot, cur_time, raid_id)
-    await RH.update_delete_time(bot, cur_time, raid_id)
+async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remove=datetime.now()):
+    await update_delete_time_with_given_time(bot, time_to_remove, raid_id)
+    await RH.update_delete_time(bot, time_to_remove, raid_id)
 
 async def check_if_lobby_full(bot, lobby_id):
     lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
@@ -757,7 +756,7 @@ async def handle_user_failed_checkin(bot, applicant_data):
                          decrement_notified_users_by_raid_id(bot, raid_id),
                          bot.send_ignore_error(member, " ", embed=new_embed))
 
-async def delete_lobby(bot, lobby):
+async def delete_lobby(bot, lobby, lobby_data):
     members = lobby.members
     guild = lobby.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
@@ -774,7 +773,8 @@ async def delete_lobby(bot, lobby):
             tasks.append(bot.remove_role_ignore_error(member, lobby_member_role, "End of Raid"))
         if discord.utils.get(guild.roles, name="Raid Host"):
             tasks.append(bot.remove_role_ignore_error(member, raid_host_role, "End of Raid"))
-    tasks.append(bot.delete_ignore_error(lobby))
+    await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
+    #tasks.append(bot.delete_ignore_error(lobby))
 
     await asyncio.gather(*tasks)
 
@@ -807,7 +807,7 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
-    await delete_lobby(bot, lobby)
+    await delete_lobby(bot, lobby, lobby_data)
     if lobby_data and lobby_id != ctx.channel.id:
         try:
             embed = discord.Embed(title="", description="The requested lobby has been removed.")

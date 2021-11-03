@@ -32,12 +32,12 @@ async def extend_duration_of_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, ctx.user_id)
     if not lobby_data:
         return
-    
+
     raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
-    if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
-        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
-        return
-        
+    # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
+    #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
+    #     return
+
     lobby_delete_time = lobby_data.get("delete_at")
     extension_amount = 10
     extension_measurement = "minute"
@@ -65,7 +65,7 @@ async def extend_duration_of_lobby(bot, ctx):
             embed = discord.Embed(title="Error", description="The total lobby duration cannot be extended beyond 45 minutes.")
             await lobby.send(embed=embed)
             return
-            
+
         if new_time_extension < 60:
             extension_amount = new_time_extension
             extension_measurement = "second"
@@ -85,7 +85,9 @@ async def extend_duration_of_lobby(bot, ctx):
 
     time_until_expiration_as_minutes = math.ceil((new_delete_time - datetime.now()).total_seconds()/60)
     new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes} minutes.\n\nYou can add up to {max_remaining_extendable_time} more {max_remaining_extendable_time_type}")
-    await RLH.update_delete_time_with_given_time(bot, new_delete_time, lobby_data.get("raid_message_id"))
+    await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"), time_to_remove=new_delete_time)
+
+#    await RLH.update_delete_time_with_given_time(bot, new_delete_time, lobby_data.get("raid_message_id"))
     await lobby.send(embed=new_embed)
 
 async def host_manual_remove_lobby(bot, ctx):
@@ -96,14 +98,14 @@ async def host_manual_remove_lobby(bot, ctx):
             await bot.send_ignore_error(ctx.author, "", embed=new_embed)
         return
 
-    raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
-    if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
-        await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
-        return
-        
+    # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
+    # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
+    #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
+    #     return
+
     lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
 
-    await RLH.delete_lobby(bot, lobby)
+    await RLH.delete_lobby(bot, lobby, lobby_data)
 
 INSERT_MANAGEMENT_DATA = """
     UPDATE raid_lobby_category
@@ -168,10 +170,10 @@ async def set_up_management_channel(ctx, bot, should_create_channel):
 
     if old_management_message_id:
         await remove_old_message(bot, lobby_category_data)
-    
+
     if old_management_message_id != dashboard_message.id:
         await update_message_database_info(bot, dashboard_message.id, lobby_category_data.get("guild_id"))
-    
+
     old_management_channel_id = lobby_category_data.get("management_channel_id")
     if old_management_channel_id and old_management_channel_id != channel.id:
         await remove_old_channel(bot, lobby_category_data.get("management_channel_id"))
