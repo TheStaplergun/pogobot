@@ -26,6 +26,7 @@ async def database_register_raid_channel(bot, ctx, channel_id, guild_id):
                                        int(guild_id))
             await c.execute(INIT_RAID_COUNTER,
                                        int(guild_id))
+        bot.guild_raid_counters.update({guild_id:0})
     except asyncpg.PostgresError as error:
         print(f"[*] An exception occurred while registering a new raid channel. [{error}]")
         return

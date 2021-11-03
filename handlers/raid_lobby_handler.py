@@ -8,6 +8,7 @@ import handlers.friend_code_handler as FCH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_management as RLM
+from pogobot.handlers.raid_handler import increment_raid_counter
 
 async def create_raid_host_role(guild):
     try:
@@ -98,7 +99,7 @@ async def get_lobby_channel_by_lobby_id(bot, channel_id):
     if not lobby:
         return False
 
-    return lobby
+    return lobby, lobby_data
 
 GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
     SELECT * FROM raid_lobby_user_map
@@ -108,16 +109,19 @@ GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
 async def get_latest_lobby_data_by_timestamp(bot):
     return await bot.database.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
 
-async def log_message_in_raid_lobby_channel(bot, message):
+async def log_message_in_raid_lobby_channel(bot, message, lobby_channel, lobby_data):
     author = message.author
     category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
     log_channel_id = category_data.get("log_channel_id")
     log_channel = bot.get_channel(int(log_channel_id))
 
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
-    new_embed.set_author(name=author.display_name, icon_url=author.avatar_url)
+    new_embed.set_author(name=author.mention, icon_url=author.avatar_url)
     new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
-    await log_channel.send(" ", embed=new_embed)
+    host_user_id = lobby_data.get("host_user_id")
+    guild = lobby_channel.guild
+    host_member = discord.utils.get(guild.members, id=host_user_id)
+    await log_channel.send(f"Lobby: {lobby_channel.name}\nHost: {host_member.mention}", embed=new_embed)
 
 NEW_LOBBY_INSERT = """
 INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
@@ -148,11 +152,11 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     raid_moderator_role = discord.utils.get(guild.roles, name="Raid Moderator")
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
-    count = await RH.get_raid_count(bot, ctx, False)
+    muted_role = discord.utils.get(guild.roles, name="Muted")
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=False),
         raid_host_member: discord.PermissionOverwrite(read_messages=True,
-                                                      send_messages=True,
+                                                      #send_messages=True,
                                                       embed_links=True,
                                                       attach_files=True),
         bot.user: discord.PermissionOverwrite(read_messages=True,
@@ -165,10 +169,16 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     if raid_moderator_role:
         overwrites.update({raid_moderator_role: discord.PermissionOverwrite(read_messages=True)})
 
-    channel_name = "raid-lobby-{}".format(count)
+    if muted_role:
+        overwrites.update({muted_role:discord.PermissionOverwrite(send_messages=False)})
+
+    # count = await RH.get_raid_count(bot, ctx, False)
+    # channel_name = "raid-lobby-{}".format(await RH.get_raid_count(bot, ctx, False))
+
     reason = "Spawning new raid lobby for [{}]".format(raid_host_member.name)
     try:
-        new_raid_lobby = await raid_lobby_category_channel.create_text_channel(channel_name, reason=reason, overwrites=overwrites)
+        new_raid_lobby = await raid_lobby_category_channel.create_text_channel("raid-lobby-{}".format(await RH.get_raid_count(bot, ctx, False)), reason=reason, overwrites=overwrites)
+        #await increment_raid_counter(ctx, bot, ctx.guild.id)
     except discord.DiscordException as error:
         try:
             await ctx.send("Something went wrong when trying to create your raid lobby: [{}]".format(error), delete_after=15)
@@ -183,7 +193,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
             pass
         print("[!] An error occurred creating a raid lobby. [{}]".format(error))
         return False
-    
+
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
 
     friend_code, has_code = await FCH.get_friend_code(bot, raid_host_member.id, host=True)
@@ -212,7 +222,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     role = discord.utils.get(guild.roles, name="Raid Host")
     if not role:
         role = await create_raid_host_role(guild)
-    
+
     await bot.add_role_ignore_error(raid_host_member, role, "Giving raid host the raid host role.")
 
     #await RLM.give_member_management_channel_view_permissions(bot, raid_lobby_category_channel_data, raid_host_member)
@@ -557,7 +567,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     await asyncio.gather(increment_user_count_for_raid_lobby(bot, lobby.id),
                          set_checked_in_flag(bot, member.id),
                          lobby.set_permissions(member, read_messages=True,
-                                                       send_messages=True,
+                                                       #send_messages=True,
                                                        embed_links=True,
                                                        attach_files=True),
                          set_recent_participation(bot, member.id),
@@ -565,7 +575,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                          bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}"),
                          bot.send_ignore_error(lobby, message_to_send),
                          bot.delete_ignore_error(message))
-                         
+
     await check_if_lobby_full(bot, lobby.id)
 
 

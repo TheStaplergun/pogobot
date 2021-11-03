@@ -29,26 +29,28 @@ async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id,
 
 INCREMENT_RAID_UPDATE_STATEMENT = """
 UPDATE guild_raid_counters
-SET raid_counter = raid_counter + 1
+SET raid_counter = $2
 WHERE (guild_id = $1);
 """
 async def increment_raid_counter(ctx, bot, guild_id):
     """Increments raid counter for a server for statistics tracking."""
-    await bot.database.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id)
+    bot.guild_raid_counters[guild_id] += 1
+    await bot.database.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id, bot.guild_raid_counters[guild_id])
 
 GET_RAID_COUNT_STATEMENT = """
     SELECT * FROM guild_raid_counters WHERE (guild_id = $1) LIMIT 1;
 """
 async def get_raid_count(bot, ctx, should_print):
     """Get raid count for server the command was called in."""
-    try:
-        count = await bot.database.fetchrow(GET_RAID_COUNT_STATEMENT,
-                                            int(ctx.guild.id))
-    except asyncpg.Exception as error:
-        print("[!] Error obtaining raid count for guild. [{}]".format(error))
-        return
+    num = bot.guild_raid_counters.get(ctx.guild.id)
+    # try:
+    #     count = await bot.database.fetchrow(GET_RAID_COUNT_STATEMENT,
+    #                                         int(ctx.guild.id))
+    # except asyncpg.Exception as error:
+    #     print("[!] Error obtaining raid count for guild. [{}]".format(error))
+    #     return
 
-    num = count.get("raid_counter")
+    #num = count.get("raid_counter")
     if should_print:
         msg = "Total raids sent within this server [`{}`]".format(num)
         try:
@@ -56,6 +58,7 @@ async def get_raid_count(bot, ctx, should_print):
         except discord.DiscordException as error:
             print("[!] Error sending raid count to channel. [{}]".format(error))
     else:
+        await increment_raid_counter(ctx, bot, ctx.guild.id)
         return num
 
 GET_RAIDS_FOR_GUILD = """
@@ -276,10 +279,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
             except discord.DiscordException as error:
                 print(f'[!] Exception occurred during toggle of raid sticky. [{error}]')
-            try:
-                await increment_raid_counter(ctx, bot, int(ctx.guild.id))
-            except discord.DiscordException as error:
-                print(f'[!] Exception occured during increment of raid counter. [{error}]')
+            #try:
+            #    await increment_raid_counter(ctx, bot, int(ctx.guild.id))
+            #except discord.DiscordException as error:
+            #    print(f'[!] Exception occured during increment of raid counter. [{error}]')
         else:
             response += "---------\n"
             response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"

@@ -18,6 +18,7 @@ async def startup_process(bot, live):
     await bot.wait_until_ready()
     #bot.pool = await init_pool()
     if live:
+        await SH.set_up_guild_raid_counters(bot)
         await SH.spin_up_message_deletions(bot)
 
 async def status_update_loop(bot):

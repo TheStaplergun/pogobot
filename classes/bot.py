@@ -27,6 +27,7 @@ class Bot(commands.Bot):
         self.dex = pokedex.Pokedex()
         self.raid_channel_cache = set()
         self.request_channel_cache = set()
+        self.guild_raid_counters = {}
 
     async def retrieve_channel(self, *args, **kwargs):
         """
@@ -53,9 +54,9 @@ class Bot(commands.Bot):
                 user = await self.fetch_user(*args, **kwargs)
             except discord.DiscordException:
                 pass
-        
+
         return user
-    
+
     async def delete_ignore_error(self, item):
         try:
             await item.delete()
@@ -89,5 +90,3 @@ class Bot(commands.Bot):
             pass
         except AttributeError:
             pass
-
-    

@@ -81,6 +81,13 @@ async def spin_up_message_deletions(bot):
 
     print("[*] All pending deletions complete.")
 
+GET_GUILD_COUNTS = """
+  SELECT * FROM guild_raid_counters;
+"""
+async def set_up_guild_raid_counters(bot):
+    guild_counts = await bot.database.fetch(GET_GUILD_COUNTS)
+    bot.guild_raid_counters = {record.get("guild_id"):record.get("raid_counter") for record in guild_counts}
+
 GET_TOTAL_COUNT = """
   SELECT SUM(raid_counter) AS total
   FROM guild_raid_counters
