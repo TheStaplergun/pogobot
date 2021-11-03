@@ -335,6 +335,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     member = user if is_self else None
     host_id = None
     channel = ctx.channel
+    print(user)
 
     lobby_data = await get_lobby_data_by_lobby_id(bot, channel.id)
     if not lobby_data:
@@ -342,9 +343,14 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
-
-
     if not is_self:
+        try:
+            user_id = int(user)
+            member = discord.utils.get(ctx.guild.members, id=user_id)
+        except ValueError:
+            pass
+        except TypeError:
+            pass
         if not member:
             member = discord.utils.get(ctx.guild.members, name=user)
 
@@ -357,13 +363,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
             return
 
         host_id = lobby_data.get("host_user_id")
-        try:
-                user_id = int(user)
-                member = discord.utils.get(ctx.guild.members, id=user_id)
-        except ValueError:
-            pass
-        except TypeError:
-            pass
+
 
     if member not in channel.members:
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
