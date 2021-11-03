@@ -198,6 +198,15 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     if await get_lobby_data_by_user_id(bot, ctx.author.id):
         await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
         return
+    is_verified = discord.utils.get(ctx.author.roles, name="Verified Raid Host")
+    try:
+        invite_slots = int(invite_slots)
+        if not is_verified and invite_slots > 5:
+            embed = discord.Embed(title="Error", description="To host a raid with more than 5 users, you must be verified by the moderators of this server and given the 'Verified Raid Host' role to show you understand how to host a large party raid.")
+            await bot.send_ignore_error(ctx.author, "", embed=embed)
+            return
+    except ValueError:
+        pass
 
     async with ctx.channel.typing():
         raid_is_valid, response, suggestion = validate_and_format_message(ctx,

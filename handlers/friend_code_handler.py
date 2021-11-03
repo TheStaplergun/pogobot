@@ -277,8 +277,18 @@ async def set_trainer_name(ctx, bot, name):
         except discord.DiscordException:
             pass
 
-async def send_trainer_information(ctx, bot):
+async def send_trainer_information(ctx, bot, user_id):
     author = ctx.author
+    print(user_id)
+    if user_id == "0":
+        user_id = ctx.author.id
+    else:
+        try:
+            user_id = int(user_id)
+        except ValueError:
+            embed = discord.Embed(title="Error", description="The provided user ID is not a valid number type")
+            await bot.send_ignore_error(ctx, "", embed=embed)
+            return
 
     raid_channel = await RH.check_if_valid_raid_channel(bot, ctx.message.channel.id)
     request_channel = await REQH.check_if_valid_request_channel(bot, ctx.message.channel.id)
@@ -289,9 +299,9 @@ async def send_trainer_information(ctx, bot):
         return
 
     result = await bot.database.fetchrow(GET_TRAINER_DATA_BY_USER_ID,
-                                         int(author.id))
+                                         int(user_id))
 
-    new_embed = discord.Embed(title=ctx.author.name, description="Trainer information")
+    new_embed = discord.Embed(title="Trainer Information")
     name=None
     level=None
     fc=None
@@ -303,11 +313,12 @@ async def send_trainer_information(ctx, bot):
         fc = result.get("friend_code")
         rh = result.get("raids_hosted")
         rp = result.get("raids_participated_in")
-
-    new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn ANameOrSomething` or `-setname ANameOrSomething`.", inline=False)
-    new_embed.add_field(name="Level", value=level if level else "To set your trainer level, use `-sl 39` or `-setlevel 39`.", inline=False)
-    new_embed.add_field(name="Friend Code", value=fc if fc else "To set your trainer friend code, use `-sf` or `-setfc`.", inline=False)
-    new_embed.add_field(name="Raids Hosted", value=rh, inline=True)
-    new_embed.add_field(name="Raids Participated In", value=rp, inline=True)
+        new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn ANameOrSomething` or `-setname ANameOrSomething`.", inline=False)
+        new_embed.add_field(name="Level", value=level if level else "To set your trainer level, use `-sl 39` or `-setlevel 39`.", inline=False)
+        new_embed.add_field(name="Friend Code", value=fc if fc else "To set your trainer friend code, use `-sf` or `-setfc`.", inline=False)
+        new_embed.add_field(name="Raids Hosted", value=rh, inline=True)
+        new_embed.add_field(name="Raids Participated In", value=rp, inline=True)
+    else:
+        new_embed = discord.Embed(title="Error", description="No trainer data found for that user ID")
 
     await bot.send_ignore_error(ctx, "", embed=new_embed)

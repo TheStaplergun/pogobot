@@ -49,9 +49,9 @@ class GeneralCommands(commands.Cog):
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command(aliases=["t", "T"])
-    async def trainer(self, ctx):
+    async def trainer(self, ctx, user_id="0"):
         """Sends trainer information to current channel."""
-        await asyncio.gather(FCH.send_trainer_information(ctx, self.__bot),
+        await asyncio.gather(FCH.send_trainer_information(ctx, self.__bot, user_id),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()

@@ -998,7 +998,7 @@ ALTERNATE_FORME_DEX =\
   "386_12":"Deoxys-Attack",
   "386_13":"Deoxys-Defense",
   "386_14":"Deoxys-Speed",
-  "487_12":"Giratina-Origin",
+  #"487_12":"Giratina-Origin",
   "487_11":"Giratina-Altered",
   "645_11":"Landorus-Incarnate",
   "645_12":"Landorus-Therian",
