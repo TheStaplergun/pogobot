@@ -349,7 +349,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
             member = discord.utils.get(ctx.guild.members, name=user)
 
         if not member:
-            member = discord.utils.get(ctx.guild.members, nickname=user)
+            member = discord.utils.get(ctx.guild.members, nick=user)
 
         if not member:
             embed = discord.Embed(title="Error", description="I could not find a user with that ID or Name/Nickname in this server.")
