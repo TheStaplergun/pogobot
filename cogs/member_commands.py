@@ -35,14 +35,14 @@ class MemberCommands(commands.Cog):
     @commands.guild_only()
     async def remove(self, ctx, user):
         """Allows a host to remove a user from their lobby."""
-        await asyncio.gather(RLH.remove_lobby_member(self.__bot, ctx, user),
+        await asyncio.gather(RLH.remove_lobby_member_by_command(self.__bot, ctx, user),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
     @commands.guild_only()
     async def leave(self, ctx):
         """Allows a member to leave a lobby."""
-        await asyncio.gather(RLH.remove_lobby_member(self.__bot, ctx, ctx.author),
+        await asyncio.gather(RLH.remove_lobby_member_by_command(self.__bot, ctx, ctx.author),
                              self.__bot.delete_ignore_error(ctx.message))
 
 
