@@ -133,6 +133,29 @@ async def delete_raid(bot, raid_id):
     except discord.DiscordException:
         return
 
+REMOVE_RAID_BY_ID = """
+    DELETE FROM raids WHERE (message_id = $1);
+"""
+async def remove_raid_by_raid_id(bot, raid_data):
+    await bot.database.execute(REMOVE_RAID_BY_ID, int(raid_data.get("message_id")))
+
+GET_NEXT_RAID_TO_REMOVE_QUERY = """
+    SELECT * FROM raids
+    ORDER BY time_to_remove
+    LIMIT 1;
+"""
+async def get_next_raid_to_remove(bot):
+    return await bot.database.fetchrow(GET_NEXT_RAID_TO_REMOVE_QUERY)
+
+UPDATE_TIME_TO_REMOVE_RAID = """
+    UPDATE raids
+    SET time_to_remove = $1
+    WHERE (message_id = $2);
+"""
+async def update_delete_time(bot, new_time, raid_id):
+    return await bot.database.execute(UPDATE_TIME_TO_REMOVE_RAID,
+                                       new_time,
+                                       int(raid_id))
 
 async def handle_clear_user_from_raid(ctx, bot, user_id):
     guild = ctx.guild
@@ -250,7 +273,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 end_string = f' hosted by {ctx.author.mention}\n'
             channel_message_body = start_string + end_string
             try:
-                message = await ctx.send(channel_message_body, embed=response, delete_after=remove_after_seconds)
+                message = await ctx.send(channel_message_body, embed=response)
             except discord.DiscordException as error:
                 print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                 return
@@ -283,6 +306,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             #    await increment_raid_counter(ctx, bot, int(ctx.guild.id))
             #except discord.DiscordException as error:
             #    print(f'[!] Exception occured during increment of raid counter. [{error}]')
+            bot.raid_remove_trigger.set()
         else:
             response += "---------\n"
             response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"

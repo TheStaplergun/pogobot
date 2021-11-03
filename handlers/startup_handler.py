@@ -151,6 +151,41 @@ async def start_lobby_removal_loop(bot):
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
 
+async def start_raid_removal_loop(bot):
+    """Permanently running loop while bot is up."""
+
+    while not bot.database:
+        await asyncio.sleep(1)
+
+    # Outer loop to wait on the event if no lobbies are present.
+    while True:
+        # Process lobbies until no lobbies remain before going to outer loop.
+        while True:
+            raid_data = await RH.get_next_raid_to_remove(bot)
+            if not raid_data:
+                break
+
+            cur_time = datetime.now()
+            deletion_time = raid_data.get("time_to_remove")
+            deletion_time_dif = deletion_time - cur_time
+            if cur_time < deletion_time:
+                if deletion_time_dif.total_seconds() > 1:
+                    await asyncio.sleep(1)
+                    continue
+
+                if deletion_time_dif.total_seconds() > 0:
+                    await asyncio.sleep(deletion_time_dif.total_seconds())
+
+            raid_id = raid_data.get("message_id")
+            raid = await bot.retrieve_message(int(raid_id))
+            #raid = bot.get_channel(int(raid_id))
+            if not raid:
+                await RH.remove_raid_by_raid_id(bot, raid_data)
+                continue
+            await bot.delete_ignore_error(raid)
+        await bot.raid_remove_trigger.wait()
+        bot.raid_remove_trigger.clear()
+
 async def start_applicant_loop(bot):
     while not bot.database:
         await asyncio.sleep(1)

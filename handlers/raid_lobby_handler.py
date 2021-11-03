@@ -69,7 +69,6 @@ async def get_lobby_channel_for_user_by_id(bot, user_id):
     if not lobby:
         try:
             lobby = await bot.fetch_channel(int(lobby_channel_id))
-            print(lobby)
         except discord.NotFound:
             await remove_lobby_by_lobby_id(bot, lobby_channel_id)
             return
@@ -309,17 +308,87 @@ REDUCE_APPLICANT_COUNT_BY_RAID_ID = """
     SET applied_users = applied_users - 1
     WHERE (raid_message_id = $1);
 """
-async def remove_application_for_user(bot, member, raid_id):
+async def remove_application_for_user(bot, member, raid_id, should_notify=True):
     async with bot.database.connect() as c:
         await c.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
         await c.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
 
     try:
-        new_embed = discord.Embed(title="System Notification", description="You have withdrawn your application to the selected raid.")
-        await member.send(" ", embed=new_embed)
+        if should_notify:
+            new_embed = discord.Embed(title="System Notification", description="You have withdrawn your application to the selected raid.")
+            await member.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
+    bot.applicant_trigger.set()
+
+async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
+    lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
+    await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
+    await ctx.channel.set_permissions(member, read_messages=False)
+    await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
+    embed = discord.Embed(title="System Notification", description="You have left the lobby.")
+    await bot.send_ignore_error(member, " ", embed=embed)
+
+async def remove_lobby_member_by_command(bot, ctx, user):
+    user_id = None
+    member = None
+
+    channel = ctx.channel
+
+    lobby_data = await get_lobby_data_by_lobby_id(bot, channel.id)
+    if not lobby_data:
+        embed = discord.Embed(title="Error", description="This channel is not a valid lobby.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    host_id = lobby_data.get("host_user_id")
+    if host_id != ctx.author.id:
+        if user and user.id == ctx.author.id:
+            await user_remove_self_from_lobby(bot, ctx, user, lobby_data)
+            return
+
+        embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+
+        if channel and not channel.permissions_for(ctx.author).manage_channels:
+            embed = discord.Embed(title="", description="You do not have permission to manage this lobby.")
+            await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
+            return
+
+    try:
+        user_id = int(user)
+        member = discord.utils.get(ctx.guild.members, id=user_id)
+    except ValueError:
+        pass
+
+    if not member:
+        member = discord.utils.get(ctx.guild.members, name=user)
+
+    if not member:
+        member = discord.utils.get(ctx.guild.members, nickname=user)
+
+    if not member:
+        embed = discord.Embed(title="Error", description="I could not find a user with that ID or Name/Nickname in this server.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    if member not in channel.members:
+        embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    if not discord.utils.get(member.roles, "Lobby Member"):
+        embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
+    await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
+    await ctx.channel.set_permissions(member, read_messages=False)
+    await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
+    embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
+    await bot.send_ignore_error(member, " ", embed=embed)
 
 async def handle_manual_clear_application(ctx, user_id, bot):
     result = await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
@@ -393,7 +462,10 @@ async def handle_application_to_raid(bot, ctx, message, channel):
     guild = message.guild
     member = guild.get_member(ctx.user_id)
     result = await get_applicant_data_for_user(bot, ctx.user_id)
-
+    if discord.utils.get(member.roles, name="Muted"):
+        embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
+        await bot.send_ignore_error(member, " ", embed=embed)
+        return
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
@@ -548,10 +620,16 @@ async def set_recent_participation(bot, user_id):
         await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
+async def update_raid_removal_and_lobby_removal_times(bot, raid_id):
+    cur_time = datetime.now()
+    await update_delete_time_with_given_time(bot, cur_time, raid_id)
+    await RH.update_delete_time(bot, cur_time, raid_id)
+
 async def check_if_lobby_full(bot, lobby_id):
     lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
     if lobby_data.get("user_count") == lobby_data.get("user_limit"):
-        await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
+        await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
+        #await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
     role = discord.utils.get(guild.roles, name="Lobby Member")
@@ -599,6 +677,11 @@ async def handle_activity_check_reaction(ctx, bot, message):
     guild = lobby.guild
     user_id = ctx.user_id
     member = guild.get_member(int(user_id))
+    if discord.utils.get(member.roles, name="Muted"):
+        embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
+        await bot.send_ignore_error(member, " ", embed=embed)
+        await remove_application_for_user(bot, member, raid_message_id, should_notify=False)
+        return
     await process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data)
 
 GET_LOBBY_BY_LOBBY_ID = """

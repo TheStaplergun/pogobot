@@ -7,6 +7,7 @@ from discord.ext import commands
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
+import handlers.raid_lobby_handler as RLH
 
 class MemberCommands(commands.Cog):
     """Members Commands Cog"""
@@ -28,6 +29,20 @@ class MemberCommands(commands.Cog):
     async def raid_count(self, ctx):
         """Show total raids hosted in this server"""
         await asyncio.gather(RH.get_raid_count(self.__bot, ctx, True),
+                             self.__bot.delete_ignore_error(ctx.message))
+
+    @commands.command()
+    @commands.guild_only()
+    async def remove(self, ctx, user):
+        """Allows a host to remove a user from their lobby."""
+        await asyncio.gather(RLH.remove_lobby_member(self.__bot, ctx, user),
+                             self.__bot.delete_ignore_error(ctx.message))
+
+    @commands.command()
+    @commands.guild_only()
+    async def leave(self, ctx):
+        """Allows a member to leave a lobby."""
+        await asyncio.gather(RLH.remove_lobby_member(self.__bot, ctx, ctx.author),
                              self.__bot.delete_ignore_error(ctx.message))
 
 

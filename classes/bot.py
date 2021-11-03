@@ -22,6 +22,7 @@ class Bot(commands.Bot):
 
         self.applicant_trigger = asyncio.Event()
         self.lobby_remove_trigger = asyncio.Event()
+        self.raid_remove_trigger = asyncio.Event()
 
         self.database = None
         self.dex = pokedex.Pokedex()

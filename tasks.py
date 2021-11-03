@@ -19,8 +19,8 @@ async def startup_process(bot):
     #bot.pool = await init_pool()
     await SH.set_up_guild_raid_counters(bot)
 
-    if bot.live:
-        await SH.spin_up_message_deletions(bot)
+    #if bot.live:
+        #await SH.spin_up_message_deletions(bot)
 
 async def status_update_loop(bot):
     """Updates status continually every ten minutes."""
