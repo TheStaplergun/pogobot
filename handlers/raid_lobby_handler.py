@@ -552,6 +552,11 @@ async def increment_notified_users_for_raid_lobby(bot, lobby_id):
     await bot.database.execute(INCREMENT_APPLICANT_COUNT, int(lobby_id))
 
 async def process_user_list(bot, raid_lobby_data, users, guild):
+    if not guild and raid_lobby_data:
+        guild = bot.get_guild(raid_lobby_data.get("guild_id"))
+    if not guild:
+        return
+
     counter = 1
     current_count = raid_lobby_data.get("user_count")
     user_limit = raid_lobby_data.get("user_limit")
