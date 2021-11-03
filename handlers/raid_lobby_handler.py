@@ -344,6 +344,9 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
         return
 
     if not is_self:
+        if "@" in user:
+            user = user.strip("<@!")
+            user = user.strip(">")
         try:
             user_id = int(user)
             member = discord.utils.get(ctx.guild.members, id=user_id)
