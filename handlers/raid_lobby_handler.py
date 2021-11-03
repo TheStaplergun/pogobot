@@ -343,7 +343,11 @@ async def remove_lobby_member_by_command(bot, ctx, user):
         return
 
     host_id = lobby_data.get("host_user_id")
-    if host_id != ctx.author.id:
+    if host_id == ctx.author.id:
+        embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+    else:
         if user and user.id == ctx.author.id:
             await user_remove_self_from_lobby(bot, ctx, user, lobby_data)
             return
@@ -551,6 +555,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     current_needed = user_limit - total_pending
 
     for user in users:
+        if not user:
+            continue
         if counter > current_needed:
             break
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
