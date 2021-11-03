@@ -322,11 +322,20 @@ async def remove_application_for_user(bot, member, raid_id, should_notify=True):
 
     bot.applicant_trigger.set()
 
+REDUCE_USER_COUNT_BY_RAID_ID = """
+    UPDATE raid_lobby_user_map
+    SET user_count = user_count - 1
+    WHERE (raid_message_id = $1);
+"""
+async def decrement_user_count_for_lobby(bot, raid_id):
+    await bot.database.execute(REDUCE_USER_COUNT_BY_RAID_ID, raid_id)
+
 async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
     await ctx.channel.set_permissions(member, read_messages=False)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
+    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
     embed = discord.Embed(title="System Notification", description="You have left the lobby.")
     await bot.send_ignore_error(member, " ", embed=embed)
 
@@ -400,6 +409,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
     await ctx.channel.set_permissions(member, read_messages=False)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
+    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
     await bot.send_ignore_error(member, " ", embed=embed)
 
