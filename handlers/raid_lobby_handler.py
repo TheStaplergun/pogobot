@@ -330,10 +330,10 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     embed = discord.Embed(title="System Notification", description="You have left the lobby.")
     await bot.send_ignore_error(member, " ", embed=embed)
 
-async def remove_lobby_member_by_command(bot, ctx, user):
+async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     user_id = None
-    member = None
-
+    member = user if is_self else None
+    host_id = None
     channel = ctx.channel
 
     lobby_data = await get_lobby_data_by_lobby_id(bot, channel.id)
@@ -342,24 +342,28 @@ async def remove_lobby_member_by_command(bot, ctx, user):
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
-    host_id = lobby_data.get("host_user_id")
 
-    try:
-        user_id = int(user)
-        member = discord.utils.get(ctx.guild.members, id=user_id)
-    except ValueError:
-        pass
 
-    if not member:
-        member = discord.utils.get(ctx.guild.members, name=user)
+    if not is_self:
+        if not member:
+            member = discord.utils.get(ctx.guild.members, name=user)
 
-    if not member:
-        member = discord.utils.get(ctx.guild.members, nickname=user)
+        if not member:
+            member = discord.utils.get(ctx.guild.members, nickname=user)
 
-    if not member:
-        embed = discord.Embed(title="Error", description="I could not find a user with that ID or Name/Nickname in this server.")
-        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
-        return
+        if not member:
+            embed = discord.Embed(title="Error", description="I could not find a user with that ID or Name/Nickname in this server.")
+            await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+            return
+
+        host_id = lobby_data.get("host_user_id")
+        try:
+                user_id = int(user)
+                member = discord.utils.get(ctx.guild.members, id=user_id)
+        except ValueError:
+            pass
+        except TypeError:
+            pass
 
     if member not in channel.members:
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
@@ -371,16 +375,16 @@ async def remove_lobby_member_by_command(bot, ctx, user):
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
+    if is_self:
+        await user_remove_self_from_lobby(bot, ctx, member, lobby_data)
+        return
+
     if member == ctx.author:
         embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
     if host_id != ctx.author.id:
-        if user and user.id == ctx.author.id:
-            await user_remove_self_from_lobby(bot, ctx, user, lobby_data)
-            return
-
         embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
 

@@ -42,7 +42,7 @@ class MemberCommands(commands.Cog):
     @commands.guild_only()
     async def leave(self, ctx):
         """Allows a member to leave a lobby."""
-        await asyncio.gather(RLH.remove_lobby_member_by_command(self.__bot, ctx, ctx.author),
+        await asyncio.gather(RLH.remove_lobby_member_by_command(self.__bot, ctx, ctx.author, is_self=True),
                              self.__bot.delete_ignore_error(ctx.message))
 
 
