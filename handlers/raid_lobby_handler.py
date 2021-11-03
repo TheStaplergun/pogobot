@@ -373,7 +373,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
-    if not discord.utils.get(member.roles, "Lobby Member"):
+    if not discord.utils.get(member.roles, name="Lobby Member"):
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
