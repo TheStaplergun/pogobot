@@ -391,13 +391,13 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
-    if is_self:
-        await user_remove_self_from_lobby(bot, ctx, member, lobby_data)
-        return
-
     if member == ctx.author:
         embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
+
+    if is_self:
+        await user_remove_self_from_lobby(bot, ctx, member, lobby_data)
         return
 
     if host_id != ctx.author.id:
