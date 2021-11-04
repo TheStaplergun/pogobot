@@ -340,7 +340,7 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     embed = discord.Embed(title="System Notification", description=f"{member.name} has left the lobby.")
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You have left the lobby.")
-    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
+    tasks.append(bot.send_ignore_error(member, " ", embed=embed))
     await asyncio.gather(*tasks)
 
 async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
@@ -418,7 +418,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     embed = discord.Embed(title="System Notification", description=f"{member.name} was removed from the lobby.")
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
-    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
+    tasks.append(bot.send_ignore_error(member, " ", embed=embed))
     await asyncio.gather(*tasks)
 
 async def handle_manual_clear_application(ctx, user_id, bot):
