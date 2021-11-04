@@ -407,7 +407,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
 
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
-    await ctx.channel.set_permissions(member, read_messages=False)
+    await ctx.channel.set_permissions(member, overwrite=None)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
     await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
