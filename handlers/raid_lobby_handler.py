@@ -257,18 +257,18 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
             pass
 
     users = lobby_data.get("user_count")
-    new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
+    # new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
 
-    await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
-                               new_delete_time,
-                               int(lobby_data.get("raid_message_id")))
+    # await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
+    #                            new_delete_time,
+    #                            int(lobby_data.get("raid_message_id")))
     limit = lobby_data.get("user_limit")
     try:
         if lobby and users > 0:
             if users < limit:
-                new_embed = discord.Embed(title=f"{users}/{limit}", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
+                new_embed = discord.Embed(title=f"{users}/{limit}", description="Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in.")
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in.")
 
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
