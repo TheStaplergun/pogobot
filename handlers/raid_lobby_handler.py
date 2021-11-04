@@ -380,6 +380,10 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
 
         host_id = lobby_data.get("host_user_id")
 
+    if member == ctx.author:
+        embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
+        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+        return
 
     if member not in channel.members:
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
@@ -388,11 +392,6 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
 
     if not discord.utils.get(member.roles, name="Lobby Member"):
         embed = discord.Embed(title="Error", description="That user is not a member of this lobby.")
-        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
-        return
-
-    if member == ctx.author:
-        embed = discord.Embed(title="Error", description="You can't remove yourself from your own lobby. Close the lobby if you want to leave.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
         return
 
