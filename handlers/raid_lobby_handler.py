@@ -268,7 +268,7 @@ async def alter_deletion_time_for_raid_lobby(bot, raid_id):
             if users < limit:
                 new_embed = discord.Embed(title=f"{users}/{limit}", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in. The raid listing has been removed.")
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="This lobby will expire in 15 minutes. Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in.")
 
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby.send(" ", embed=new_embed)
@@ -657,7 +657,9 @@ async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remo
 async def check_if_lobby_full(bot, lobby_id):
     lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
     if lobby_data.get("user_count") == lobby_data.get("user_limit"):
-        await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
+        await alter_deletion_time_for_raid_lobby(bot, lobby_data.get("raid_message_id"))
+        #time_to_remove = datetime.now()
+        #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
         #await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
