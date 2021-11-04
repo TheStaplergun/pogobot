@@ -175,7 +175,7 @@ async def set_trainer_level(ctx, bot, level):
         target = author
     else:
         target = ctx
-    
+
     async with ctx.channel.typing():
         try:
             level = int(level)
@@ -183,7 +183,7 @@ async def set_trainer_level(ctx, bot, level):
             embed = discord.Embed(title="Error", description="The given level is invalid. It must be between 1 and 50.")
             await bot.send_ignore_error(target, "", embed=embed, delete_after=15)
             return
-            
+
         if level < 1 or level > 50:
             embed = discord.Embed(title="Error", description="The given level is invalid. It must be between 1 and 50.")
             await bot.send_ignore_error(target, "", embed=embed, delete_after=15)
@@ -197,7 +197,7 @@ async def set_trainer_level(ctx, bot, level):
             new_embed = discord.Embed(title="Notification", description="That level matches the one in the database. No changes have been made.")
         elif result == UPDATED:
             new_embed = discord.Embed(title="Notification", description="Your Trainer Level has been updated.")
-        
+
         try:
             await target.send(embed=new_embed, delete_after=15)
         except discord.DiscordException:
@@ -244,7 +244,7 @@ async def set_trainer_name(ctx, bot, name):
         target = author
     else:
         target = ctx
-    
+
     async with ctx.channel.typing():
         if any(c in SPECIAL_CHARACTERS for c in name):
             new_embed = discord.Embed(title="Error", description="A name cannot contain any special characters.")
@@ -261,7 +261,7 @@ async def set_trainer_name(ctx, bot, name):
             except discord.DiscordException:
                 pass
             return
-        
+
 
         result = await add_trainer_name_to_table(bot, author.id, name)
 
@@ -271,7 +271,7 @@ async def set_trainer_name(ctx, bot, name):
             new_embed = discord.Embed(title="Notification", description="That name matches the one in the database. No changes have been made.")
         elif result == UPDATED:
             new_embed = discord.Embed(title="Notification", description="Your Trainer Name has been updated.")
-        
+
         try:
             await target.send(embed=new_embed, delete_after=15)
         except discord.DiscordException:
@@ -279,7 +279,6 @@ async def set_trainer_name(ctx, bot, name):
 
 async def send_trainer_information(ctx, bot, user_id):
     author = ctx.author
-    print(user_id)
     if user_id == "0":
         user_id = ctx.author.id
     else:
@@ -298,6 +297,12 @@ async def send_trainer_information(ctx, bot, user_id):
         await bot.send_ignore_error(author, "", embed=new_embed)
         return
 
+    if user_id != ctx.author.id:
+        if not ctx.guild:
+            return
+
+
+
     result = await bot.database.fetchrow(GET_TRAINER_DATA_BY_USER_ID,
                                          int(user_id))
 
@@ -310,7 +315,13 @@ async def send_trainer_information(ctx, bot, user_id):
     if result:
         name = result.get("name")
         level = result.get("level")
-        fc = result.get("friend_code")
+        if not ctx.author.guild_permissions.manage_roles and\
+           not ctx.author.guild_permissions.manage_channels and\
+           not ctx.author.guild_permissions.manage_messages and\
+           user_id != ctx.author.id:
+            fc = "Hidden"
+        else:
+            fc = result.get("friend_code")
         rh = result.get("raids_hosted")
         rp = result.get("raids_participated_in")
         new_embed.add_field(name="Name", value=name if name else "To set your trainer name, use `-sn ANameOrSomething` or `-setname ANameOrSomething`.", inline=False)
