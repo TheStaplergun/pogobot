@@ -336,8 +336,12 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     await ctx.channel.set_permissions(member, read_messages=False)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
     await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
+    tasks = []
+    embed = discord.Embed(title="System Notification", description=f"{member.name} has left the lobby.")
+    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You have left the lobby.")
-    await bot.send_ignore_error(member, " ", embed=embed)
+    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
+    await asyncio.gather(*tasks)
 
 async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     user_id = None
@@ -410,8 +414,12 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     await ctx.channel.set_permissions(member, overwrite=None)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
     await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
+    tasks = []
+    embed = discord.Embed(title="System Notification", description=f"{member.name} was removed from the lobby.")
+    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
-    await bot.send_ignore_error(member, " ", embed=embed)
+    tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
+    await asyncio.gather(*tasks)
 
 async def handle_manual_clear_application(ctx, user_id, bot):
     result = await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
@@ -766,13 +774,16 @@ async def decrement_notified_users_by_raid_id(bot, raid_id):
 async def handle_user_failed_checkin(bot, applicant_data):
     guild_id = applicant_data.get("guild_id")
     guild = bot.get_guild(int(guild_id))
-
     member = guild.get_member(applicant_data.get("user_id"))
     if not member:
         return False
     raid_id = applicant_data.get("raid_message_id")
+    lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
+    lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
+    embed = discord.Embed(title="System Notification", description="A user has failed to check in. Attempting to find a replacement...")
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
-    await asyncio.gather(remove_application_for_user(bot, member, raid_id),
+    await asyncio.gather(bot.send_ignore_error(lobby, " ", embed=embed),
+                         remove_application_for_user(bot, member, raid_id),
                          decrement_notified_users_by_raid_id(bot, raid_id),
                          bot.send_ignore_error(member, " ", embed=new_embed))
 
