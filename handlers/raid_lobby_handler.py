@@ -501,7 +501,7 @@ async def handle_application_to_raid(bot, ctx, message, channel):
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
         if has_been_notified:
-            new_embed = discord.Embed(title="Error", description="You are already locked into a raid. Wait until that raid is complete.")
+            new_embed = discord.Embed(title="Error", description="You are already locked into a raid. Wait until that raid is complete, or leave that lobby with `-leave`.")
             await member.send(" ", embed=new_embed)
             return
         raid_message_id = message.id
@@ -587,8 +587,6 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     current_needed = user_limit - total_pending
 
     for user in users:
-        if not user:
-            continue
         if counter > current_needed:
             break
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
