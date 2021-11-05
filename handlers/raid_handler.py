@@ -273,7 +273,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 end_string = f' hosted by {ctx.author.mention}\n'
             channel_message_body = start_string + end_string
             try:
-                message = await ctx.send(channel_message_body, embed=response)
+                message = await ctx.send(channel_message_body, embed=response, view=bot.raid_view)
             except discord.DiscordException as error:
                 print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                 return

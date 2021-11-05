@@ -8,6 +8,7 @@ from discord.ext import commands
 
 import classes.database as database
 import classes.pokedex as pokedex
+import handlers.view_handler as VH
 #from classes import database
 #from classes import pokedex
 
@@ -29,6 +30,7 @@ class Bot(commands.Bot):
         self.raid_channel_cache = set()
         self.request_channel_cache = set()
         self.guild_raid_counters = {}
+        self.raid_view = VH.construct_raid_view(self)
 
     async def retrieve_channel(self, *args, **kwargs):
         """
