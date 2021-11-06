@@ -16,7 +16,7 @@ async def startup_process(bot):
                                      user=important.DB_USER,
                                      password=important.PASSWORD)
     bot.database = database.Database(pool)
-    await bot.add_view(VH.PersistentView())
+    await bot.add_view(VH.PersistentView(bot))
     bot.raid_view = VH.PersistentView
     await bot.wait_until_ready()
     #bot.pool = await init_pool()
