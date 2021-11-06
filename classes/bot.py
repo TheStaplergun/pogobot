@@ -30,6 +30,9 @@ class Bot(commands.Bot):
         self.raid_channel_cache = set()
         self.request_channel_cache = set()
         self.guild_raid_counters = {}
+        self.raid_view = None
+
+    async def establish_views(self):
         self.raid_view = VH.construct_raid_view(self)
 
     async def retrieve_channel(self, *args, **kwargs):
