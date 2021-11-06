@@ -12,3 +12,4 @@ def construct_raid_view(bot):
 
     delete_button.callback = test_function
     raid_view.add_item(delete_button)
+    return raid_view
