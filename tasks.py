@@ -17,7 +17,6 @@ async def startup_process(bot):
                                      password=important.PASSWORD)
     bot.database = database.Database(pool)
     #await bot.add_view(VH.PersistentView(bot))
-    bot.raid_view = VH.PersistentView
     await bot.wait_until_ready()
     #bot.pool = await init_pool()
     await SH.set_up_guild_raid_counters(bot)

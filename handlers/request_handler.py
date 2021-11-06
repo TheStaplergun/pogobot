@@ -103,7 +103,7 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
         new_role = await guild.create_role(name=pokemon_name, reason="Setting up a request role.")
     except discord.DiscordException as error:
         print("[!] An error occurred creating a new role: [{}]".format(error))
-    author = ctx.author
+    author = ctx.author if ctx.author else ctx.user
     try:
         await give_request_role(author, guild, new_role)
     except discord.DiscordException as error:
@@ -281,6 +281,41 @@ async def check_if_user_already_assigned_role(member, role_id):
         return True
     return False
 
+async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name):
+    """Sets up a request and gives you a role for that Pokemon"""
+    author = interaction.user
+    if not tier or (tier.lower() == "mega" and not pokemon_name):
+        await interaction.response.send_message(format_request_failed_dm(interaction.guild.name, "No pokemon given to request."), ephemeral=True)
+        return
+    channel_id = interaction.channel.id
+
+    if not pokemon_name:
+        pokemon_name = tier
+        tier = ""
+    guild_id = interaction.guild.id
+    is_valid, response, suggestion, dex_num = validate_pokemon(pokemon_name, tier)
+    if tier.lower() == "mega" and not pokemon_name.startswith("Mega ", 0, 5):
+        pokemon_name = "Mega " + pokemon_name
+
+    pokemon_name = pokemon_name.title()
+    temp = pokemon_name.replace("-Altered", "")
+    temp = temp.replace("-Origin","")
+    if temp.replace("-", " ") not in bot.dex.current_raid_bosses():
+        embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
+        await interaction.response.send_message(" ", embed=embed, ephemeral=True)
+        #await bot.send_ignore_error(author, " ", embed=embed)
+        return
+    does_exist, request_channel_id, message_id, role_id = await check_if_request_message_exists(bot, pokemon_name, guild_id)
+    if not does_exist:
+        await set_up_request_role_and_message(bot, interaction, pokemon_name, dex_num)
+        return
+
+    if not await check_if_user_already_assigned_role(author, role_id):
+        role = discord.utils .get(interaction.guild.roles, id=role_id)
+        await give_request_role(author, interaction.guild, role)
+        await increment_request_count(interaction, bot, request_channel_id, message_id)
+    return
+
 async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
     """Sets up a request and gives you a role for that Pokemon"""
     author = ctx.author
@@ -341,6 +376,13 @@ async def remove_request_pokemon_handle(bot, ctx, tier, pokemon_name):
         print("[!][{}] An error occurred removing a role from a user. [{}]".format(ctx.guild.name, error))
     await decrement_request_count(ctx, bot, request_channel_id, message_id)
 
+async def add_request_role_to_user_from_button(interaction, bot):
+    is_mega, pokemon_name = H.get_pokemon_name_from_raid(interaction.message)
+    tier = pokemon_name
+    if is_mega:
+        tier = "Mega"
+
+    await request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name)
 
 async def add_request_role_to_user(bot, ctx, message):
     is_mega, pokemon_name = H.get_pokemon_name_from_raid(message)
@@ -359,6 +401,32 @@ async def add_request_role_to_user(bot, ctx, message):
         tier = "Mega"
 
     await request_pokemon_handle(bot, ctx, tier, pokemon_name)
+
+async def remove_request_role_from_user_from_button(interaction, bot):
+    is_mega, pokemon_name = H.get_pokemon_name_from_raid(interaction.message)
+
+    tier = pokemon_name
+    if is_mega:
+        tier = "Mega"
+
+    await remove_request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name)
+
+async def remove_request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name):
+    author = interaction.user
+    if tier.lower() == "mega" and not pokemon_name.startswith("Mega", 0, 5):
+        pokemon_name = "Mega " + pokemon_name
+    if not discord.utils.get(author.roles, name=pokemon_name):
+        await interaction.response.send_message("You don't have that role.", ephemeral=True)
+        return
+    _, request_channel_id, message_id, role_id = await check_if_request_message_exists(bot, pokemon_name, interaction.guild.id)
+    #if not discord.utils.get(author.roles, id=role_id):
+    #    return
+    try:
+        await author.remove_roles(discord.Object(role_id))
+        await interaction.response.send_message("The role was removed!", ephemeral=True)
+    except discord.DiscordException as error:
+        print("[!][{}] An error occurred removing a role from a user. [{}]".format(interaction.guild.name, error))
+    await decrement_request_count(interaction, bot, request_channel_id, message_id)
 
 async def remove_request_role_from_user(bot, ctx, message):
     is_mega, pokemon_name = H.get_pokemon_name_from_raid(message)

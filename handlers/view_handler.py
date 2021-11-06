@@ -4,7 +4,7 @@ import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
 
-class PersistentView(discord.ui.View):
+class RaidView(discord.ui.View):
     def __init__(self, bot):
         super().__init__(timeout=None)
         self.__bot = bot
@@ -21,13 +21,14 @@ class PersistentView(discord.ui.View):
 
     @discord.ui.button(custom_id="button_add_role_raid", label="Get notifications", emoji="📬")#, style=discord.ButtonStyle.green)
     async def add_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await interaction.channel.send("Not implemented yet")
+        await RH.add_request_role_to_user_from_button(interaction, self.__bot)
+        #await interaction.channel.send("Not implemented yet")
         pass
         #RH.remove_raid_from_button(interaction, bot)
 
     @discord.ui.button(custom_id="button_remove_role_raid", label="Stop notifications", emoji="📪")#, style=discord.ButtonStyle.red)
     async def remove_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await interaction.channel.send("Not implemented yet")
+        #await interaction.channel.send("Not implemented yet")
         pass
         #RH.remove_raid_from_button(interaction, bot)
 
