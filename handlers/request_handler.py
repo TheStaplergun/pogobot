@@ -286,7 +286,6 @@ async def check_if_user_already_assigned_role(member, role_id):
 
 async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name):
     """Sets up a request and gives you a role for that Pokemon"""
-    print("Test")
     author = interaction.user
     if not tier or (tier.lower() == "mega" and not pokemon_name):
         await interaction.response.send_message(format_request_failed_dm(interaction.guild.name, "No pokemon given to request."), ephemeral=True)
@@ -304,6 +303,7 @@ async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_nam
     pokemon_name = pokemon_name.title()
     temp = pokemon_name.replace("-Altered", "")
     temp = temp.replace("-Origin","")
+    print("Test 4")
     if temp.replace("-", " ") not in bot.dex.current_raid_bosses():
         embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
         await interaction.response.send_message(" ", embed=embed, ephemeral=True)
@@ -313,10 +313,12 @@ async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_nam
     if not does_exist:
         await set_up_request_role_and_message(bot, interaction, pokemon_name, dex_num)
         return
-
+    print("Test")
     if not await check_if_user_already_assigned_role(author, role_id):
-        role = discord.utils .get(interaction.guild.roles, id=role_id)
+        role = discord.utils.get(interaction.guild.roles, id=role_id)
+        print("Test2")
         try:
+            print("Test3")
             await interaction.user.add_roles(role, reason="Giving user a request role.")
             print("Sending interactive response")
             await interaction.response.send_message("You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing on the raid or in the requests channel.".format(role.name), ephemeral=True)
@@ -388,7 +390,6 @@ async def remove_request_pokemon_handle(bot, ctx, tier, pokemon_name):
     await decrement_request_count(ctx, bot, request_channel_id, message_id)
 
 async def add_request_role_to_user_from_button(interaction, bot):
-    print("Test 1")
     is_mega, pokemon_name = H.get_pokemon_name_from_raid(interaction.message)
     tier = pokemon_name
     if is_mega:
