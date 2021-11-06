@@ -24,7 +24,7 @@ COMMAND_PREFIX = '-'
 #Change this string to change the 'playing' status of the bot.
 CUSTOM_STATUS = ""
 
-intent = discord.Intents().default()
+intent = discord.Intents().all()
 intent.members = True
 intent.guilds = True
 
