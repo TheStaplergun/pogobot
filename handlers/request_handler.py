@@ -388,6 +388,7 @@ async def remove_request_pokemon_handle(bot, ctx, tier, pokemon_name):
     await decrement_request_count(ctx, bot, request_channel_id, message_id)
 
 async def add_request_role_to_user_from_button(interaction, bot):
+    print("Test 1")
     is_mega, pokemon_name = H.get_pokemon_name_from_raid(interaction.message)
     tier = pokemon_name
     if is_mega:
