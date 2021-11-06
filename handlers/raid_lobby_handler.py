@@ -489,13 +489,12 @@ async def get_applicant_data_for_user(bot, user_id):
     return await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, user_id)
 
 async def handle_application_from_button(interaction, bot):
-    interaction.user_id = interaction.user.id
     await handle_application_to_raid(bot, interaction, interaction.message, interaction.channel)
 
 async def handle_application_to_raid(bot, ctx, message, channel):
     guild = message.guild
-    member = guild.get_member(ctx.user_id)
-    result = await get_applicant_data_for_user(bot, ctx.user_id)
+    member = guild.get_member(ctx.user.id)
+    result = await get_applicant_data_for_user(bot, ctx.user.id)
     if discord.utils.get(member.roles, name="Muted"):
         embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
         await bot.send_ignore_error(member, " ", embed=embed)
