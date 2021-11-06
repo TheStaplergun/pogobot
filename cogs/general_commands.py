@@ -30,7 +30,7 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.set_friend_code(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["sn", "Setname"])
+    @commands.command(aliases=["sn"])
     async def setname(self, ctx, name=""):
         """Allows a user to register their Pokemon Go trainer name."""
         await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot, name),
@@ -71,21 +71,21 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(APIH.get_counter(self.__bot, ctx, tier, name, weather),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["Close"])
+    @commands.command()
     async def close(self, ctx):
         """Allows a user to manually delete their lobby via command."""
         ctx.user_id = ctx.author.id
         await asyncio.gather(RLM.host_manual_remove_lobby(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["Extend"])
+    @commands.command()
     async def extend(self, ctx):
         """Allows a user to manually extend the time of their lobby via command."""
         ctx.user_id = ctx.author.id
         await asyncio.gather(RLM.extend_duration_of_lobby(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["ln", "Ln", "LN"])
+    @commands.command(aliases=["ln"])
     async def list_names(self, ctx):
         """Shows all trainer names in a copy/paste format for searching in game."""
         ctx.user_id = ctx.author.id
