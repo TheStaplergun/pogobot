@@ -24,7 +24,7 @@ class GeneralCommands(commands.Cog):
         await msg.edit(
             content=f'🏓 Pong! Latency is {round((time.time() - curr) * 1000.0, 2)}ms. API latency is {latency}ms.')
 
-    @commands.command(aliases=["fcreg", "set_fc", "sf", "Setfc"])
+    @commands.command(aliases=["fcreg", "set_fc", "sf"])
     async def setfc(self, ctx):
         """Allows a user to register their Pokemon Go friend code."""
         await asyncio.gather(FCH.set_friend_code(ctx, self.__bot),
@@ -36,7 +36,7 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot, name),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["sl", "Sl", "Setlevel"])
+    @commands.command(aliases=["sl", "Sl"])
     async def setlevel(self, ctx, level):
         """Allows a user to register their Pokemon Go trainer level."""
         await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
@@ -85,7 +85,7 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(RLM.extend_duration_of_lobby(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["ln", "Ln", "LN", "List_names"])
+    @commands.command(aliases=["ln", "Ln", "LN"])
     async def list_names(self, ctx):
         """Shows all trainer names in a copy/paste format for searching in game."""
         ctx.user_id = ctx.author.id
