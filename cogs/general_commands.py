@@ -30,13 +30,13 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.set_friend_code(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["sn", "Sn", "Setname"])
+    @commands.command(aliases=["sn", "Setname"])
     async def setname(self, ctx, name=""):
         """Allows a user to register their Pokemon Go trainer name."""
         await asyncio.gather(FCH.set_trainer_name(ctx, self.__bot, name),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["sl", "Sl"])
+    @commands.command(aliases=["sl"])
     async def setlevel(self, ctx, level):
         """Allows a user to register their Pokemon Go trainer level."""
         await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
@@ -48,7 +48,7 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.send_friend_code(ctx, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["t", "T"])
+    @commands.command(aliases=["t"])
     async def trainer(self, ctx, user_id="0"):
         """Sends trainer information to current channel."""
         await asyncio.gather(FCH.send_trainer_information(ctx, self.__bot, user_id),
@@ -66,7 +66,7 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(APIH.retrieve_pokedex_data(self.__bot, ctx, arg1, arg2),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["c", "C"])
+    @commands.command(aliases=["c"])
     async def counter(self, ctx, tier="None", name="None", weather="Clear"):
         await asyncio.gather(APIH.get_counter(self.__bot, ctx, tier, name, weather),
                              self.__bot.delete_ignore_error(ctx.message))
