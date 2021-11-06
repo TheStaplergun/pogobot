@@ -28,6 +28,7 @@ class RaidView(discord.ui.View):
 
     @discord.ui.button(custom_id="button_remove_role_raid", label="Stop notifications", emoji="📪")#, style=discord.ButtonStyle.red)
     async def remove_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await RH.remove_request_role_from_user_from_button(interaction, self.__bot)
         #await interaction.channel.send("Not implemented yet")
         pass
         #RH.remove_raid_from_button(interaction, bot)
