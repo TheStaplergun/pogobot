@@ -286,6 +286,7 @@ async def check_if_user_already_assigned_role(member, role_id):
 
 async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_name):
     """Sets up a request and gives you a role for that Pokemon"""
+    print("Test")
     author = interaction.user
     if not tier or (tier.lower() == "mega" and not pokemon_name):
         await interaction.response.send_message(format_request_failed_dm(interaction.guild.name, "No pokemon given to request."), ephemeral=True)
