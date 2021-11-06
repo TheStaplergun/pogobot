@@ -139,6 +139,20 @@ REMOVE_RAID_BY_ID = """
 async def remove_raid_by_raid_id(bot, raid_data):
     await bot.database.execute(REMOVE_RAID_BY_ID, int(raid_data.get("message_id")))
 
+async def remove_raid_from_button(interaction, bot):
+    message_id = interaction.message.id
+    results = await check_if_in_raid(interaction, bot, interaction.user.id)
+    if results and results.get("message_id") == message_id:
+        message_to_send = "Your raid has been successfuly deleted."
+        try:
+            await interaction.message.delete()
+        except discord.DiscordException:
+            pass
+    else:
+        message_to_send = "You are not the host. You cannot delete this raid!"
+    await interaction.user.send(H.guild_member_dm(bot.get_guild(interaction.guild_id).name, message_to_send))
+
+
 GET_NEXT_RAID_TO_REMOVE_QUERY = """
     SELECT * FROM raids
     ORDER BY time_to_remove
