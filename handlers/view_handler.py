@@ -1,6 +1,7 @@
 import discord
 
-async def test_function():
+async def test_function(interaction):
+    await interaction.channel.send("You've clicked the delete button")
     print("This is a test")
 
 def construct_raid_view(bot):
@@ -12,4 +13,7 @@ def construct_raid_view(bot):
 
     delete_button.callback = test_function
     raid_view.add_item(delete_button)
+    raid_view.add_item(sign_up_button)
+    raid_view.add_item(add_role_button)
+    raid_view.add_item(remove_role_button)
     return raid_view
