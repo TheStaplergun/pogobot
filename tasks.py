@@ -6,6 +6,7 @@ import asyncpg
 import classes.database as database
 import important
 from handlers import startup_handler as SH
+import handlers.view_handler as VH
 
 async def startup_process(bot):
     """Startup process. Linear process."""
@@ -15,7 +16,8 @@ async def startup_process(bot):
                                      user=important.DB_USER,
                                      password=important.PASSWORD)
     bot.database = database.Database(pool)
-    await bot.establish_views()
+    await bot.add_view(VH.PersistentView())
+    await bot.raid_view = VH.PersistentView()
     await bot.wait_until_ready()
     #bot.pool = await init_pool()
     await SH.set_up_guild_raid_counters(bot)
