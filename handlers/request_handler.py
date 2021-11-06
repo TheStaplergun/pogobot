@@ -97,7 +97,7 @@ INSERT_NEW_ROLE = """
 INSERT INTO request_role_id_map (role_id, message_id, guild_id, role_name)
 VALUES ($1, $2, $3, $4);
 """
-async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
+async def set_up_request_role_and_message(bot, ctx, pokemon_name, number, interaction=None):
     guild = ctx.guild
     try:
         new_role = await guild.create_role(name=pokemon_name, reason="Setting up a request role.")
@@ -108,7 +108,7 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
     except AttributeError:
         author = ctx.user
     try:
-        await give_request_role(author, guild, new_role)
+        await give_request_role(author, guild, new_role, interaction=interaction)
     except discord.DiscordException as error:
         print("[!] An error occurred giving a user a role: [{}]".format(error))
         return
@@ -177,12 +177,15 @@ async def handle_clear_all_requests_for_guild(ctx, bot):
             print("[!][{}] An error occurred when deleting a message [{}]".format(guild.name,  error))
     await ctx.send("Total roles deleted: [{}]".format(len(query_results)), delete_after=15)
 
-async def give_request_role(author, guild, role):
+async def give_request_role(author, guild, role, interaction=None):
     blurb = "You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing in the requests channel. To opt back in, click on the 📬.".format(role.name)
     dm_message = H.guild_member_dm(guild.name, blurb)
     try:
         await author.add_roles(role, reason="Giving user a request role.")
-        await author.send(dm_message)
+        if interaction:
+            await interaction.response.send_message(blurb, ephemeral=True)
+        else:
+            await author.send(dm_message)
     except discord.DiscordException as error:
         print("[!] An error occurred giving a user a role: [{}]".format(error))
         return
@@ -303,7 +306,6 @@ async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_nam
     pokemon_name = pokemon_name.title()
     temp = pokemon_name.replace("-Altered", "")
     temp = temp.replace("-Origin","")
-    print("Test 4")
     if temp.replace("-", " ") not in bot.dex.current_raid_bosses():
         embed = discord.Embed(title="Error", description=f"That pokemon ({pokemon_name}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
         await interaction.response.send_message(" ", embed=embed, ephemeral=True)
@@ -311,14 +313,11 @@ async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_nam
         return
     does_exist, request_channel_id, message_id, role_id = await check_if_request_message_exists(bot, pokemon_name, guild_id)
     if not does_exist:
-        await set_up_request_role_and_message(bot, interaction, pokemon_name, dex_num)
+        await set_up_request_role_and_message(bot, interaction, pokemon_name, dex_num, interaction=interaction)
         return
-    print("Test")
     if not await check_if_user_already_assigned_role(author, role_id):
         role = discord.utils.get(interaction.guild.roles, id=role_id)
-        print("Test2")
         try:
-            print("Test3")
             await interaction.user.add_roles(role, reason="Giving user a request role.")
             print("Sending interactive response")
             await interaction.response.send_message("You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing on the raid or in the requests channel.".format(role.name), ephemeral=True)
