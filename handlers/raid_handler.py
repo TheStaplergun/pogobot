@@ -150,7 +150,7 @@ async def remove_raid_from_button(interaction, bot):
             pass
     else:
         message_to_send = "You are not the host. You cannot delete this raid!"
-        interaction.response.send_message(H.guild_member_dm(bot.get_guild(interaction.guild_id).name, message_to_send), ephemeral=True)
+        await interaction.response.send_message("You are not the host. You cannot delete this raid!", ephemeral=True)
     #await interaction.user.send(H.guild_member_dm(bot.get_guild(interaction.guild_id).name, message_to_send))
 
 
