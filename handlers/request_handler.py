@@ -103,7 +103,10 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number):
         new_role = await guild.create_role(name=pokemon_name, reason="Setting up a request role.")
     except discord.DiscordException as error:
         print("[!] An error occurred creating a new role: [{}]".format(error))
-    author = ctx.author if ctx.author else ctx.user
+    try:
+        author = ctx.author
+    except AttributeError:
+        author = ctx.user
     try:
         await give_request_role(author, guild, new_role)
     except discord.DiscordException as error:
