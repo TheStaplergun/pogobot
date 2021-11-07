@@ -88,6 +88,16 @@ async def set_up_guild_raid_counters(bot):
     guild_counts = await bot.database.fetch(GET_GUILD_COUNTS)
     bot.guild_raid_counters = {record.get("guild_id"):record.get("raid_counter") for record in guild_counts}
 
+GET_ALL_LOBBIES = """
+  SELECT * FROM raid_lobby_user_map;
+"""
+async def set_up_lobbes(bot):
+    lobbies = await bot.database.fetch(GET_ALL_LOBBIES)
+    bot.lobbies = {lobby.get("lobby_channel_id"):bot.get_lobby(lobby.get("lobby_channel_id"),
+                                                               user_limit=lobby.get("user_limit"),
+                                                               raid_id=lobby.get("raid_message_id"),
+                                                               host=await bot.retrieve_user(lobby.get("host_user_id"))) for lobby in lobbies}
+
 GET_TOTAL_COUNT = """
   SELECT SUM(raid_counter) AS total
   FROM guild_raid_counters
