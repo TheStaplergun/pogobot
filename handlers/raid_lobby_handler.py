@@ -629,6 +629,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
             continue
+        await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id")),
         tasks.append(notify_user_task(member))
         counter+=1
 
@@ -700,8 +701,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{users+1}/{limit}** checked in.\n-----"
 
-    await asyncio.gather(increment_user_count_for_raid_lobby(bot, lobby.id),
-                         set_checked_in_flag(bot, member.id),
+    await asyncio.gather(set_checked_in_flag(bot, member.id),
                          lobby.set_permissions(member, read_messages=True,
                                                        #send_messages=True,
                                                        embed_links=True,
