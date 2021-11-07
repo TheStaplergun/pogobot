@@ -653,7 +653,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     await bot.database.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
 
-    lobby = bot.lobbies.get(lobby_id)
+    lobby = bot.get_lobby(lobby_id)
     return lobby.add_a_user()
 
 UPDATE_CHECKED_IN_FLAG = """
