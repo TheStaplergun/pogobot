@@ -246,6 +246,7 @@ async def update_delete_time_with_given_time(bot, new_time, raid_id):
                                        int(raid_id))
 
 async def alter_deletion_time_for_raid_lobby(bot, lobby):
+    print(lobby)
     lobby_data = await get_lobby_data_by_raid_id(bot, lobby.raid_id)
     if not lobby_data:
         return
@@ -272,7 +273,7 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
                 new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in.")
 
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
-            await lobby.send(" ", embed=new_embed)
+            await lobby_channel.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
 
@@ -693,7 +694,10 @@ async def check_if_lobby_full(bot, lobby_id):
     #lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
     lobby = bot.lobbies.get(lobby_id)
     #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
+    print(lobby)
+
     if lobby.is_full():
+        print(lobby)
         await alter_deletion_time_for_raid_lobby(bot, lobby)
         #time_to_remove = datetime.now()
         #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
