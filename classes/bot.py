@@ -6,7 +6,9 @@ import asyncio
 import discord
 from discord.ext import commands
 
-import classes.database as database
+#import classes.database as database
+from classes.lobby import Lobby
+#import classes.lobby as lobby
 import classes.pokedex as pokedex
 import handlers.view_handler as VH
 #from classes import database
@@ -35,10 +37,18 @@ class Bot(commands.Bot):
         #self.check_in_view = VH.CheckInView
 
         self.interactions = {}
+        self.lobbies = {}
 
     async def on_ready(self):
         self.add_view(VH.RaidView(self))
         self.add_view(VH.RequestView(self))
+
+    async def get_lobby(self, lobby_id, user_limit=None, raid_id=None, host=None):
+        lobby = self.lobbies.get(lobby_id)
+        if not lobby:
+            lobby = Lobby(self, user_limit, lobby_id, raid_id, host)
+
+        return lobby
 
     async def retrieve_channel(self, *args, **kwargs):
         """

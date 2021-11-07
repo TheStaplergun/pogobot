@@ -128,9 +128,11 @@ NEW_LOBBY_INSERT = """
 INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 """
-async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at, invite_slots):
+async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at, invite_slots, host):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
+    lobby = bot.get_lobby(lobby_channel_id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host)
+    bot.lobbies.update({lobby_channel_id:lobby})
     await bot.database.execute(NEW_LOBBY_INSERT,
                                int(lobby_channel_id),
                                int(host_user_id),
@@ -214,7 +216,7 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     except discord.DiscordException:
         pass
     try:
-        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby, invite_slots)
+        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby, invite_slots, raid_host_member)
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
@@ -329,7 +331,10 @@ REDUCE_USER_COUNT_BY_RAID_ID = """
     SET user_count = user_count - 1
     WHERE (raid_message_id = $1);
 """
-async def decrement_user_count_for_lobby(bot, raid_id):
+async def decrement_user_count_for_lobby(bot, raid_id, lobby_data=None):
+    if lobby_data:
+        lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
+        lobby.remove_a_user()
     await bot.database.execute(REDUCE_USER_COUNT_BY_RAID_ID, raid_id)
 
 async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
@@ -337,7 +342,7 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
     await ctx.channel.set_permissions(member, read_messages=False)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
-    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
+    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"), lobby_data=lobby_data)
     tasks = []
     embed = discord.Embed(title="System Notification", description=f"{member.name} has left the lobby.")
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
@@ -414,7 +419,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
     await ctx.channel.set_permissions(member, overwrite=None)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
-    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"))
+    await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"), lobby_data=lobby_data)
     tasks = []
     embed = discord.Embed(title="System Notification", description=f"{member.name} was removed from the lobby.")
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
@@ -620,7 +625,6 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         if not lobby:
             return
         await process_and_add_user_to_lobby(bot, member, lobby, guild, message, raid_lobby_data)
-        #await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
         #await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
 
     for user in users:
@@ -629,7 +633,6 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
             continue
-        await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id")),
         tasks.append(notify_user_task(member))
         counter+=1
 
@@ -649,6 +652,9 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     await bot.database.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
+
+    lobby = bot.lobbies.get(lobby_id)
+    return lobby.add_a_user()
 
 UPDATE_CHECKED_IN_FLAG = """
     UPDATE raid_application_user_map
@@ -693,13 +699,14 @@ async def check_if_lobby_full(bot, lobby_id):
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
-    users = lobby_data.get("user_count")
+    #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
+    count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"), lobby_data=lobby_data)
     if has_code:
-        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{users+1}/{limit}** checked in."
+        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
         message_to_send = f"{message_to_send}\n*Copy this message directly into the game.*\n-----"
     else:
-        message_to_send = f"{friend_code}\n{member.mention} **{users+1}/{limit}** checked in.\n-----"
+        message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined.\n-----"
 
     await asyncio.gather(set_checked_in_flag(bot, member.id),
                          lobby.set_permissions(member, read_messages=True,
@@ -708,7 +715,6 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                                                        attach_files=True),
                          set_recent_participation(bot, member.id),
                          bot.add_role_ignore_error(member, role, "Member of lobby"),
-                         #bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}"),
                          bot.send_ignore_error(lobby, message_to_send),
                          bot.delete_ignore_error(message))
 
@@ -857,6 +863,7 @@ async def delete_lobby(bot, lobby, lobby_data):
     tasks.append(bot.delete_ignore_error(lobby))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
     await asyncio.gather(*tasks)
+    bot.lobbies.pop(lobby.id)
 
 async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
