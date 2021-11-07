@@ -267,16 +267,16 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             remove_after_seconds = 900
             channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
             _, _, _, role_id = await REQH.check_if_request_message_exists(bot, response.title, ctx.guild.id)
-            message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."
-            try:
-                await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
-            except discord.Forbidden:
-                await ctx.send(ctx.author.name + ", I was unable to DM you. You must have your DMs open to coordinate raids.\nRaid will not be listed.", delete_after=15)
-                return
-            request_channel_id = await REQH.get_request_channel(bot, ctx.guild.id)
-            if request_channel_id:
-                response.add_field(name="Want to be pinged for future raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
-            raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
+            # message_to_dm = "Your raid has been successfully listed.\nIt will automatically be deleted at the time given in `Time to Expire` or just 10 minutes.\nPress the trash can to remove it at any time."
+            # try:
+            #     await ctx.author.send(H.guild_member_dm(ctx.guild.name, message_to_dm))
+            # except discord.Forbidden:
+            #     await ctx.send(ctx.author.name + ", I was unable to DM you. You must have your DMs open to coordinate raids.\nRaid will not be listed.", delete_after=15)
+            #     return
+            # request_channel_id = await REQH.get_request_channel(bot, ctx.guild.id)
+            # if request_channel_id:
+            #     response.add_field(name="Want to be pinged for future raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
+            # raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
             start_string = ""
             if role_id:
                 role = discord.utils.get(ctx.guild.roles, id=role_id)
