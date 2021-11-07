@@ -282,10 +282,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 role = discord.utils.get(ctx.guild.roles, id=role_id)
                 start_string = f'{role.mention}'
             end_string = ""
-            if raid_lobby_category:
-                response.set_footer(text="📝 sign up")
-            else:
-                end_string = f' hosted by {ctx.author.mention}\n'
+            #if raid_lobby_category:
+                #response.set_footer(text="📝 sign up")
+            #else:
+            #    end_string = f' hosted by {ctx.author.mention}\n'
             channel_message_body = start_string + end_string
             try:
                 message = await ctx.send(channel_message_body, embed=response, view=bot.raid_view(bot))
@@ -295,19 +295,19 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
             await add_raid_to_table(ctx, bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
 
-            await message.add_reaction("🗑️")
+            #await message.add_reaction("🗑️")
             lobby = None
             if raid_lobby_category:
                 time_to_remove_lobby = time_to_delete + timedelta(seconds=300)
                 lobby = await create_raid_lobby(ctx, bot, message.id, ctx.author, time_to_remove_lobby, int(invite_slots))
-                await message.add_reaction("📝")
+                #await message.add_reaction("📝")
 
-            if request_channel_id:
-                try:
-                    await message.add_reaction("📬")
-                    await message.add_reaction("📪")
-                except discord.DiscordException as error:
-                    print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
+            #if request_channel_id:
+                # try:
+                #     #await message.add_reaction("📬")
+                #     #await message.add_reaction("📪")
+                # except discord.DiscordException as error:
+                #     print(f'[!] Exception occurred during adding request enrollment reactions. [{error}]')
             if lobby:
                 edited_message_content = f"{message.content}\n{lobby.mention} **<-lobby**"
                 await message.edit(content=edited_message_content)

@@ -37,7 +37,7 @@ class AdminCommands(commands.Cog):
         """Mod Only - Clears an application for a specific user by ID"""
         await asyncio.gather(RLH.handle_manual_clear_application(ctx, user_id, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
-        
+
     # @commands.command()
     # @commands.guild_only()
     # @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
@@ -45,7 +45,7 @@ class AdminCommands(commands.Cog):
     #     """Mod Only - Clears an application for a specific user by ID"""
     #     await asyncio.gather(RLH.handle_admin_clear_lobby(ctx, user_id, self.__bot),
     #                          self.__bot.delete_ignore_error(ctx.message))
-    
+
     @commands.command()
     @commands.guild_only()
     @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
@@ -53,6 +53,12 @@ class AdminCommands(commands.Cog):
         """Mod Only - Flags a raid lobby for closure."""
         await asyncio.gather(RLH.handle_admin_close_lobby(ctx, self.__bot, channel_id),
                              self.__bot.delete_ignore_error(ctx.message))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
+    async def show_interaction_list(self, ctx):
+        await ctx.send(self.__bot.interactions)
 
 def setup(bot):
     """Default setup function for file"""
