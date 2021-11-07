@@ -707,7 +707,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                                                        attach_files=True),
                          set_recent_participation(bot, member.id),
                          bot.add_role_ignore_error(member, role, "Member of lobby"),
-                         bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}"),
+                         #bot.send_ignore_error(member, f"You have been selected for the raid and added to the lobby. **The hosts information is pinned in the channel.** Click this for a shortcut to the lobby: {lobby.mention}"),
                          bot.send_ignore_error(lobby, message_to_send),
                          bot.delete_ignore_error(message))
 
