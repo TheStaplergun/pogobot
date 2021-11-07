@@ -526,7 +526,10 @@ async def handle_application_to_raid(bot, itx, message, channel):
             bot.interactions.pop(itx.user.id)
             await remove_application_for_user(bot, member, applied_to_raid_id)
         else:
-            bot.interactions.update({itx.user.id:itx})
+            bot.interactions.update({itx.user.id:{
+                "interaction":itx,
+                "raid_id":raid_message_id}
+            })
             await update_application_for_user(bot, member, applied_to_raid_id)
     else:
         bot.interactions.update({itx.user.id:{
@@ -701,7 +704,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
-    count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"), lobby_data=lobby_data)
+    count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"))
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
         message_to_send = f"{message_to_send}\n*Copy this message directly into the game.*\n-----"
