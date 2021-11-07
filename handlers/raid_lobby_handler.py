@@ -293,11 +293,9 @@ UPDATE_APPLICATION_DATA_FOR_USER = """
     WHERE (user_id = $2);
 """
 async def update_application_for_user(bot, member, raid_message_id):
-    print(await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, member.id))
     await bot.database.execute(UPDATE_APPLICATION_DATA_FOR_USER,
                                int(raid_message_id),
                                int(member.id))
-    print(await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, member.id))
     try:
         new_embed = discord.Embed(title="System Notification", description="You have updated your application to the selected raid.")
         await member.send(" ", embed=new_embed)
@@ -356,7 +354,6 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     member = user if is_self else None
     host_id = None
     channel = ctx.channel
-    print(user)
 
     lobby_data = await get_lobby_data_by_lobby_id(bot, channel.id)
     if not lobby_data:
@@ -534,7 +531,6 @@ async def handle_application_to_raid(bot, itx, message, channel):
                 "interaction":itx,
                 "raid_id":raid_message_id}
             })
-            print(f"Updating application from {applied_to_raid_id} to {raid_message_id}")
             await update_application_for_user(bot, member, raid_message_id)
     else:
         bot.interactions.update({itx.user.id:{
@@ -613,13 +609,9 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
     current_count = lobby.user_count
     user_limit = lobby.user_limit
-    # current_count = raid_lobby_data.get("user_count")
-    # user_limit = raid_lobby_data.get("user_limit")
-    notified_count = raid_lobby_data.get("notified_users")
+    #notified_count = raid_lobby_data.get("notified_users")
 
-    #total_pending = notified_count + current_count
     current_needed = user_limit - current_count# - total_pending
-    #print("Creating Tasks")
     lobby_channel = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
     if not lobby_channel:
         return
