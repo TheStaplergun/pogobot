@@ -694,7 +694,6 @@ async def check_if_lobby_full(bot, lobby_id):
     #lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
     lobby = bot.lobbies.get(lobby_id)
     #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
-    print(lobby)
 
     if lobby.is_full():
         print("Lobby after is full", lobby)
