@@ -54,11 +54,11 @@ class AdminCommands(commands.Cog):
         await asyncio.gather(RLH.handle_admin_close_lobby(ctx, self.__bot, channel_id),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
-    async def show_interaction_list(self, ctx):
-        await ctx.send(self.__bot.interactions)
+    # @commands.command()
+    # @commands.guild_only()
+    # @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
+    # async def show_interaction_list(self, ctx):
+    #     await ctx.send(self.__bot.interactions)
 
 def setup(bot):
     """Default setup function for file"""

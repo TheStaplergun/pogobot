@@ -37,7 +37,7 @@ class Bot(commands.Bot):
 
     async def on_ready(self):
         self.add_view(VH.RaidView(self))
-        self.add_view(VH.CheckInView(self))
+        self.add_view(VH.RequestView(self))
 
     async def retrieve_channel(self, *args, **kwargs):
         """

@@ -120,16 +120,16 @@ async def set_up_request_role_and_message(bot, ctx, pokemon_name, number, intera
     request_channel_id = await get_request_channel(bot, guild.id)
     request_channel = guild.get_channel(request_channel_id)
     try:
-        message = await request_channel.send(embed=new_embed)
+        message = await request_channel.send(embed=new_embed, view=bot.RequestView(bot))
     except discord.DiscordException as error:
         print("[!] An error occurred setting up the request sticky message. [{}]".format(error))
         #await author.remove_roles([new_role])
         return
-    try:
-        await message.add_reaction("📬")
-        await message.add_reaction("📪")
-    except discord.DiscordException as error:
-        print("[!][{}] An error occurred while adding reactions to a new request listing. [{}]".format(error))
+    # try:
+    #     await message.add_reaction("📬")
+    #     await message.add_reaction("📪")
+    # except discord.DiscordException as error:
+    #     print("[!][{}] An error occurred while adding reactions to a new request listing. [{}]".format(error))
 
     try:
         await bot.database.execute(INSERT_NEW_ROLE, new_role.id, message.id, guild.id, pokemon_name)
