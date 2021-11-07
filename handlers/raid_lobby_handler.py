@@ -533,6 +533,7 @@ async def handle_application_to_raid(bot, itx, message, channel):
                 "interaction":itx,
                 "raid_id":raid_message_id}
             })
+            print(f"Updating application from {applied_to_raid_id} to {raid_message_id}")
             await update_application_for_user(bot, member, applied_to_raid_id)
     else:
         bot.interactions.update({itx.user.id:{
@@ -615,6 +616,9 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     total_pending = notified_count + current_count
     current_needed = user_limit - total_pending
     print("Creating Tasks")
+    lobby = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
+    if not lobby:
+        return
     tasks = []
     async def notify_user_task(member):
         print("Inside notify user task")
@@ -627,10 +631,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         except discord.DiscordException:
             pass
         await set_notified_flag(bot, message.id, member.id)
-        lobby = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
-        if not lobby:
-            return
-        print("Before procss and add user to lobby")
+
+        print("Before process and add user to lobby")
         await process_and_add_user_to_lobby(bot, member, lobby, guild, message, raid_lobby_data)
         #await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
 
@@ -646,6 +648,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
 
     print("Gathering task")
     await asyncio.gather(*tasks)
+    await check_if_lobby_full(bot, lobby.id)
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
@@ -710,6 +713,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
+    print("Increment user counts")
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"))
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
@@ -727,7 +731,6 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                          bot.send_ignore_error(lobby, message_to_send),
                          bot.delete_ignore_error(message))
 
-    await check_if_lobby_full(bot, lobby.id)
 
 async def handle_check_in_from_button(itx, bot):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, itx.user.id)
@@ -755,8 +758,6 @@ async def handle_check_in_from_button(itx, bot):
         await remove_application_for_user(bot, itx.user, raid_message_id, should_notify=False)
         return
     await process_and_add_user_to_lobby(bot, itx.user, lobby, guild, itx.message, lobby_data)
-
-
 
 async def handle_activity_check_reaction(ctx, bot, message):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)
