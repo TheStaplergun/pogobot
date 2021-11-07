@@ -31,7 +31,8 @@ class Bot(commands.Bot):
         self.request_channel_cache = set()
         self.guild_raid_counters = {}
         self.raid_view = VH.RaidView
-        self.check_in_view = VH.CheckInView
+        self.request_view = VH.RequestView
+        #self.check_in_view = VH.CheckInView
 
         self.interactions = {}
 
