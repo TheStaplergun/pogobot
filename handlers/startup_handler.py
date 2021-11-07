@@ -29,7 +29,7 @@ async def spin_up_message_deletions(bot):
         print("[*] No pending raids found to delete.")
         return
 
-    cur_time = discord.utils.utcnow()
+    cur_time = datetime.now()
     to_delete = {}
     future_delete = {}
     for record in results:
@@ -62,7 +62,7 @@ async def spin_up_message_deletions(bot):
 
     sorted(future_delete)
     for ttr, data in future_delete.items():
-        cur_time = discord.utils.utcnow()
+        cur_time = datetime.now()
         delay = ttr - cur_time
         if ttr < cur_time:
             delay = 0
@@ -130,7 +130,7 @@ async def start_lobby_removal_loop(bot):
             if not lobby_data:
                 break
 
-            cur_time = discord.utils.utcnow()
+            cur_time = datetime.now()
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
@@ -165,7 +165,7 @@ async def start_raid_removal_loop(bot):
             if not raid_data:
                 break
 
-            cur_time = discord.utils.utcnow()
+            cur_time = datetime.now()
             deletion_time = raid_data.get("time_to_remove")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
@@ -199,7 +199,7 @@ async def start_applicant_loop(bot):
 
             total_lobbies_to_handle = len(raid_lobby_data_list)
             checked_count = 0
-            cur_time = discord.utils.utcnow()
+            cur_time = datetime.now()
             threshold_time = cur_time - timedelta(seconds=45)
 
             for raid_lobby_data in raid_lobby_data_list:

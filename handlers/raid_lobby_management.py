@@ -83,7 +83,7 @@ async def extend_duration_of_lobby(bot, ctx):
     if max_remaining_extendable_time > 1:
         max_remaining_extendable_time_type = f"{max_remaining_extendable_time_type}s"
 
-    time_until_expiration_as_minutes = math.ceil((new_delete_time - discord.utils.utcnow()).total_seconds()/60)
+    time_until_expiration_as_minutes = math.ceil((new_delete_time - datetime.now()).total_seconds()/60)
     new_embed = discord.Embed(title="System Notification", description=f"The host has extended the lobby duration by {extension_amount} {extension_measurement}. It will now expire in {time_until_expiration_as_minutes} minutes.\n\nYou can add up to {max_remaining_extendable_time} more {max_remaining_extendable_time_type}")
     await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"), time_to_remove=new_delete_time)
 

@@ -16,7 +16,7 @@ VALUES($1, $2, $3, $4, $5, $6)
 """
 async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove):
     """Add a raid to the database with all the given data points."""
-    cur_time = discord.utils.utcnow()
+    cur_time = datetime.now()
 
     await bot.database.execute(NEW_RAID_INSERT,
                                  int(message_id),
@@ -292,7 +292,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             except discord.DiscordException as error:
                 print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                 return
-            time_to_delete = discord.utils.utcnow() + timedelta(seconds=remove_after_seconds)
+            time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
             await add_raid_to_table(ctx, bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
 
             await message.add_reaction("🗑️")
