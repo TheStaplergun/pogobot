@@ -523,8 +523,10 @@ async def handle_application_to_raid(bot, itx, message, channel):
             return
         #raid_message_id = message.id
         if applied_to_raid_id == raid_message_id:
-            del bot.interactions[itx.user.id]
-            #bot.interactions.pop(itx.user.id)
+            try:
+                bot.interactions.pop(itx.user.id)
+            except KeyError:
+                pass
             await remove_application_for_user(bot, member, applied_to_raid_id)
         else:
             bot.interactions.update({itx.user.id:{
@@ -838,7 +840,10 @@ async def handle_user_failed_checkin(bot, applicant_data):
     raid_id = applicant_data.get("raid_message_id")
     lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
     lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
-    del bot.interactions[applicant_data.get("user_id")]
+    try:
+        bot.interactions.pop(applicant_data.get("user_id"))
+    except KeyError:
+        pass
     embed = discord.Embed(title="System Notification", description="A user has failed to check in. Attempting to find a replacement...")
     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
     await asyncio.gather(bot.send_ignore_error(lobby, " ", embed=embed),
