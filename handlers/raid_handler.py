@@ -276,7 +276,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             # request_channel_id = await REQH.get_request_channel(bot, ctx.guild.id)
             # if request_channel_id:
             #     response.add_field(name="Want to be pinged for future raids?", value="📬 Add Role\n📪 Remove Role", inline=False)
-            # raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
+            raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
             start_string = ""
             if role_id:
                 role = discord.utils.get(ctx.guild.roles, id=role_id)
