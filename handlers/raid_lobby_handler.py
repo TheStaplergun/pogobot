@@ -131,7 +131,7 @@ VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at, invite_slots, host):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    lobby = bot.get_lobby(lobby_channel_id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host)
+    lobby = await bot.get_lobby(lobby_channel_id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host)
     bot.lobbies.update({lobby_channel_id:lobby})
     await bot.database.execute(NEW_LOBBY_INSERT,
                                int(lobby_channel_id),
@@ -653,7 +653,7 @@ UPDATE_USER_COUNT_FOR_RAID_LOBBY = """
 async def increment_user_count_for_raid_lobby(bot, lobby_id):
     await bot.database.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
 
-    lobby = bot.get_lobby(lobby_id)
+    lobby = await bot.get_lobby(lobby_id)
     return lobby.add_a_user()
 
 UPDATE_CHECKED_IN_FLAG = """
