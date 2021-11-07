@@ -787,7 +787,7 @@ REMOVE_LOBBY_BY_ID = """
 async def remove_lobby_by_lobby_id(bot, lobby_data):
     if lobby_data:
         raid_id = lobby_data.get("raid_message_id")
-        bot.interactions = {k:v for k, v in bot.interactions if v["raid_id"] != raid_id}
+        bot.interactions = {k:v for k, v in bot.interactions.items() if v["raid_id"] != raid_id}
         await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
     await bot.database.execute(REMOVE_LOBBY_BY_ID, int(lobby_data.get("lobby_channel_id")))
