@@ -614,7 +614,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     if not lobby_channel:
         return
     tasks = []
-    async def notify_user_task(member):
+    async def notify_user_task(member, user):
         interaction = bot.interactions.get(user.get("user_id"))
         if not interaction:
             return
@@ -634,7 +634,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
             continue
-        tasks.append(notify_user_task(member))
+        tasks.append(notify_user_task(member, user))
         counter+=1
 
     await asyncio.gather(*tasks)
@@ -698,9 +698,7 @@ async def check_if_lobby_full(bot, lobby_id):
     if lobby.is_full():
         print("Lobby after is full", lobby)
         await alter_deletion_time_for_raid_lobby(bot, lobby)
-        #time_to_remove = datetime.now()
-        #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
-        #await RH.delete_raid(bot, lobby_data.get("raid_message_id"))
+
 
 async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
     role = discord.utils.get(guild.roles, name="Lobby Member")
