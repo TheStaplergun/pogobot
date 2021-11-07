@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+import pytz
 
 import asyncpg
 import discord
@@ -479,6 +480,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
         return False
     role = discord.utils.get(member.roles, name=pokemon_name)
     time_to_end = raid_data.get("time_to_remove")
+    time_to_end = pytz.utc.localize(time_to_end)
     listing_duration = time_to_end - message.created_at
     speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
     app_weight = await calculate_weight(bot, True if role else False, speed_bonus, member.id)
