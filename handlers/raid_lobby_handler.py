@@ -116,7 +116,7 @@ async def log_message_in_raid_lobby_channel(bot, message, lobby_channel, lobby_d
     log_channel = bot.get_channel(int(log_channel_id))
 
     new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
-    url = author.guild_avatar.url if author.guild_avatar and author.guild_avatar.url else author.avatar.url if author.avatar.url else None
+    url = author.guild_avatar.url if author.guild_avatar and author.guild_avatar.url else author.avatar.url if author.avatar and author.avatar.url else None
     new_embed.set_author(name=author.name, icon_url=url)
     new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
     host_user_id = lobby_data.get("host_user_id")
@@ -245,28 +245,25 @@ async def update_delete_time_with_given_time(bot, new_time, raid_id):
                                        new_time,
                                        int(raid_id))
 
-async def alter_deletion_time_for_raid_lobby(bot, raid_id):
-    current_time = datetime.now()
-    lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
-
+async def alter_deletion_time_for_raid_lobby(bot, lobby):
+    lobby_data = await get_lobby_data_by_raid_id(bot, lobby.raid_id)
     if not lobby_data:
         return
 
-    lobby_channel_id = lobby_data.get("lobby_channel_id")
-    lobby = bot.get_channel(int(lobby_channel_id))
-    if not lobby:
+    lobby_channel = bot.get_channel(int(lobby.lobby_id))
+    if not lobby_channel:
         try:
-            lobby = await bot.fetch_channel(int(lobby_channel_id))
+            lobby = await bot.fetch_channel(int(lobby.lobby_id))
         except discord.DiscordException:
             pass
 
-    users = lobby_data.get("user_count")
+    users = lobby.user_count#lobby_data.get("user_count")
     # new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
 
     # await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
     #                            new_delete_time,
     #                            int(lobby_data.get("raid_message_id")))
-    limit = lobby_data.get("user_limit")
+    limit = lobby.user_limit#lobby_data.get("user_limit")
     try:
         if lobby and users > 0:
             if users < limit:
@@ -693,9 +690,11 @@ async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remo
     await RH.update_delete_time(bot, time_to_remove, raid_id)
 
 async def check_if_lobby_full(bot, lobby_id):
-    lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
-    if lobby_data.get("user_count") == lobby_data.get("user_limit"):
-        await alter_deletion_time_for_raid_lobby(bot, lobby_data.get("raid_message_id"))
+    #lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
+    lobby = bot.lobbies.get(lobby_id)
+    #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
+    if lobby.is_full():
+        await alter_deletion_time_for_raid_lobby(bot, lobby)
         #time_to_remove = datetime.now()
         #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
         #await RH.delete_raid(bot, lobby_data.get("raid_message_id"))

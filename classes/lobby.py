@@ -16,3 +16,6 @@ class Lobby():
 
     def remove_a_user(self):
         self.user_count-=1
+
+    def is_full(self):
+        return self.user_count == self.user_limit
