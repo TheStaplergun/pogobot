@@ -319,13 +319,14 @@ async def request_pokemon_handle_from_button(bot, interaction, tier, pokemon_nam
         role = discord.utils.get(interaction.guild.roles, id=role_id)
         try:
             await interaction.user.add_roles(role, reason="Giving user a request role.")
-            print("Sending interactive response")
             await interaction.response.send_message("You have been given the role {} and you will be pinged **every time** a raid with that Pokémon name is created. If you want to opt out of the listings for this Pokémon, click on the 📪 on the listing on the raid or in the requests channel.".format(role.name), ephemeral=True)
             #await author.send(dm_message)
         except discord.DiscordException as error:
             print("[!] An error occurred giving a user a role: [{}]".format(error))
             return
         await increment_request_count(interaction, bot, request_channel_id, message_id)
+    else:
+        await interaction.response.send_message("You already have that role.", ephemeral=True)
     return
 
 async def request_pokemon_handle(bot, ctx, tier, pokemon_name):
