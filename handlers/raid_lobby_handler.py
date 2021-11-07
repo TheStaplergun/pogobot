@@ -464,15 +464,18 @@ async def handle_new_application(ctx, bot, member, message, channel):
     try:
         if host_id == member.id:
             new_embed = discord.Embed(title="Error", description="You cannot apply to your own raid!")
-            await member.send(" ", embed=new_embed)
+            await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+            #await member.send(" ", embed=new_embed)
             return False
         else:
             new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
-            await member.send(" ", embed=new_embed)
+            await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+            #await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
-        await channel.send(" ", embed=new_embed, delete_after=15)
+        await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+        #await channel.send(" ", embed=new_embed, delete_after=15)
         return False
     role = discord.utils.get(member.roles, name=pokemon_name)
     time_to_end = raid_data.get("time_to_remove")
@@ -497,14 +500,16 @@ async def handle_application_to_raid(bot, ctx, message, channel):
     result = await get_applicant_data_for_user(bot, ctx.user.id)
     if discord.utils.get(member.roles, name="Muted"):
         embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
-        await bot.send_ignore_error(member, " ", embed=embed)
+        await ctx.response.send_message(" ", embed=embed, ephemeral=True)
+        #await bot.send_ignore_error(member, " ", embed=embed)
         return
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
         if has_been_notified:
             new_embed = discord.Embed(title="Error", description="You are already locked into a raid. Wait until that raid is complete, or leave that lobby with `-leave`.")
-            await member.send(" ", embed=new_embed)
+            await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
+            #await member.send(" ", embed=new_embed)
             return
         raid_message_id = message.id
         if applied_to_raid_id == raid_message_id:
