@@ -535,7 +535,7 @@ async def handle_application_to_raid(bot, itx, message, channel):
                 "raid_id":raid_message_id}
             })
             print(f"Updating application from {applied_to_raid_id} to {raid_message_id}")
-            await update_application_for_user(bot, member, applied_to_raid_id)
+            await update_application_for_user(bot, member, raid_message_id)
     else:
         bot.interactions.update({itx.user.id:{
             "interaction":itx,
