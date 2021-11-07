@@ -611,7 +611,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
             return
         try:
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
-            message = await interaction["interaction"].followup.send(f"{interaction.user.mention}", embed=new_embed, ephemeral=True)
+            message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
         except discord.DiscordException:
             pass
         await set_notified_flag(bot, message.id, member.id)
