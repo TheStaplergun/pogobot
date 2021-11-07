@@ -464,17 +464,17 @@ async def handle_new_application(ctx, bot, member, message, channel):
     try:
         if host_id == member.id:
             new_embed = discord.Embed(title="Error", description="You cannot apply to your own raid!")
-            await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+            await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
             #await member.send(" ", embed=new_embed)
             return False
         else:
             new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
-            await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+            await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
             #await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
-        await ctx.interaction.send_message(" ", embed=new_embed, ephemeral=True)
+        await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
         #await channel.send(" ", embed=new_embed, delete_after=15)
         return False
     role = discord.utils.get(member.roles, name=pokemon_name)
