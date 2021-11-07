@@ -505,6 +505,8 @@ async def handle_application_to_raid(bot, itx, message, channel):
         await itx.response.send_message(" ", embed=embed, ephemeral=True)
         #await bot.send_ignore_error(member, " ", embed=embed)
         return
+
+    raid_message_id = message.id
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
@@ -513,7 +515,7 @@ async def handle_application_to_raid(bot, itx, message, channel):
             await itx.response.send_message(" ", embed=new_embed, ephemeral=True)
             #await member.send(" ", embed=new_embed)
             return
-        raid_message_id = message.id
+        #raid_message_id = message.id
         if applied_to_raid_id == raid_message_id:
             bot.interactions.pop(itx.user.id)
             await remove_application_for_user(bot, member, applied_to_raid_id)
