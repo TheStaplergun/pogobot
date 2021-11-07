@@ -609,7 +609,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         interaction = bot.interactions.get(user.get("user_id"))
         try:
             new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
-            message = await interaction.followup.send(" ", embed=new_embed, delete_after=30, view=bot.check_in_view(bot))
+            message = await interaction["interaction"].followup.send(" ", embed=new_embed, delete_after=30, view=bot.check_in_view(bot))
         except discord.DiscordException:
             pass
         await set_notified_flag(bot, message.id, member.id)
