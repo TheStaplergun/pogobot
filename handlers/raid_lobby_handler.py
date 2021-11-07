@@ -607,6 +607,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     async def notify_user_task(member):
 
         interaction = bot.interactions.get(user.get("user_id"))
+        if not interaction:
+            return
         try:
             new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
             message = await interaction["interaction"].followup.send(" ", embed=new_embed, delete_after=30, view=bot.check_in_view(bot))
