@@ -2,10 +2,10 @@ class Lobby():
     """
     A class containing various pieces of cached data about a lobbym
     """
-    def __init__(self, bot, user_limit, lobby_id, raid_id, host):
+    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host):
         self.__bot = bot
         self.user_limit = user_limit
-        self.user_count = 0
+        self.user_count = user_count
         self.lobby_id = lobby_id
         self.raid_id = raid_id
         self.host = host

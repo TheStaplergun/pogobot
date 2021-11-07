@@ -93,13 +93,12 @@ GET_ALL_LOBBIES = """
 """
 async def set_up_lobbes(bot):
     lobbies = await bot.database.fetch(GET_ALL_LOBBIES)
-    print(lobbies)
     bot.lobbies = {lobby.get("lobby_channel_id"):await bot.get_lobby(lobby.get("lobby_channel_id"),
                                                                      user_limit=lobby.get("user_limit"),
+                                                                     user_count=lobby.get("user_count"),
                                                                      raid_id=lobby.get("raid_message_id"),
                                                                      host=await bot.retrieve_user(lobby.get("host_user_id"))) for lobby in lobbies}
 
-    print(bot.lobbies)
 
 GET_TOTAL_COUNT = """
   SELECT SUM(raid_counter) AS total

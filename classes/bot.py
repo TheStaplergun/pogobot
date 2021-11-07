@@ -43,10 +43,10 @@ class Bot(commands.Bot):
         self.add_view(VH.RaidView(self))
         self.add_view(VH.RequestView(self))
 
-    async def get_lobby(self, lobby_id, user_limit=None, raid_id=None, host=None):
+    async def get_lobby(self, lobby_id, user_limit=None, user_count=0, raid_id=None, host=None):
         lobby = self.lobbies.get(lobby_id)
         if not lobby:
-            lobby = Lobby(self, user_limit, lobby_id, raid_id, host)
+            lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host)
 
         return lobby
 
