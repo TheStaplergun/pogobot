@@ -610,12 +610,13 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         if not interaction:
             return
         try:
-            new_embed = discord.Embed(title="Activity Check", description="Tap the reaction below to confirm you are present. This message will expire in 30 seconds.")
-            message = await interaction["interaction"].followup.send(" ", embed=new_embed, delete_after=30, view=bot.check_in_view(bot))
+            new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
+            message = await interaction["interaction"].followup.send(f"{interaction.user.mention}", embed=new_embed, ephemeral=True)
         except discord.DiscordException:
             pass
         await set_notified_flag(bot, message.id, member.id)
-        await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
+        await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
+        #await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
 
     for user in users:
         if counter > current_needed:
