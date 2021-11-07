@@ -333,6 +333,7 @@ async def decrement_user_count_for_lobby(bot, raid_id, lobby_data=None):
         lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
         lobby.remove_a_user()
     await bot.database.execute(REDUCE_USER_COUNT_BY_RAID_ID, raid_id)
+    bot.applicant_trigger.set()
 
 async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
@@ -422,6 +423,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
     tasks.append(bot.send_ignore_error(member, " ", embed=embed))
     await asyncio.gather(*tasks)
+    #bot.applicant_trigger.set()
 
 async def handle_manual_clear_application(ctx, user_id, bot):
     result = await bot.database.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, int(user_id))
