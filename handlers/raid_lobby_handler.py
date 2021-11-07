@@ -293,10 +293,11 @@ UPDATE_APPLICATION_DATA_FOR_USER = """
     WHERE (user_id = $2);
 """
 async def update_application_for_user(bot, member, raid_message_id):
+    print(await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, member.id))
     await bot.database.execute(UPDATE_APPLICATION_DATA_FOR_USER,
                                int(raid_message_id),
                                int(member.id))
-
+    print(await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, member.id))
     try:
         new_embed = discord.Embed(title="System Notification", description="You have updated your application to the selected raid.")
         await member.send(" ", embed=new_embed)
@@ -624,7 +625,6 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         return
     tasks = []
     async def notify_user_task(member):
-        print("Inside notify user task")
         interaction = bot.interactions.get(user.get("user_id"))
         if not interaction:
             return
@@ -635,7 +635,6 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
             pass
         await set_notified_flag(bot, message.id, member.id)
 
-        print("Before process and add user to lobby")
         await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data)
 
     for user in users:
@@ -644,11 +643,9 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
             continue
-        print("Appended Task")
         tasks.append(notify_user_task(member))
         counter+=1
 
-    print("Gathering task")
     await asyncio.gather(*tasks)
     await check_if_lobby_full(bot, lobby_channel.id)
 
@@ -715,7 +712,6 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
-    print("Increment user counts")
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"))
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
