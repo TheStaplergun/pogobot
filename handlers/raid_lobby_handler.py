@@ -615,7 +615,11 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         except discord.DiscordException:
             pass
         await set_notified_flag(bot, message.id, member.id)
-        await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
+        lobby = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
+        if not lobby:
+            return
+        await process_and_add_user_to_lobby(bot, member, lobby, guild, message, raid_lobby_data)
+        #await increment_user_count_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
         #await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
 
     for user in users:
