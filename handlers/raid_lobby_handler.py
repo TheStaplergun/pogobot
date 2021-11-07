@@ -609,15 +609,18 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         return
 
     counter = 1
-    current_count = raid_lobby_data.get("user_count")
-    user_limit = raid_lobby_data.get("user_limit")
+    lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
+    current_count = lobby.user_count
+    user_limit = lobby.user_limit
+    # current_count = raid_lobby_data.get("user_count")
+    # user_limit = raid_lobby_data.get("user_limit")
     notified_count = raid_lobby_data.get("notified_users")
 
-    total_pending = notified_count + current_count
-    current_needed = user_limit - total_pending
-    print("Creating Tasks")
-    lobby = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
-    if not lobby:
+    #total_pending = notified_count + current_count
+    current_needed = user_limit - current_count# - total_pending
+    #print("Creating Tasks")
+    lobby_channel = await bot.retrieve_channel(raid_lobby_data.get("lobby_channel_id"))
+    if not lobby_channel:
         return
     tasks = []
     async def notify_user_task(member):
@@ -633,8 +636,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         await set_notified_flag(bot, message.id, member.id)
 
         print("Before process and add user to lobby")
-        await process_and_add_user_to_lobby(bot, member, lobby, guild, message, raid_lobby_data)
-        #await increment_notified_users_for_raid_lobby(bot, raid_lobby_data.get("lobby_channel_id"))
+        await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data)
 
     for user in users:
         if counter > current_needed:
@@ -648,7 +650,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
 
     print("Gathering task")
     await asyncio.gather(*tasks)
-    await check_if_lobby_full(bot, lobby.id)
+    await check_if_lobby_full(bot, lobby_channel.id)
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
