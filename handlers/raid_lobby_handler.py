@@ -246,7 +246,7 @@ async def update_delete_time_with_given_time(bot, new_time, raid_id):
                                        int(raid_id))
 
 async def alter_deletion_time_for_raid_lobby(bot, lobby):
-    print(lobby)
+    print("Inside alter delete time", lobby)
     lobby_data = await get_lobby_data_by_raid_id(bot, lobby.raid_id)
     if not lobby_data:
         return
@@ -697,7 +697,7 @@ async def check_if_lobby_full(bot, lobby_id):
     print(lobby)
 
     if lobby.is_full():
-        print(lobby)
+        print("Lobby after is full", lobby)
         await alter_deletion_time_for_raid_lobby(bot, lobby)
         #time_to_remove = datetime.now()
         #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
