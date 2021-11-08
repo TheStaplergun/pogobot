@@ -224,17 +224,9 @@ async def start_applicant_loop(bot):
                         checked_count += 1
                     guild_id = raid_lobby_data.get("guild_id")
                     guild = bot.get_guild(int(guild_id))
-                    # user_list = []
-                    # sorted_users = sorted([{
-                    #         "user_data":user,
-                    #         "weight":await RLH.calculate_weight(bot, user, user.get("user_id")),
-                    #         "member_object":guild.get_member(int(user.get("user_id"))),
-                    #     } for user in users], key=itemgetter('weight'), reverse=True)
 
-                    #sorted_users = sorted(user_list, key=itemgetter('weight'), reverse=True)
                     await RLH.process_user_list(bot, raid_lobby_data, users, guild)
             if checked_count == total_lobbies_to_handle:
-                # Prevents infinitely looping when there's just no users for any of the lobbies.
                 break
             await asyncio.sleep(1)
 
