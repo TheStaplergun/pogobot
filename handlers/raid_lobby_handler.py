@@ -505,7 +505,11 @@ async def handle_application_from_button(interaction, bot):
 async def handle_application_to_raid(bot, itx, message, channel):
     guild = message.guild
     member = guild.get_member(itx.user.id)
-    result = await get_applicant_data_for_user(bot, itx.user.id)
+    try:
+        interacted_message = itx.original_message()
+    except discord.DiscordException:
+        pass
+    result = await get_applicant_data_for_user(bot, itx.user.id, )
     if discord.utils.get(member.roles, name="Muted"):
         embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
         await itx.response.send_message(" ", embed=embed, ephemeral=True)
@@ -536,11 +540,16 @@ async def handle_application_to_raid(bot, itx, message, channel):
         #         "raid_id":raid_message_id}
         #     })
         #     await update_application_for_user(bot, member, raid_message_id)
-
-    bot.interactions.update({itx.user.id:{
-        "interaction":itx,
-        "raid_id":raid_message_id}
-    })
+    if not bot.interactions.get(itx.user.id):
+        bot.interactions.update({itx.user.id:[{
+            "interaction":itx,
+            "raid_id":raid_message_id}]
+        })
+    else:
+        bot.interactions[itx.user.id].append({
+            "interaction":itx,
+            "raid_id":raid_message_id}
+        )
     await handle_new_application(itx, bot, member, message, channel)
 
 QUERY_APPLICANT_BY_MESSAGE_ID = """
@@ -711,6 +720,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     await bot.database.execute(DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER,
                                int(member.id),
                                int(raid_id))
+    bot.interactions[member.id].update({member.id:[item for item in bot.interactions.get(member.id) if item["raid_id"] != raid_id]})
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
@@ -805,7 +815,16 @@ REMOVE_LOBBY_BY_ID = """
 async def remove_lobby_by_lobby_id(bot, lobby_data):
     if lobby_data:
         raid_id = lobby_data.get("raid_message_id")
-        bot.interactions = {k:v for k, v in bot.interactions.items() if v["raid_id"] != raid_id}
+        to_pop = []
+        for id, data in bot.interactions.items():
+            bot.interactions.update({id:[item for item in data if item["raid_id"] != raid_id]})
+            if len(bot.interactions.get(id)) < 1:
+                to_pop.append(id)
+
+        for item in to_pop:
+            bot.interactions.pop(item)
+        #         counter+=1
+        # bot.interactions = {k:v for k, v in bot.interactions.items() for itx in v if itx["raid_id"] != raid_id}
         await remove_applicants_for_raid_by_raid_id(bot, raid_id)
 
     await bot.database.execute(REMOVE_LOBBY_BY_ID, int(lobby_data.get("lobby_channel_id")))
