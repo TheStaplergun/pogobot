@@ -10,10 +10,6 @@ class RaidView(discord.ui.View):
         super().__init__(timeout=None)
         self.__bot = bot
 
-    @discord.ui.button(custom_id="button_delete_raid", label="Delete", emoji="🗑️", style=discord.ButtonStyle.red)
-    async def delete_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await RH.remove_raid_from_button(interaction, self.__bot)
-
     @discord.ui.button(custom_id="button_sign_up_raid", label="Sign up", emoji="📝", style=discord.ButtonStyle.green)
     async def sign_up_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         await RLH.handle_application_from_button(interaction, self.__bot)
@@ -25,6 +21,10 @@ class RaidView(discord.ui.View):
     @discord.ui.button(custom_id="button_remove_role_raid", label="Stop notifications", emoji="📪")#, style=discord.ButtonStyle.red)
     async def remove_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         await REQH.remove_request_role_from_user_from_button(interaction, self.__bot)
+
+    @discord.ui.button(custom_id="button_delete_raid", label="Delete (Host only)", emoji="🗑️", style=discord.ButtonStyle.red)
+    async def delete_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await RH.remove_raid_from_button(interaction, self.__bot)
 
 # class CheckInView(discord.ui.View):
 #     def __init__(self, bot):
