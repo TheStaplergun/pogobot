@@ -624,12 +624,12 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         try:
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
             message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
+            await set_notified_flag(bot, message.id, member.id)
+            await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data)
         except discord.DiscordException as e:
             print(f"[!] An exception occurred while attempting to send a followup message: [{e}]")
             pass
-        await set_notified_flag(bot, message.id, member.id)
 
-        await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data)
 
     for user in users:
         if counter > current_needed:
