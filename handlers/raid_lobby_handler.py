@@ -505,10 +505,10 @@ async def handle_application_from_button(interaction, bot):
 async def handle_application_to_raid(bot, itx, message, channel):
     guild = message.guild
     member = guild.get_member(itx.user.id)
-    try:
-        interacted_message = itx.original_message()
-    except discord.DiscordException:
-        pass
+    # try:
+    #     interacted_message = await itx.original_message()
+    # except discord.DiscordException:
+    #     pass
     result = await get_applicant_data_for_user(bot, itx.user.id, )
     if discord.utils.get(member.roles, name="Muted"):
         embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
@@ -629,9 +629,12 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         return
     tasks = []
     async def notify_user_task(member, user):
-        interaction = bot.interactions.get(user.get("user_id"))
-        if not interaction:
+        user_interaction_data = bot.interactions.get(user.get("user_id"))
+
+        if not user_interaction_data:
             return
+
+        interaction = [itx for itx in user_interaction_data if itx["raid_id"] == lobby.raid_id].pop()
         try:
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
             message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
