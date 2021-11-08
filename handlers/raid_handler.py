@@ -303,7 +303,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             bot.raid_remove_trigger.set()
         else:
             response += "---------\n"
-            response += "*Here's the command you entered below. Suggestions were added. Check that it is correct and try again.*\n"
+            response += "**Here's the command you entered below. Suggestions were added. Check that it is correct and try again.**\n"
             await ctx.author.send(response)
             correction_suggestion = ctx.prefix + "raid " + suggestion
             await ctx.author.send(correction_suggestion)

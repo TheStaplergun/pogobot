@@ -127,7 +127,7 @@ def validate_tier(tier):
     return(is_valid, response)
 
 def format_invalid_tier_message(tier):
-    response = "You gave an invalid **Tier** of " + backtick_and_bracket(tier) + ". Valid tiers are: "
+    response = f"[`{tier}`] is not a valid tier. Valid tiers are: "
 
     for index, item in enumerate(TIERS):
         response += item.title()
@@ -189,7 +189,7 @@ def validate_pokemon(pokemon_name, tier):
     return (is_valid, response, suggestion, dex_num)
 
 def format_invalid_pokemon_message(pokemon_name, tier):
-    response = "You gave an invalid **Pokemon Name** of " + backtick_and_bracket(pokemon_name) + "."
+    response = f"[`{pokemon_name}`] is not a valid Pokemon."
     best_ratio = 0
     suggestion = ""
 
@@ -320,7 +320,7 @@ def validate_weather_argument(weather):
 
 
 def format_invalid_weather_message(weather):
-    response = "You gave an invalid **Weather Condition** of " + backtick_and_bracket(weather) + ". Valid weather conditions are: "
+    response = f"[`{weather}`] is not a valid weather type. Valid weather conditions are: "
     best_ratio = 0
     suggestion = ""
     for index, (key, _) in enumerate(WEATHER_TO_OUTPUT.items()):
