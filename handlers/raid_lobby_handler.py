@@ -723,7 +723,7 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     await bot.database.execute(DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER,
                                int(member.id),
                                int(raid_id))
-    bot.interactions[member.id].update({member.id:[item for item in bot.interactions.get(member.id) if item["raid_id"] != raid_id]})
+    bot.interactions.update({member.id:[item for item in bot.interactions.get(member.id) if item["raid_id"] != raid_id]})
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
