@@ -246,7 +246,6 @@ async def update_delete_time_with_given_time(bot, new_time, raid_id):
                                        int(raid_id))
 
 async def alter_deletion_time_for_raid_lobby(bot, lobby):
-    print("Inside alter delete time", lobby)
     lobby_data = await get_lobby_data_by_raid_id(bot, lobby.raid_id)
     if not lobby_data:
         return
@@ -270,8 +269,8 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
             if users < limit:
                 new_embed = discord.Embed(title=f"{users}/{limit}", description="Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full. All players have checked in.")
-
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full.")
+                await RH.set_raid_status_full(lobby.raid_id)
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby_channel.send(" ", embed=new_embed)
     except discord.DiscordException:
@@ -698,7 +697,6 @@ async def check_if_lobby_full(bot, lobby_id):
     #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
 
     if lobby.is_full():
-        print("Lobby after is full", lobby)
         await alter_deletion_time_for_raid_lobby(bot, lobby)
 
 

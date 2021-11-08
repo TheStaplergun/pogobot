@@ -9,6 +9,8 @@ class Lobby():
         self.lobby_id = lobby_id
         self.raid_id = raid_id
         self.host = host
+        self.has_filled = False
+        #self.lobby_members = []
 
     def add_a_user(self):
         self.user_count+=1
