@@ -256,6 +256,8 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
             lobby = await bot.fetch_channel(int(lobby.lobby_id))
         except discord.DiscordException:
             pass
+    if not lobby_channel:
+        return
 
     users = lobby.user_count#lobby_data.get("user_count")
     # new_delete_time = current_time if users == 0 else current_time + timedelta(minutes=15)
