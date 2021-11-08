@@ -292,9 +292,10 @@ UPDATE_APPLICATION_DATA_FOR_USER = """
     WHERE (user_id = $2);
 """
 async def update_application_for_user(bot, member, raid_message_id):
-    await bot.database.execute(UPDATE_APPLICATION_DATA_FOR_USER,
-                               int(raid_message_id),
-                               int(member.id))
+    async with bot.database.connect() as c:
+        await bot.database.execute(UPDATE_APPLICATION_DATA_FOR_USER,
+                                int(raid_message_id),
+                                int(member.id))
     try:
         new_embed = discord.Embed(title="System Notification", description="You have updated your application to the selected raid.")
         await member.send(" ", embed=new_embed)
@@ -512,6 +513,7 @@ async def handle_application_to_raid(bot, itx, message, channel):
         return
 
     raid_message_id = message.id
+
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
@@ -527,18 +529,19 @@ async def handle_application_to_raid(bot, itx, message, channel):
             except KeyError:
                 pass
             await remove_application_for_user(bot, member, applied_to_raid_id)
-        else:
-            bot.interactions.update({itx.user.id:{
-                "interaction":itx,
-                "raid_id":raid_message_id}
-            })
-            await update_application_for_user(bot, member, raid_message_id)
-    else:
-        bot.interactions.update({itx.user.id:{
-            "interaction":itx,
-            "raid_id":raid_message_id}
-        })
-        await handle_new_application(itx, bot, member, message, channel)
+            return
+        # else:
+        #     bot.interactions.update({itx.user.id:{
+        #         "interaction":itx,
+        #         "raid_id":raid_message_id}
+        #     })
+        #     await update_application_for_user(bot, member, raid_message_id)
+
+    bot.interactions.update({itx.user.id:{
+        "interaction":itx,
+        "raid_id":raid_message_id}
+    })
+    await handle_new_application(itx, bot, member, message, channel)
 
 QUERY_APPLICANT_BY_MESSAGE_ID = """
     SELECT * FROM raid_application_user_map WHERE (activity_check_message_id = $1);
@@ -564,7 +567,6 @@ GET_PERSISTENCE_BONUS = """
     SELECT * FROM trainer_data WHERE (user_id = $1);
 """
 async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
-#async def calculate_weight(bot, user_data, member_id):
     async with bot.database.connect() as c:
         result = await c.fetchrow(QUERY_RECENT_PARTICIPATION, int(member_id))
         persistence = await c.fetchrow(GET_PERSISTENCE_BONUS, int(member_id))
@@ -625,7 +627,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
             message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
             await set_notified_flag(bot, message.id, member.id)
-            await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data)
+            await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data, lobby.raid_id)
         except discord.DiscordException as e:
             print(f"[!] An exception occurred while attempting to send a followup message: [{e}]")
             pass
@@ -701,8 +703,14 @@ async def check_if_lobby_full(bot, lobby_id):
     if lobby.is_full():
         await alter_deletion_time_for_raid_lobby(bot, lobby)
 
-
-async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data):
+DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER = """
+    DELETE FROM raid_application_user_map
+    WHERE (user_id = $1 and raid_message_id != $2);
+"""
+async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data, raid_id):
+    await bot.database.execute(DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER,
+                               int(member.id),
+                               int(raid_id))
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
     #users = lobby_data.get("user_count")
@@ -750,7 +758,7 @@ async def handle_check_in_from_button(itx, bot):
         await itx.response.send_message(" ", embed=embed, ephemeral=True)
         await remove_application_for_user(bot, itx.user, raid_message_id, should_notify=False)
         return
-    await process_and_add_user_to_lobby(bot, itx.user, lobby, guild, itx.message, lobby_data)
+    await process_and_add_user_to_lobby(bot, itx.user, lobby, guild, itx.message, lobby_data, lobby_data.get("raid_message_id"))
 
 async def handle_activity_check_reaction(ctx, bot, message):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, ctx.user_id)

@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS raid_lobby_category(
 """
 
 REQUEST_CHANNELS = """
-CREATE TABLE IF NOT EXISTS valid_requeset_channels(
+CREATE TABLE IF NOT EXISTS valid_request_channels(
   channel_id BIGINT PRIMARY KEY,
   guild_id BIGINT NOT NULL
 );
@@ -98,6 +98,11 @@ CREATE TABLE IF NOT EXISTS raid_placeholder_stickies(
   guild_id BIGINT NOT NULL
 )
 """
+ADD_ID_COLUMN_TO_APPS_TABLE = """
+ALTER TABLE raid_application_user_map
+DROP CONSTRAINT raid_application_user_map_pkey,
+ADD COLUMN id bigserial PRIMARY KEY;
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
@@ -107,5 +112,6 @@ async def main():
 
   #await conn.execute(friend_code_table_update)
   #await conn.execute(UPDATE_WEIGHT_COLUMN)
+  await conn.execute(ADD_ID_COLUMN_TO_APPS_TABLE)
 
 asyncio.get_event_loop().run_until_complete(main())
