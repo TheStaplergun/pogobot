@@ -29,8 +29,7 @@ async def notify_user_cannot_alter_lobby_while_in_raid(bot, user_id):
 
 async def extend_lobby_from_button(interaction, bot):
     lobby = bot.lobbies.get(interaction.channel.id)
-    print(interaction.user.id)
-    print(lobby.host.id)
+
     if interaction.user.id != lobby.host.id:
         return
     await extend_duration_of_lobby(bot, interaction)

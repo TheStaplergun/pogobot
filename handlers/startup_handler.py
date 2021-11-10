@@ -243,7 +243,9 @@ async def start_applicant_loop(bot):
 
             for raid_lobby_data in raid_lobby_data_list:
                 lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
-                if lobby.has_filled and not lobby.pending_unlock and lobby.raid_still_exists:
+                if not lobby.raid_still_exists or lobby.pending_unlock:
+                    continue
+                if lobby.has_filled:
                     await lobby.ask_to_unlock()
                     checked_count += 1
                     continue

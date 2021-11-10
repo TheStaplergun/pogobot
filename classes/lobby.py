@@ -12,7 +12,7 @@ class Lobby():
         self.lobby_channel = None
         self.raid_id = raid_id
         self.host = host
-        self.has_filled = False
+        self.has_filled = self.user_count == self.user_limit
         self.pending_unlock = False
         self.lock()
         self.five_minute_warning = False
