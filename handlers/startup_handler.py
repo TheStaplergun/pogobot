@@ -147,7 +147,7 @@ async def start_five_minute_warning_loop(bot):
                     print("Did not have five minute warning flag set")
                     if lobby.delete_time < relevant_time:
                         print("Lobby time was less than the relevant time")
-                        lobby.send_five_minute_warning()
+                        await lobby.send_five_minute_warning()
                     else:
                         print("lobby was not less than the relevant time")
                         continue
