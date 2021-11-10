@@ -664,10 +664,13 @@ async def unlock_lobby_from_button(interaction, bot):
     lobby = bot.lobbies.get(interaction.channel.id)
     lobby.unlock()
     bot.applicant_trigger.set()
+    await bot.delete_ignore_error(interaction.message)
 
 async def lock_lobby_from_button(interaction, bot):
     lobby = bot.lobbies.get(interaction.channel.id)
     await RH.delete_raid(bot, lobby.raid_id)
+    lobby.raid_still_exists = False
+    await bot.delete_ignore_error(interaction.message)
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
@@ -717,8 +720,9 @@ async def set_recent_participation(bot, user_id):
 
 async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remove=datetime.now(), lobby_id=0):
     lobby = bot.lobbies.get(lobby_id)
-    lobby.delete_time = time_to_remove
-    lobby.five_minute_warning = False
+    if lobby:
+        lobby.delete_time = time_to_remove
+        lobby.five_minute_warning = False
     bot.five_minute_trigger.set()
     await update_delete_time_with_given_time(bot, time_to_remove, raid_id)
     await RH.update_delete_time(bot, time_to_remove, raid_id)

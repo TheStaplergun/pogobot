@@ -17,6 +17,7 @@ class Lobby():
         self.lock()
         self.five_minute_warning = False
         self.delete_time = delete_time
+        self.raid_still_exists = True
         #self.lobby_members = []
 
     def add_a_user(self):
