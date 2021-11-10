@@ -28,6 +28,9 @@ async def notify_user_cannot_alter_lobby_while_in_raid(bot, user_id):
     await bot.send_ignore_error(user, "", embed=embed)
 
 async def extend_lobby_from_button(interaction, bot):
+    lobby = bot.lobbies.get(interaction.channel.id)
+    if interaction.user.id != lobby.host.id:
+        return
     await extend_duration_of_lobby(bot, interaction)
     await bot.delete_ignore_error(interaction.message)
 

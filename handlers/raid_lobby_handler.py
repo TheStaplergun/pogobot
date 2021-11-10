@@ -662,12 +662,16 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
 
 async def unlock_lobby_from_button(interaction, bot):
     lobby = bot.lobbies.get(interaction.channel.id)
+    if interaction.user.id != lobby.host.id:
+        return
     lobby.unlock()
     bot.applicant_trigger.set()
     await bot.delete_ignore_error(interaction.message)
 
 async def lock_lobby_from_button(interaction, bot):
     lobby = bot.lobbies.get(interaction.channel.id)
+    if interaction.user.id != lobby.host.id:
+        return
     await RH.delete_raid(bot, lobby.raid_id)
     lobby.raid_still_exists = False
     await bot.delete_ignore_error(interaction.message)
