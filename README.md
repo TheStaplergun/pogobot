@@ -28,6 +28,20 @@ To register a lobby category, open an empty channel in a category and run `regis
 
 If you want to use the management channel system, add a new channel to the above category and run the command `register_lobby_management_channel`.
 
+### Minimum permissions required for the bot to function.
+
+## Serverwide
+manage_roles (set individual permissions per channel) <- I hate to say it but for some reason discord has this set as the required permission to modify individual permissions in a channel
+
+## Raid Category
+view_channels
+manage_channels
+manage_messages
+embed_links
+send_messages
+read_message_history
+add_reactions
+
 ### Posting a raid
 The hosting user would type the following in the preferred raid channel:
 

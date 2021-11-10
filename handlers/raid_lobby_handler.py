@@ -128,13 +128,14 @@ NEW_LOBBY_INSERT = """
 INSERT INTO raid_lobby_user_map (lobby_channel_id, host_user_id, raid_message_id, guild_id, posted_at, delete_at, user_count, user_limit, applied_users, notified_users)
 VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 """
-async def add_lobby_to_table(bot, lobby_channel_id, host_user_id, raid_id, guild_id, delete_at, invite_slots, host):
+async def add_lobby_to_table(bot, lobby_channel, host_user_id, raid_id, guild_id, delete_at, invite_slots, host):
     """Add a raid to the database with all the given data points."""
     cur_time = datetime.now()
-    lobby = await bot.get_lobby(lobby_channel_id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host)
-    bot.lobbies.update({lobby_channel_id:lobby})
+    lobby = await bot.get_lobby(lobby_channel.id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host, delete_time=delete_at)
+    lobby.lobby_channel = lobby_channel
+    bot.lobbies.update({lobby_channel.id:lobby})
     await bot.database.execute(NEW_LOBBY_INSERT,
-                               int(lobby_channel_id),
+                               int(lobby_channel.id),
                                int(host_user_id),
                                int(raid_id),
                                int(guild_id),
@@ -216,11 +217,12 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     except discord.DiscordException:
         pass
     try:
-        await add_lobby_to_table(bot, new_raid_lobby.id, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby, invite_slots, raid_host_member)
+        await add_lobby_to_table(bot, new_raid_lobby, raid_host_member.id, raid_message_id, ctx.guild.id, time_to_remove_lobby, invite_slots, raid_host_member)
     except asyncpg.PostgresError as error:
         print("[!] An error occurred adding a lobby to the database. [{}]".format(error))
         await new_raid_lobby.delete()
         return
+    bot.five_minute_trigger.set()
 
     role = discord.utils.get(guild.roles, name="Raid Host")
     if not role:
@@ -234,13 +236,13 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
 
     return new_raid_lobby
 
+
 UPDATE_TIME_TO_REMOVE_LOBBY = """
     UPDATE raid_lobby_user_map
     SET delete_at = $1
     WHERE (raid_message_id = $2);
 """
 async def update_delete_time_with_given_time(bot, new_time, raid_id):
-    bot.lobby_remove_trigger.set()
     return await bot.database.execute(UPDATE_TIME_TO_REMOVE_LOBBY,
                                        new_time,
                                        int(raid_id))
@@ -475,7 +477,7 @@ async def handle_new_application(ctx, bot, member, message, channel):
             #await member.send(" ", embed=new_embed)
             return False
         else:
-            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected at random based on a weighted system.\n\nYou will be sent a DM here to check in if you are selected. You only have 30 seconds to check in once you are selected.\n\nYou will know within 60 seconds if you are selected, unless another user fails to check in, then it may be longer.")
+            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected based on a weighted system.\n\n\nYou will know within 60 seconds if you are selected.\n\nIt is possible to be pulled into the lobby if someone is removed later on.")
             await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
             #await member.send(" ", embed=new_embed)
     except discord.Forbidden:
@@ -629,6 +631,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         return
     tasks = []
     async def notify_user_task(member, user):
+        """This function is being used to create tasks to allow concurrent asynchronous processing."""
         user_interaction_data = bot.interactions.get(user.get("user_id"))
 
         if not user_interaction_data:
@@ -656,6 +659,15 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
 
     await asyncio.gather(*tasks)
     await check_if_lobby_full(bot, lobby_channel.id)
+
+async def unlock_lobby_from_button(interaction, bot):
+    lobby = bot.lobbies.get(interaction.channel.id)
+    lobby.unlock()
+    bot.applicant_trigger.set()
+
+async def lock_lobby_from_button(interaction, bot):
+    lobby = bot.lobbies.get(interaction.channel.id)
+    await RH.delete_raid(bot, lobby.raid_id)
 
 QUERY_LOBBY_BY_RAID_ID = """
     SELECT * FROM raid_lobby_user_map WHERE (raid_message_id = $1)
@@ -703,9 +715,13 @@ async def set_recent_participation(bot, user_id):
         await c.execute(DELETE_RECENT_PARTICIPATION_RECORD, int(user_id))
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
-async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remove=datetime.now()):
+async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remove=datetime.now(), lobby_id=0):
+    lobby = bot.lobbies.get(lobby_id)
+    lobby.delete_time = time_to_remove
+    bot.five_minute_trigger.set()
     await update_delete_time_with_given_time(bot, time_to_remove, raid_id)
     await RH.update_delete_time(bot, time_to_remove, raid_id)
+    bot.lobby_remove_trigger.set()
 
 async def check_if_lobby_full(bot, lobby_id):
     #lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
@@ -855,28 +871,28 @@ DECREMENT_NOTIFIED_USERS = """
     SET notified_users = notified_users - 1
     WHERE (raid_message_id = $1)
 """
-async def decrement_notified_users_by_raid_id(bot, raid_id):
-    await bot.database.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
+# async def decrement_notified_users_by_raid_id(bot, raid_id):
+#     await bot.database.execute(DECREMENT_NOTIFIED_USERS, int(raid_id))
 
-async def handle_user_failed_checkin(bot, applicant_data):
-    guild_id = applicant_data.get("guild_id")
-    guild = bot.get_guild(int(guild_id))
-    member = guild.get_member(applicant_data.get("user_id"))
-    if not member:
-        return False
-    raid_id = applicant_data.get("raid_message_id")
-    lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
-    lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
-    try:
-        bot.interactions.pop(applicant_data.get("user_id"))
-    except KeyError:
-        pass
-    embed = discord.Embed(title="System Notification", description="A user has failed to check in. Attempting to find a replacement...")
-    new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
-    await asyncio.gather(bot.send_ignore_error(lobby, " ", embed=embed),
-                         remove_application_for_user(bot, member, raid_id),
-                         decrement_notified_users_by_raid_id(bot, raid_id),
-                         bot.send_ignore_error(member, " ", embed=new_embed))
+# async def handle_user_failed_checkin(bot, applicant_data):
+#     guild_id = applicant_data.get("guild_id")
+#     guild = bot.get_guild(int(guild_id))
+#     member = guild.get_member(applicant_data.get("user_id"))
+#     if not member:
+#         return False
+#     raid_id = applicant_data.get("raid_message_id")
+#     lobby_data = await get_lobby_data_by_raid_id(bot, raid_id)
+#     lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
+#     try:
+#         bot.interactions.pop(applicant_data.get("user_id"))
+#     except KeyError:
+#         pass
+#     embed = discord.Embed(title="System Notification", description="A user has failed to check in. Attempting to find a replacement...")
+#     new_embed = discord.Embed(title="System Notification", description="You failed to check in and have been removed.")
+#     await asyncio.gather(bot.send_ignore_error(lobby, " ", embed=embed),
+#                          remove_application_for_user(bot, member, raid_id),
+#                          decrement_notified_users_by_raid_id(bot, raid_id),
+#                          bot.send_ignore_error(member, " ", embed=new_embed))
 
 async def delete_lobby(bot, lobby, lobby_data):
     members = lobby.members

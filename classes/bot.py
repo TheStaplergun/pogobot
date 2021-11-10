@@ -26,6 +26,7 @@ class Bot(commands.Bot):
         self.applicant_trigger = asyncio.Event()
         self.lobby_remove_trigger = asyncio.Event()
         self.raid_remove_trigger = asyncio.Event()
+        self.five_minute_trigger = asyncio.Event()
 
         self.database = None
         self.dex = pokedex.Pokedex()
@@ -34,6 +35,8 @@ class Bot(commands.Bot):
         self.guild_raid_counters = {}
         self.raid_view = VH.RaidView
         self.request_view = VH.RequestView
+        self.unlock_lobby_view = VH.UnlockLobbyView
+        self.extend_lobby_view = VH.ExtendLobbyView
         #self.check_in_view = VH.CheckInView
 
         self.interactions = {}
@@ -42,11 +45,13 @@ class Bot(commands.Bot):
     async def on_ready(self):
         self.add_view(VH.RaidView(self))
         self.add_view(VH.RequestView(self))
+        self.add_view(VH.UnlockLobbyView(self))
+        self.add_view(VH.ExtendLobbyView(self))
 
-    async def get_lobby(self, lobby_id, user_limit=None, user_count=0, raid_id=None, host=None):
+    async def get_lobby(self, lobby_id, user_limit=None, user_count=0, raid_id=None, host=None, delete_time=None):
         lobby = self.lobbies.get(lobby_id)
         if not lobby:
-            lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host)
+            lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host, delete_time)
 
         return lobby
 

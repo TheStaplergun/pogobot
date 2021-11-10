@@ -4,6 +4,7 @@ import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
 import handlers.raid_lobby_handler as RLH
+import handlers.raid_lobby_management as RLM
 
 class RaidView(discord.ui.View):
     def __init__(self, bot):
@@ -47,3 +48,25 @@ class RequestView(discord.ui.View):
     @discord.ui.button(custom_id="button_remove_role_request", label="Stop notifications", emoji="📪", style=discord.ButtonStyle.red)
     async def remove_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         await REQH.remove_request_role_from_user_from_button(interaction, self.__bot)
+
+class UnlockLobbyView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.__bot = bot
+
+    @discord.ui.button(custom_id="button_unlock_lobby", label="Unlock Lobby (Attempt to Fill)", emoji="🔓", style=discord.ButtonStyle.green)
+    async def unlock_lobby_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await RLH.unlock_lobby_from_button(interaction, self.__bot)
+
+    @discord.ui.button(custom_id="button_lock_lobby", label="Keep Lobby Locked (Deletes Raid)", emoji="🔒", style=discord.ButtonStyle.red)
+    async def lock_lobby_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await RLH.lock_lobby_from_button(interaction, self.__bot)
+
+class ExtendLobbyView(discord.ui.View):
+    def __init__(self, bot):
+        super().__init__(timeout=None)
+        self.__bot = bot
+
+    @discord.ui.button(custom_id="button_extend_lobby", label="Extend Lobby Time", emoji="⏱️", style=discord.ButtonStyle.green)
+    async def extend_lobby_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await RLM.extend_lobby_from_button(interaction, self.__bot)

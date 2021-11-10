@@ -97,7 +97,8 @@ async def set_up_lobbes(bot):
                                                                      user_limit=lobby.get("user_limit"),
                                                                      user_count=lobby.get("user_count"),
                                                                      raid_id=lobby.get("raid_message_id"),
-                                                                     host=await bot.retrieve_user(lobby.get("host_user_id"))) for lobby in lobbies}
+                                                                     host=await bot.retrieve_user(lobby.get("host_user_id")),
+                                                                     delete_time=lobby.get("delete_at")) for lobby in lobbies}
 
 
 GET_TOTAL_COUNT = """
@@ -127,6 +128,30 @@ async def start_status_update_loop(bot):
     while True:
         count = await set_new_presence(bot, count)
         await asyncio.sleep(600)
+
+async def start_five_minute_warning_loop(bot):
+    while not bot.database:
+        await asyncio.sleep(1)
+
+    while True:
+        relevant_time = datetime.now() + timedelta(minutes=5)
+
+        checked = 0
+        for lobby in bot.lobbies:
+            if not lobby.five_minute_warning:
+                if lobby.time_to_remove < relevant_time:
+                    lobby.send_five_minute_warning()
+                else:
+                    continue
+            checked += 1
+
+        if checked == len(bot.lobbies):
+            break
+
+        await asyncio.sleep(1)
+
+    await bot.five_minute_trigger.wait()
+    bot.five_minute_trigger.clear()
 
 async def start_lobby_removal_loop(bot):
     """Permanently running loop while bot is up."""
@@ -215,6 +240,11 @@ async def start_applicant_loop(bot):
             threshold_time = cur_time - timedelta(seconds=45)
 
             for raid_lobby_data in raid_lobby_data_list:
+                lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
+                if lobby.has_filled:
+                    await lobby.ask_to_unlock()
+                    checked_count += 1
+                    continue
                 posted_time = raid_lobby_data.get("posted_at")
                 if posted_time < threshold_time:
                     #raid_host_id = raid_lobby_data.get("host_user_id")
