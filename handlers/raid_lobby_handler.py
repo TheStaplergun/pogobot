@@ -418,7 +418,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
 
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
-    await ctx.channel.set_permissions(member, overwrite=None)
+    await ctx.channel.set_permissions(member, read_messages=False)
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), should_notify=False)
     await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"), lobby_data=lobby_data)
     tasks = []
@@ -597,13 +597,12 @@ async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
 
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_application_user_map
-    SET has_been_notified = true,
-        activity_check_message_id = $1
+    SET has_been_notified = true
     WHERE (user_id = $2);
 """
 
-async def set_notified_flag(bot, message_id, user_id):
-    await bot.database.execute(UPDATE_LOBBY_APPLICANT_DATA, int(message_id), int(user_id))
+async def set_notified_flag(bot, user_id):
+    await bot.database.execute(UPDATE_LOBBY_APPLICANT_DATA, int(user_id))
 
 INCREMENT_APPLICANT_COUNT = """
     UPDATE raid_lobby_user_map
@@ -641,12 +640,13 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         try:
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
             message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
-            await set_notified_flag(bot, message.id, member.id)
-            await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data, lobby.raid_id)
         except discord.DiscordException as e:
+            new_embed = discord.Embed(title="Notification", description="An error occurred from discord, so I DMed you instead to let you know you were selected for a raid.")
+            message = await bot.send_ignore_error(member, " ", embed=new_embed)
             print(f"[!] An exception occurred while attempting to send a followup message: [{e}]")
-            pass
-
+        finally:
+            await set_notified_flag(bot, member.id)
+            await process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, raid_lobby_data, lobby.raid_id)
 
     for user in users:
         if counter > current_needed:
