@@ -598,7 +598,7 @@ async def calculate_weight(bot, is_requesting, speed_bonus_weight, member_id):
 UPDATE_LOBBY_APPLICANT_DATA = """
     UPDATE raid_application_user_map
     SET has_been_notified = true
-    WHERE (user_id = $2);
+    WHERE (user_id = $1);
 """
 
 async def set_notified_flag(bot, user_id):
