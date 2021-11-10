@@ -63,6 +63,7 @@ if __name__ == "__main__":
     BOT.loop.create_task(status_update_loop(BOT))
     BOT.loop.create_task(applicant_loop(BOT))
     BOT.loop.create_task(lobby_removal_loop(BOT))
+    BOT.loop.create_task(five_minute_warning_loop(BOT))
     if args.l:
         print("[!] Running bot live.")
         BOT.live=True
