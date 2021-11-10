@@ -140,7 +140,7 @@ async def start_five_minute_warning_loop(bot):
 
             checked = 0
             print("Looking at lobbies in list")
-            for lobby in bot.lobbies:
+            for id, lobby in bot.lobbies.items():
                 print("First Lobby")
                 print(f"Lobby {lobby}")
                 if not lobby.five_minute_warning:
