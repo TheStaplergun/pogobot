@@ -730,6 +730,7 @@ async def check_if_lobby_full(bot, lobby_id):
     #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
 
     if lobby.is_full():
+        lobby.lock()
         await alter_deletion_time_for_raid_lobby(bot, lobby)
 
 DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER = """
