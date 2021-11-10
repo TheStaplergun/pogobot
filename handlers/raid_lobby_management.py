@@ -36,10 +36,11 @@ async def extend_lobby_from_button(interaction, bot):
 
 async def extend_duration_of_lobby(bot, ctx):
     user_id = None
-    if ctx.user:
+    try:
         user_id = ctx.user.id
-    else:
+    except AttributeError:
         user_id = ctx.user_id
+
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, user_id)
     if not lobby_data:
         return
