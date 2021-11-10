@@ -28,6 +28,10 @@ async def notify_user_cannot_alter_lobby_while_in_raid(bot, user_id):
     await bot.send_ignore_error(user, "", embed=embed)
 
 async def extend_lobby_from_button(interaction, bot):
+    try:
+        await interaction.delete_original_message()
+    except discord.DiscordException:
+        pass
     await extend_duration_of_lobby(bot, interaction)
 
 async def extend_duration_of_lobby(bot, ctx):
