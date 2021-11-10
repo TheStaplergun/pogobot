@@ -43,7 +43,7 @@ class Lobby():
         embed = discord.Embed(title="Unlock?", description="The lobby is no longer full. Would you like to gather more users?")
         await self.get_channel()
         try:
-            await self.lobby_channel.send(f"<@{self.host_id}>", embed=embed, view=self.__bot.unlock_lobby_view(self.__bot))
+            await self.lobby_channel.send(f"<@{self.host.id}>", embed=embed, view=self.__bot.unlock_lobby_view(self.__bot))
         except discord.DiscordException:
             pass
 
@@ -51,7 +51,7 @@ class Lobby():
         embed = discord.Embed(title="Warning", description="Only five minutes remain on the time of this lobby. Would you like to extend the lobby?")
         await self.get_channel()
         try:
-            await self.lobby_channel.send(f"<@{self.host_id}>", embed=embed, view=self.__bot.extend_lobby_view(self.__bot))
+            await self.lobby_channel.send(f"<@{self.host.id}>", embed=embed, view=self.__bot.extend_lobby_view(self.__bot))
         except discord.DiscordException:
             pass
         self.five_minute_warning = True
