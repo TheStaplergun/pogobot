@@ -139,23 +139,15 @@ async def start_five_minute_warning_loop(bot):
             relevant_time = datetime.now() + timedelta(minutes=5)
 
             checked = 0
-            print("Looking at lobbies in list")
             for id, lobby in bot.lobbies.items():
-                print("First Lobby")
-                print(f"Lobby {lobby}")
                 if not lobby.five_minute_warning:
-                    print("Did not have five minute warning flag set")
                     if lobby.delete_time < relevant_time:
-                        print("Lobby time was less than the relevant time")
                         await lobby.send_five_minute_warning()
                     else:
-                        print("lobby was not less than the relevant time")
                         continue
-                print("Incrementing Checked")
                 checked += 1
 
             if checked == len(bot.lobbies):
-                print("All lobbies were sucessfully handled.")
                 break
 
             await asyncio.sleep(1)

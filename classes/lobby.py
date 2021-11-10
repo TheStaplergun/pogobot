@@ -15,7 +15,6 @@ class Lobby():
         self.has_filled = False
         self.lock()
         self.five_minute_warning = False
-        print(f"Lobby delete time is {delete_time}")
         self.delete_time = delete_time
         #self.lobby_members = []
 

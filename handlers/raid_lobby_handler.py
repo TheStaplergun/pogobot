@@ -719,7 +719,6 @@ async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remo
     lobby = bot.lobbies.get(lobby_id)
     lobby.delete_time = time_to_remove
     lobby.five_minute_warning = False
-    print("Setting five minute trigger.")
     bot.five_minute_trigger.set()
     await update_delete_time_with_given_time(bot, time_to_remove, raid_id)
     await RH.update_delete_time(bot, time_to_remove, raid_id)
