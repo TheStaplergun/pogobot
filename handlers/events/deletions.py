@@ -16,6 +16,8 @@ async def raid_delete_handle(ctx, bot):
     lobby_data = await RLH.get_lobby_data_by_raid_id(bot, ctx.message_id)
     if not lobby_data:
         return
+    lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
+    lobby.raid_still_exists = False
     user_id = lobby_data.get("host_user_id")
     ctx.user_id = user_id
     raid_id = lobby_data.get("raid_message_id")
