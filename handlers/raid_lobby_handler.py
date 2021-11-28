@@ -638,6 +638,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         try:
             interaction = [itx for itx in user_interaction_data if itx["raid_id"] == lobby.raid_id].pop()
         except IndexError:
+            
             return
         try:
             new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
