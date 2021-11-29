@@ -72,7 +72,20 @@ async def get_friend_code(bot, user_id, host=False):
                             datetime.now(),
                             int(user_id),
                             1 if host else 0)
-    return result.get("friend_code") if result and result.get("friend_code") else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if result else False
+    return result.get("friend_code") if result and result.get("friend_code") else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if result and result.get("friend_code") else False
+
+async def has_friend_code_set(bot, user_id):
+    friend_code, has_code = await get_friend_code(bot, user_id)
+
+    try:
+        friend_code = int(friend_code)
+    except:
+        return False
+
+    if not has_code:
+        return False
+    
+    return True
 
 async def send_friend_code(ctx, bot):
     friend_code, _ = await get_friend_code(bot, ctx.author.id)

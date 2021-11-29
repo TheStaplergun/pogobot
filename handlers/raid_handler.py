@@ -225,6 +225,7 @@ async def check_if_valid_raid_channel(bot, channel_id):
 
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
+    from handlers.friend_code_handler import has_friend_code_set
 
     try:
         await ctx.message.delete()
@@ -264,8 +265,12 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 embed = discord.Embed(title="Error", description=f"That pokemon ({temp}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
+            if not await has_friend_code_set(ctx.author.id):
+                embed = discord.Embed(title="Error", description="You cannot host a raid without your friend code set. Use `-setfc 1234 5678 9012` to set your code.")
+                await bot.send_ignore_error(ctx.author, " ", embed=embed)
+                return
             remove_after_seconds = 900
-            channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
+            #channel_message_body = f'Raid hosted by {ctx.author.mention}\n'
             _, _, _, role_id = await REQH.check_if_request_message_exists(bot, response.title, ctx.guild.id)
 
             raid_lobby_category = await get_raid_lobby_category_by_guild_id(bot, ctx.guild.id)
