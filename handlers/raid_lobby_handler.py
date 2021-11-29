@@ -638,11 +638,15 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         try:
             interaction = [itx for itx in user_interaction_data if itx["raid_id"] == lobby.raid_id].pop()
         except IndexError:
-            
-            return
+            interaction = None
         try:
-            new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
-            message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
+            if interaction:
+                new_embed = discord.Embed(title="Notification", description="You have been accepted into a lobby. Click the replied to message above to see which lobby.")
+                message = await interaction["interaction"].followup.send(f"{member.mention}", embed=new_embed, ephemeral=True)
+            else:
+                # If no interaction available, or of it fails to send on the interaction, just Dm the user.
+                new_embed = discord.Embed(title="Notification", description=f"An error occurred from discord, so I DMed you instead to let you know you were selected for a raid. You can find it here: [{lobby_channel.mention}]")
+                message = await bot.send_ignore_error(member, " ", embed=new_embed)
         except discord.DiscordException as e:
             new_embed = discord.Embed(title="Notification", description=f"An error occurred from discord, so I DMed you instead to let you know you were selected for a raid. You can find it here: [{lobby_channel.mention}]")
             message = await bot.send_ignore_error(member, " ", embed=new_embed)
