@@ -1,6 +1,7 @@
 import asyncio
 from datetime import datetime, timedelta
 import pytz
+import traceback
 
 import asyncpg
 import discord
@@ -782,8 +783,8 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
                              bot.add_role_ignore_error(member, role, "Member of lobby"),
                              bot.send_ignore_error(lobby, message_to_send),
                              bot.delete_ignore_error(message))
-    except discord.DiscordException:
-        pass
+    except discord.DiscordException as e:
+        print(f"[!]An exception occurred during the process of adding a user to a lobby. [{e}]")
 
 
 async def handle_check_in_from_button(itx, bot):

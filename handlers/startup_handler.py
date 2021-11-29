@@ -3,6 +3,7 @@ from operator import itemgetter
 import asyncio
 from datetime import datetime, timedelta
 import time
+import traceback
 import discord
 import handlers.raid_handler as RH
 import handlers.raid_lobby_handler as RLH
@@ -232,37 +233,43 @@ async def start_applicant_loop(bot):
     while True:
         # Outer loop waits on triggers.
         while True:
-            raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
-            if not raid_lobby_data_list:
-                break
+            try:
+                raid_lobby_data_list = await RLH.get_latest_lobby_data_by_timestamp(bot)
+                if not raid_lobby_data_list:
+                    break
 
-            total_lobbies_to_handle = len(raid_lobby_data_list)
-            checked_count = 0
-            cur_time = datetime.now()
-            threshold_time = cur_time - timedelta(seconds=45)
+                total_lobbies_to_handle = len(raid_lobby_data_list)
+                checked_count = 0
+                cur_time = datetime.now()
+                threshold_time = cur_time - timedelta(seconds=45)
 
-            for raid_lobby_data in raid_lobby_data_list:
-                lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
-                if not lobby.raid_still_exists or lobby.pending_unlock:
-                    continue
-                if lobby.has_filled:
-                    await lobby.ask_to_unlock()
-                    checked_count += 1
-                    continue
-                posted_time = raid_lobby_data.get("posted_at")
-                if posted_time < threshold_time:
-                    #raid_host_id = raid_lobby_data.get("host_user_id")
-                    raid_message_id = raid_lobby_data.get("raid_message_id")
-                    users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
-                    if not users:
+                for raid_lobby_data in raid_lobby_data_list:
+                    lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
+                    if not lobby.raid_still_exists or lobby.pending_unlock:
+                        continue
+                    if lobby.has_filled:
+                        await lobby.ask_to_unlock()
                         checked_count += 1
-                    guild_id = raid_lobby_data.get("guild_id")
-                    guild = bot.get_guild(int(guild_id))
+                        continue
+                    posted_time = raid_lobby_data.get("posted_at")
+                    if posted_time < threshold_time:
+                        #raid_host_id = raid_lobby_data.get("host_user_id")
+                        raid_message_id = raid_lobby_data.get("raid_message_id")
+                        users = await RLH.get_applicants_by_raid_id(bot, raid_message_id)
+                        if not users:
+                            checked_count += 1
+                        guild_id = raid_lobby_data.get("guild_id")
+                        guild = bot.get_guild(int(guild_id))
 
-                    await RLH.process_user_list(bot, raid_lobby_data, users, guild)
-            if checked_count == total_lobbies_to_handle:
-                break
-            await asyncio.sleep(1)
+                        await RLH.process_user_list(bot, raid_lobby_data, users, guild)
+                if checked_count == total_lobbies_to_handle:
+                    break
+                await asyncio.sleep(1)
+            except:
+                error_channel = await bot.get_error_channel()
+                await bot.send_ignore_error(error_channel, "<@422429826809331712>\nAn exception occurred during the applicant loop. Check the logs.")
+                traceback.print_last(file="traceback.log")
+
 
         await bot.applicant_trigger.wait()
 

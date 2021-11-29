@@ -42,6 +42,8 @@ class Bot(commands.Bot):
         self.interactions = {}
         self.lobbies = {}
 
+        self.error_channel = None
+
     async def on_ready(self):
         self.add_view(VH.RaidView(self))
         self.add_view(VH.RequestView(self))
@@ -116,3 +118,9 @@ class Bot(commands.Bot):
             pass
         except AttributeError:
             pass
+
+    async def get_error_channel(self):
+        if not self.error_channel:
+            self.error_channel = await self.retrieve_channel(914713447772598282)
+        
+        return self.error_channel
