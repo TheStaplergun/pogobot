@@ -265,7 +265,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 embed = discord.Embed(title="Error", description=f"That pokemon ({temp}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
-            if not await has_friend_code_set(ctx.author.id):
+            if not await has_friend_code_set(bot, ctx.author.id):
                 embed = discord.Embed(title="Error", description="You cannot host a raid without your friend code set. Use `-setfc 1234 5678 9012` to set your code.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
