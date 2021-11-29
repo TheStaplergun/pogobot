@@ -265,9 +265,9 @@ async def start_applicant_loop(bot):
                 if checked_count == total_lobbies_to_handle:
                     break
                 await asyncio.sleep(1)
-            except:
+            except Exception as e:
                 error_channel = await bot.get_error_channel()
-                await bot.send_ignore_error(error_channel, "<@422429826809331712>\nAn exception occurred during the applicant loop. Check the logs.")
+                await bot.send_ignore_error(error_channel, f"<@422429826809331712>\nAn exception occurred during the applicant loop. [{e}] Check the logs for the traceback.")
                 traceback.print_last(file="traceback.log")
 
 
