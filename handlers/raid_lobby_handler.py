@@ -766,10 +766,10 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"))
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
-        message_to_send = f"{message_to_send}\n*Copy this message directly into the game.*\n-----"
+        message_to_send = f"{message_to_send}\n**Copy this message directly into the game.**"
     else:
-        message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined.\n-----"
-
+        message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined."
+    message_to_send += "\nCheck the 📌pinned📌 message for host information.\n-----"
     await asyncio.gather(set_checked_in_flag(bot, member.id),
                          lobby.set_permissions(member, read_messages=True,
                                                        #send_messages=True,
