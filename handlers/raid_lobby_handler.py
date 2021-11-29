@@ -770,15 +770,20 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined."
     message_to_send += "\nCheck the 📌pinned📌 message for host information.\n-----"
-    await asyncio.gather(set_checked_in_flag(bot, member.id),
-                         lobby.set_permissions(member, read_messages=True,
-                                                       #send_messages=True,
-                                                       embed_links=True,
-                                                       attach_files=True),
-                         set_recent_participation(bot, member.id),
-                         bot.add_role_ignore_error(member, role, "Member of lobby"),
-                         bot.send_ignore_error(lobby, message_to_send),
-                         bot.delete_ignore_error(message))
+    if not lobby:
+        return
+    try:
+        await asyncio.gather(set_checked_in_flag(bot, member.id),
+                             lobby.set_permissions(member, read_messages=True,
+                                                         #send_messages=True,
+                                                         embed_links=True,
+                                                         attach_files=True),
+                             set_recent_participation(bot, member.id),
+                             bot.add_role_ignore_error(member, role, "Member of lobby"),
+                             bot.send_ignore_error(lobby, message_to_send),
+                             bot.delete_ignore_error(message))
+    except discord.DiscordException:
+        pass
 
 
 async def handle_check_in_from_button(itx, bot):
