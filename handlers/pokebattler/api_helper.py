@@ -106,8 +106,14 @@ def format_pokemon_name(name):
     name = " ".join(name).title()
     return name
 
+async def get_counter_from_button(interaction, bot):
+    _, pokemon_name = H.get_pokemon_name_from_raid(interaction.message)
 
-async def get_counter(bot, ctx, tier, name, weather):
+    tier = H.get_tier_from_raid(interaction.message)
+    weather = H.get_weather_from_emoji(interaction.message)
+    await get_counter(bot, itx=interaction, tier=tier, name=pokemon_name, weather=weather)
+
+async def get_counter(bot, ctx=None, itx=None, tier=None, name=None, weather=None):
     author = ctx.author
     message = ctx.message
     raid_channel = await check_if_valid_raid_channel(bot, message.channel.id)
@@ -117,6 +123,9 @@ async def get_counter(bot, ctx, tier, name, weather):
         target = author
     else:
         target = ctx
+
+    if itx:
+        target = itx.response
 
     if not tier or (tier.lower() == "mega" and not name):
         await target.send("No pokemon given to get counters for.", delete_after=None if target == author else 15)
@@ -147,7 +156,10 @@ async def get_counter(bot, ctx, tier, name, weather):
     embed_thumbnail = build_image_link_github(dex_num)
     embed.set_thumbnail(url=embed_thumbnail)
     try:
-        await target.send(embed=embed)
+        if itx:
+            await target.send_message(" ", embed=embed, ephemeral=True)
+        else:
+            await target.send(embed=embed)
     except discord.DiscordException:
         pass
 

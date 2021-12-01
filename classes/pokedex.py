@@ -94,7 +94,7 @@ class Pokedex():
             b"attackerTypes":b"POKEMON_TYPE_ALL",
         }
         result, url = API.retrieve_data_from_api(API.link_builder(name, tier, weather), params)
-        result = result.get("attackers").pop().get("randomMove").get("defenders")[-1:-7:-1]
+        result = result.get("attackers").pop().get("randomMove").get("defenders")[-1:-11:-1]
         for defender in result:
             moves = defender.get("byMove").pop()
             moves.pop("result")

@@ -95,6 +95,7 @@ def validate_and_format_message(ctx,
             embed.url = POKEBATTLER_LINK.get(embed_pokemon)
             embed.description = "Click the Pokemon name above for more in depth counter information."
         embed.set_thumbnail(url=embed_thumbnail)
+        embed.add_field(name="Tier", value=tier, inline=False)
         embed.add_field(name="Weather", value=embed_weather, inline=True)
         embed.add_field(name="Slots", value=embed_invites, inline=True)
         #embed.set_footer(text="To join this raid, DM the host above.")

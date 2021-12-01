@@ -1,5 +1,6 @@
 import discord
 
+import handlers.pokebattler.api_helper as APIH
 import handlers.helpers as H
 import handlers.raid_handler as RH
 import handlers.request_handler as REQH
@@ -14,6 +15,10 @@ class RaidView(discord.ui.View):
     @discord.ui.button(custom_id="button_sign_up_raid", label="Sign up", emoji="📝", style=discord.ButtonStyle.green)
     async def sign_up_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         await RLH.handle_application_from_button(interaction, self.__bot)
+
+    @discord.ui.button(custom_id="button_counter_raid", label="Recommended Counters", emoji="⚔️", style=discord.ButtonStyle.Blurple)
+    async def send_counters_button_callback(self, button:discord.ui.Button, interaction: discord.Interaction):
+        await APIH.get_counter_from_button(interaction, self.__bot)
 
     @discord.ui.button(custom_id="button_add_role_raid", label="Get notifications", emoji="📬")#, style=discord.ButtonStyle.green)
     async def add_role_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):

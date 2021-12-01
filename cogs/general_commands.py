@@ -68,7 +68,7 @@ class GeneralCommands(commands.Cog):
 
     @commands.command(aliases=["c"])
     async def counter(self, ctx, tier="None", name="None", weather="Clear"):
-        await asyncio.gather(APIH.get_counter(self.__bot, ctx, tier, name, weather),
+        await asyncio.gather(APIH.get_counter(self.__bot, ctx=ctx, tier=tier, name=name, weather=weather),
                              self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
