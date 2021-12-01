@@ -222,7 +222,9 @@ async def check_if_valid_raid_channel(bot, channel_id):
         return False
     return True
 
-
+VERIFIED_ONLY_RAIDS = [
+    "Mega Steelix"
+]
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
     from handlers.friend_code_handler import has_friend_code_set
@@ -257,6 +259,11 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                                                                           weather,
                                                                           invite_slots)
         if raid_is_valid:
+            if not is_verified or not invite_slots > 5:
+                if response.title in VERIFIED_ONLY_RAIDS and not invite_slots > 5:
+                    embed = discord.Embed(title="Error", description="This raid has proven to be excessively difficult, and has been deemed as only being allowed to be hosted by `Verified Raid Hosts` with 6 or more slots. To get this role, you must be verified by the moderators of this server and given the 'Verified Raid Host' role, and host the raid with more than 5 slots.")
+                    await bot.send_ignore_error(ctx.author, "", embed=embed)
+                    return
             temp = response.title
             temp = temp.replace("-Altered", "")
             temp = temp.replace("-Origin","")
