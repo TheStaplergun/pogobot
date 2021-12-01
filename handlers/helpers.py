@@ -15,7 +15,7 @@ def get_pokemon_name_from_raid(message):
 def get_tier_from_raid(message):
     embed = message.embeds[0]
     tier = "1"
-    for field in embed:
+    for field in embed.fields:
         if field.name == "Tier":
             tier = field.value
             break
@@ -27,7 +27,7 @@ EMOJI_TO_WEATHER = {v:k for k,v in WEATHER_TO_EMOJI.items()}
 def get_weather_from_emoji(message):
     embed = message.embeds[0]
     emoji = "☀️"
-    for field in embed:
+    for field in embed.fields:
         if field.name == "Weather":
             emoji = field.value
             break
