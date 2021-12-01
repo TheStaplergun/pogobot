@@ -246,7 +246,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     try:
         invite_slots = int(invite_slots)
         if not is_verified and invite_slots > 5:
-            embed = discord.Embed(title="Error", description="To host a raid with more than 5 users, you must be verified by the moderators of this server and given the 'Verified Raid Host' role to show you understand how to host a large party raid.")
+            embed = discord.Embed(title="Error", description="To host a raid with more than 5 users, you must be verified by the moderators of this server and given the `Verified Raid Host` role to show you understand how to host a large party raid.")
             await bot.send_ignore_error(ctx.author, "", embed=embed)
             return
     except ValueError:
