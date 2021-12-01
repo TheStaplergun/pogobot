@@ -16,7 +16,7 @@ class RaidView(discord.ui.View):
     async def sign_up_button_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
         await RLH.handle_application_from_button(interaction, self.__bot)
 
-    @discord.ui.button(custom_id="button_counter_raid", label="Recommended Counters", emoji="⚔️", style=discord.ButtonStyle.Blurple)
+    @discord.ui.button(custom_id="button_counter_raid", label="Recommended Counters", emoji="⚔️", style=discord.ButtonStyle.blurple)
     async def send_counters_button_callback(self, button:discord.ui.Button, interaction: discord.Interaction):
         await APIH.get_counter_from_button(interaction, self.__bot)
 
