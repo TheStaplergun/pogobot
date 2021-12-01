@@ -268,7 +268,7 @@ async def start_applicant_loop(bot):
             except Exception as e:
                 error_channel = await bot.get_error_channel()
                 await bot.send_ignore_error(error_channel, f"<@422429826809331712>\nAn exception occurred during the applicant loop. [{e}] Check the logs for the traceback.")
-                traceback.print_last(file="traceback.log")
+                traceback.print_last(file="/home/ubuntu/traceback.log")
 
 
         await bot.applicant_trigger.wait()
