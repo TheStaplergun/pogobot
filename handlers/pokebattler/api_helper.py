@@ -114,8 +114,8 @@ async def get_counter_from_button(interaction, bot):
     await get_counter(bot, itx=interaction, tier=tier, name=pokemon_name, weather=weather)
 
 async def get_counter(bot, ctx=None, itx=None, tier=None, name=None, weather=None):
-    author = ctx.author
-    message = ctx.message
+    author = ctx.author if ctx else itx.user
+    message = ctx.message if ctx else itx.message
     raid_channel = await check_if_valid_raid_channel(bot, message.channel.id)
     request_channel = await check_if_valid_request_channel(bot, message.channel.id)
 
