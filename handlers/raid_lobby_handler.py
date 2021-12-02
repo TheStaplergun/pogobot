@@ -963,21 +963,22 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
         lobby_id = ctx.channel.id
     lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
-    lobby_channel = await bot.retrieve_channel(lobby_id)
+    #lobby_channel = await bot.retrieve_channel(lobby_id)
     if lobby_data and lobby_id == ctx.channel.id:
-        lobby = ctx.channel
+        lobby_channel = ctx.channel
     else:
-        lobby = await bot.retrieve_channel(lobby_id)
+        lobby_channel = await bot.retrieve_channel(lobby_id)
 
-    if lobby and not lobby.permissions_for(ctx.author).manage_channels:
+    if lobby_channel and not lobby_channel.permissions_for(ctx.author).manage_channels:
         embed = discord.Embed(title="", description="You do not have permission to manage that lobby.")
         await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
         return False
 
     if lobby_data and lobby_data.get("lobby_channel_id") != lobby_id:
         await bot.send_ignore_error(ctx, "The given channel id is not a valid lobby.", delete_after=15)
+        return False
 
-    if not lobby:
+    if not lobby_channel:
         try:
             await ctx.send("The given channel id is not a valid lobby.")
         except discord.DiscordException:
@@ -988,6 +989,7 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
+    lobby = bot.lobbies.get(lobby_channel.id)
     await delete_lobby(bot, lobby, lobby_channel, lobby_data)
     if lobby_data and lobby_id != ctx.channel.id:
         try:
