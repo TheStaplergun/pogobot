@@ -320,6 +320,7 @@ async def remove_application_for_user(bot, member, raid_id, lobby, should_notify
         await c.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
 
     await lobby.remove_an_applicant(member.id)
+    await lobby.update_raid_status()
 
     try:
         if should_notify:
@@ -501,6 +502,7 @@ async def handle_new_application(ctx, bot, member, message, lobby):
     speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
     app_weight = await calculate_weight(bot, True if role else False, speed_bonus, member.id)
     await lobby.add_an_applicant(member.id)
+    await lobby.update_raid_status()
     #await lobby.update_raid_status()
     await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), app_weight)
     bot.applicant_trigger.set()

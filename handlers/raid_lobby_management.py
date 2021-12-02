@@ -69,7 +69,7 @@ async def extend_duration_of_lobby(bot, ctx):
 
     max_remaining_extendable_time = 2700 - old_total_duration.total_seconds()
     max_remaining_extendable_time_type = "minute"
-
+    new_time_extension = 0
     if new_total_duration.total_seconds() > 2700:
         new_time_extension = max_remaining_extendable_time
         new_delete_time = lobby_delete_time + timedelta(seconds=new_time_extension)
