@@ -24,8 +24,8 @@ class Lobby():
         self.delete_time = delete_time
         self.raid_still_exists = True
         self.updating_raid_status = False
-        self.applicants = {}
-        self.members = {}
+        self.applicants = set()
+        self.members = set()
 
     async def add_a_user(self, user_id):
         self.user_count+=1
