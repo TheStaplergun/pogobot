@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+from datetime import timedelta
 
 import discord
 
@@ -28,7 +30,9 @@ class Lobby():
         self.auto_locked = False
         self.applicants = set()
         self.members = set()
-        if self.
+        relevant_time = datetime.now() - timedelta(minutes=1)
+        if self.posted_at < relevant_time:
+            self.starting_phase = False
 
     async def add_a_user(self, user_id):
         self.user_count+=1
