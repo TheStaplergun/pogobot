@@ -74,7 +74,7 @@ class Lobby():
             return
         self.updating_raid_status = True
         await asyncio.sleep(self.__bot.status_update_interval)
-        raid_data = RH.retrieve_raid_data_by_message_id(None, self.__bot, self.raid_id)
+        raid_data = await RH.retrieve_raid_data_by_message_id(None, self.__bot, self.raid_id)
         raid_channel = self.__bot.retrieve_channel(raid_data.get("channel_id"))
         try:
             raid_message = await raid_channel.fetch_message(self.raid_id)
