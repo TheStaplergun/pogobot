@@ -98,7 +98,7 @@ class Lobby():
                 status = "Unlocked (Searching for users)"
 
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=STATUS_TO_COLOR.get(status))
-        embed.set_thumbnail(url=embed.thumbnail.url)
+        new_embed.set_thumbnail(url=embed.thumbnail.url)
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value, inline=True)
         new_embed.add_field(name=embed.fields[1].name, value=embed.fields[1].value, inline=True)
         new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value, inline=False)
