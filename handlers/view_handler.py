@@ -1,3 +1,5 @@
+import traceback
+
 import discord
 
 import handlers.pokebattler.api_helper as APIH
@@ -88,4 +90,8 @@ class ExtendLobbyView(discord.ui.View):
 
     @discord.ui.button(custom_id="button_extend_lobby", label="Extend Lobby Time", emoji="⏱️", style=discord.ButtonStyle.green)
     async def extend_lobby_callback(self, button: discord.ui.Button, interaction: discord.Interaction):
-        await RLM.extend_lobby_from_button(interaction, self.__bot)
+        try:
+            await RLM.extend_lobby_from_button(interaction, self.__bot)
+        except Exception as e:
+            await self.__bot.get_error_channel()
+            await self.__bot.send_ignore_error(traceback.print_tb())
