@@ -93,5 +93,5 @@ class ExtendLobbyView(discord.ui.View):
         try:
             await RLM.extend_lobby_from_button(interaction, self.__bot)
         except Exception as e:
-            await self.__bot.get_error_channel()
-            await self.__bot.send_ignore_error(traceback.print_tb())
+            channel = await self.__bot.get_error_channel()
+            await self.__bot.send_ignore_error(channel, traceback.print_tb())
