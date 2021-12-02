@@ -91,8 +91,12 @@ class Lobby():
             status = "Gathering Applications"
         elif self.is_full():
             status = "Locked (Full)"
-        elif not self.is_full() and not self.pending_unlock:
-            status = "Unlocked (Searching for users)"
+        elif not self.is_full():
+            if self.pending_unlock:
+                status = "Locked (Pending Unlock)"
+            else:
+                status = "Unlocked (Searching for users)"
+
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=STATUS_TO_COLOR.get(status))
         embed.set_thumbnail(url=embed.thumbnail.url)
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value, inline=True)
