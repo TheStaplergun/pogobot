@@ -98,7 +98,7 @@ def validate_and_format_message(ctx,
         embed.add_field(name="Tier", value=tier.lower().replace("t",""), inline=True)
         embed.add_field(name="Weather", value=embed_weather, inline=True)
         embed.add_field(name="Applicants", value=0, inline=True)
-        embed.add_field(name="Members/Slots", value=f"0/embed_invites", inline=False)
+        embed.add_field(name="Members/Slots", value=f"0/{embed_invites}", inline=False)
         #embed.set_footer(text="To join this raid, DM the host above.")
         if embed_pokemon in RAID_COUNTER_GUIDE:
             embed.set_image(url=RAID_COUNTER_GUIDE.get(embed_pokemon))
