@@ -934,8 +934,8 @@ DECREMENT_NOTIFIED_USERS = """
 #                          bot.send_ignore_error(member, " ", embed=new_embed))
 
 async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
-    members = lobby.members
-    guild = lobby.guild
+    members = lobby_channel.members
+    guild = lobby_channel.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
     raid_host_role = discord.utils.get(guild.roles, name="Raid Host")
     new_embed = discord.Embed(title="System Notification", description="This lobby has been flagged for removal or has expired and is in the process of being shut down.")
@@ -954,7 +954,7 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
     await asyncio.gather(*tasks)
-    bot.lobbies.pop(lobby.id)
+    bot.lobbies.pop(lobby_channel.id)
 
 async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
