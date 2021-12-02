@@ -8,7 +8,7 @@ class Lobby():
     """
     A class containing various pieces of cached data about a lobbym
     """
-    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications):
+    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications, posted_at):
         self.__bot = bot
         self.user_limit = user_limit
         self.user_count = user_count
@@ -28,6 +28,7 @@ class Lobby():
         self.auto_locked = False
         self.applicants = set()
         self.members = set()
+        if self.
 
     async def add_a_user(self, user_id):
         self.user_count+=1
