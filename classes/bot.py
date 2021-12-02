@@ -43,6 +43,7 @@ class Bot(commands.Bot):
         self.lobbies = {}
 
         self.error_channel = None
+        self.status_update_interval = 1
 
     async def on_ready(self):
         self.add_view(VH.RaidView(self))
@@ -122,5 +123,5 @@ class Bot(commands.Bot):
     async def get_error_channel(self):
         if not self.error_channel:
             self.error_channel = await self.retrieve_channel(914713447772598282)
-        
+
         return self.error_channel

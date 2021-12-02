@@ -93,3 +93,9 @@ TYPE_TO_EMOJI =\
   "FIGHTING":"856345066087907348",
   "NORMAL":"856345015001415701"
 }
+
+STATUS_TO_COLOR={
+    "Locked (Full)":0xE74C3C,
+    "Unlocked (Searching for users)":0x2ECC71,
+    "Gathering Applications":0xBCC0C0
+}

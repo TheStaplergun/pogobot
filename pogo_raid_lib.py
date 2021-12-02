@@ -90,7 +90,7 @@ def validate_and_format_message(ctx,
         title = embed_pokemon
         if tier.lower() == "mega":
             title = "Mega " + embed_pokemon
-        embed = discord.Embed(title=title, description="", color=0xff8c00)#get_embed_color(gym_color))
+        embed = discord.Embed(title=title, description="", color=0xBCC0C0)#get_embed_color(gym_color))
         if embed_pokemon in POKEBATTLER_LINK:
             embed.url = POKEBATTLER_LINK.get(embed_pokemon)
             embed.description = "Click the Pokemon name above for more in depth counter information."

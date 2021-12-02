@@ -319,7 +319,7 @@ async def remove_application_for_user(bot, member, raid_id, lobby, should_notify
         await c.execute(REMOVE_APPLICATION_FOR_USER_BY_ID, member.id)
         await c.execute(REDUCE_APPLICANT_COUNT_BY_RAID_ID, raid_id)
 
-    lobby.remove_an_applicant(member.id)
+    await lobby.remove_an_applicant(member.id)
 
     try:
         if should_notify:
@@ -327,7 +327,7 @@ async def remove_application_for_user(bot, member, raid_id, lobby, should_notify
             await member.send(" ", embed=new_embed)
     except discord.DiscordException:
         pass
-
+    lobby.update_raid_status()
     bot.applicant_trigger.set()
 
 REDUCE_USER_COUNT_BY_RAID_ID = """
@@ -338,7 +338,7 @@ REDUCE_USER_COUNT_BY_RAID_ID = """
 async def decrement_user_count_for_lobby(bot, raid_id, user_id, lobby_data=None):
     if lobby_data:
         lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
-        lobby.remove_a_user(user_id)
+        await lobby.remove_a_user(user_id)
     await bot.database.execute(REDUCE_USER_COUNT_BY_RAID_ID, raid_id)
     bot.applicant_trigger.set()
 
@@ -354,6 +354,7 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You have left the lobby.")
     tasks.append(bot.send_ignore_error(member, " ", embed=embed))
+    tasks.append(lobby.update_raid_status())
     await asyncio.gather(*tasks)
 
 async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
@@ -432,6 +433,7 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     tasks.append(bot.send_ignore_error(ctx.channel, " ", embed=embed))
     embed = discord.Embed(title="System Notification", description="You were removed from the lobby.")
     tasks.append(bot.send_ignore_error(member, " ", embed=embed))
+    tasks.append(lobby.update_raid_status())
     await asyncio.gather(*tasks)
     #bot.applicant_trigger.set()
 
@@ -498,7 +500,8 @@ async def handle_new_application(ctx, bot, member, message, lobby):
     listing_duration = time_to_end - message.created_at
     speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
     app_weight = await calculate_weight(bot, True if role else False, speed_bonus, member.id)
-    lobby.add_an_applicant(member.id)
+    await lobby.add_an_applicant(member.id)
+    lobby.update_raid_status()
     await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), app_weight)
     bot.applicant_trigger.set()
 
@@ -711,7 +714,7 @@ async def increment_user_count_for_raid_lobby(bot, lobby_id, user_id):
     await bot.database.execute(UPDATE_USER_COUNT_FOR_RAID_LOBBY, int(lobby_id))
 
     lobby = await bot.get_lobby(lobby_id)
-    return lobby.add_a_user(user_id)
+    return await lobby.add_a_user(user_id)
 
 UPDATE_CHECKED_IN_FLAG = """
     UPDATE raid_application_user_map
@@ -764,7 +767,7 @@ DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER = """
     DELETE FROM raid_application_user_map
     WHERE (user_id = $1 and raid_message_id != $2);
 """
-async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobby_data, raid_id):
+async def process_and_add_user_to_lobby(bot, member, lobby_channel, guild, message, lobby_data, raid_id):
     await bot.database.execute(DELETE_APPLICATIONS_THAT_ARE_NOT_RELEVANT_FOR_USER,
                                int(member.id),
                                int(raid_id))
@@ -774,24 +777,26 @@ async def process_and_add_user_to_lobby(bot, member, lobby, guild, message, lobb
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"), member.id)
+    lobby = bot.lobbies.get(lobby_channel.id)
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
         message_to_send = f"{message_to_send}\n**Copy this message directly into the game.**"
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined."
     message_to_send += "\nCheck the 📌pinned📌 message for host information.\n-----"
-    if not lobby:
+    if not lobby_channel:
         return
     try:
         await asyncio.gather(set_checked_in_flag(bot, member.id),
-                             lobby.set_permissions(member, read_messages=True,
+                             lobby_channel.set_permissions(member, read_messages=True,
                                                          #send_messages=True,
                                                          embed_links=True,
                                                          attach_files=True),
                              set_recent_participation(bot, member.id),
                              bot.add_role_ignore_error(member, role, "Member of lobby"),
-                             bot.send_ignore_error(lobby, message_to_send),
-                             bot.delete_ignore_error(message))
+                             bot.send_ignore_error(lobby_channel, message_to_send),
+                             bot.delete_ignore_error(message),
+                             lobby.update_raid_status())
     except discord.DiscordException as e:
         print(f"[!]An exception occurred during the process of adding a user to a lobby. [{e}]")
 
