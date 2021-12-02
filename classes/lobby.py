@@ -83,7 +83,7 @@ class Lobby():
             return
         embed = raid_message.embeds[0]
         status=None
-        if self.is_full:
+        if self.is_full():
             status = "Locked (Full)"
         if not self.is_full and not self.pending_unlock:
             status = "Unlocked (Searching for users)"
