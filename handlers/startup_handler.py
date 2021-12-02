@@ -253,8 +253,7 @@ async def start_applicant_loop(bot):
                         continue
                     posted_time = raid_lobby_data.get("posted_at")
                     if cur_time - posted_time > timedelta(minutes=5) and not lobby.is_full() and not lobby.auto_locked:
-                        lobby.auto_locked = True
-                        lobby.pending_unlock = True
+                        await lobby.auto_lock()
                         lobby.update_raid_status()
                         continue
 

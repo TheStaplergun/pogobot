@@ -117,7 +117,7 @@ class Lobby():
         if self.pending_unlock:
             return
 
-        embed = discord.Embed(title="Unlock?", description="The lobby is no longer full. Would you like to gather more users?")
+        embed = discord.Embed(title="Unlock?", description="The lobby is not full. Would you like to gather more users?")
         await self.get_channel()
         try:
             await self.lobby_channel.send(f"<@{self.host.id}>", embed=embed, view=self.__bot.unlock_lobby_view(self.__bot))
@@ -134,3 +134,9 @@ class Lobby():
         except discord.DiscordException:
             pass
         self.five_minute_warning = True
+
+    async def auto_lock(self):
+        self.auto_locked = True
+        self.pending_unlock = True
+
+        await self.ask_to_unlock()
