@@ -85,7 +85,7 @@ class Lobby():
         status=None
         if self.is_full():
             status = "Locked (Full)"
-        if not self.is_full and not self.pending_unlock:
+        if not self.is_full() and not self.pending_unlock:
             status = "Unlocked (Searching for users)"
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=STATUS_TO_COLOR.get(status))
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value, inline=False)
