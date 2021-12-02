@@ -799,11 +799,10 @@ async def process_and_add_user_to_lobby(bot, member, lobby_channel, guild, messa
                              set_recent_participation(bot, member.id),
                              bot.add_role_ignore_error(member, role, "Member of lobby"),
                              bot.send_ignore_error(lobby_channel, message_to_send),
-                             bot.delete_ignore_error(message),
-                             lobby.update_raid_status())
+                             bot.delete_ignore_error(message))
+        lobby.update_raid_status()
     except discord.DiscordException as e:
         print(f"[!]An exception occurred during the process of adding a user to a lobby. [{e}]")
-
 
 async def handle_check_in_from_button(itx, bot):
     result = await bot.database.fetchrow(QUERY_APPLICATION_DATA_FOR_USER, itx.user.id)
