@@ -59,7 +59,7 @@ class Lobby():
     def is_full(self):
         return self.user_count == self.user_limit
 
-    async def lock(self):
+    def lock(self):
         self.has_filled = True if self.is_full() else False
         #await self.update_raid_status()
 
