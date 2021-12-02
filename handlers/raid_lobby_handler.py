@@ -948,7 +948,7 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     for member in members:
         if discord.utils.get(member.roles, name="Lobby Member") and member.id in lobby.members:
             tasks.append(bot.remove_role_ignore_error(member, lobby_member_role, "End of Raid"))
-        if discord.utils.get(guild.roles, name="Raid Host") and member.id == lobby.host_id:
+        if discord.utils.get(guild.roles, name="Raid Host") and member.id == lobby.host.id:
             tasks.append(bot.remove_role_ignore_error(member, raid_host_role, "End of Raid"))
     #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     tasks.append(bot.delete_ignore_error(lobby_channel))
