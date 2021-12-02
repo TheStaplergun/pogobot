@@ -950,6 +950,8 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
         pass
 
     tasks = []
+    if not lobby:
+        return
     for member in members:
         if discord.utils.get(member.roles, name="Lobby Member") and member.id in lobby.members:
             tasks.append(bot.remove_role_ignore_error(member, lobby_member_role, "End of Raid"))
