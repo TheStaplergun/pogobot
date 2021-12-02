@@ -93,7 +93,7 @@ class Lobby():
         new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value)
         new_embed.add_field(name=embed.fields[3].name, value=embed.fields[3].value)
         new_embed.add_field(name="Status", value=status)
-        raid_message.edit(embed=new_embed)
+        await raid_message.edit(embed=new_embed)
         self.updating_raid_status = False
 
     async def get_channel(self):
