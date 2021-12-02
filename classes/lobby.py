@@ -24,6 +24,7 @@ class Lobby():
         self.delete_time = delete_time
         self.raid_still_exists = True
         self.updating_raid_status = False
+        self.starting_phase = True
         self.applicants = set()
         self.members = set()
 
@@ -83,17 +84,20 @@ class Lobby():
             return
         embed = raid_message.embeds[0]
         status=None
-        if self.is_full():
+        if self.starting_phase:
+            status = "Gathering Applications"
+        elif self.is_full():
             status = "Locked (Full)"
-        if not self.is_full() and not self.pending_unlock:
+        elif not self.is_full() and not self.pending_unlock:
             status = "Unlocked (Searching for users)"
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=STATUS_TO_COLOR.get(status))
+        embed.set_thumbnail(url=embed.thumbnail.url)
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value, inline=False)
         new_embed.add_field(name=embed.fields[1].name, value=embed.fields[1].value, inline=True)
-        new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value, inline=True)
+        new_embed.add_field(name=embed.fields[2].name, value=self.applicant_count, inline=False)
+        new_embed.add_field(name=embed.fields[3].name, value=f"{self.user_count}/{embed.fields[3].value}", inline=True)
         new_embed.add_field(name=embed.fields[3].name, value=embed.fields[3].value, inline=False)
         new_embed.add_field(name="Status", value=status, inline=False)
-
         await raid_message.edit(embed=new_embed)
         self.updating_raid_status = False
 

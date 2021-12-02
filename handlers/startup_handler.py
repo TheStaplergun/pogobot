@@ -184,8 +184,9 @@ async def start_lobby_removal_loop(bot):
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby_channel = await bot.retrieve_channel(int(lobby_id))
             lobby = bot.lobbies.get(lobby_id)
+            lobby.starting_phase = False
             #lobby = bot.get_channel(int(lobby_id))
-            if not lobby:
+            if not lobby_channel:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
                 continue
             await RLH.delete_lobby(bot, lobby, lobby_channel, lobby_data)
