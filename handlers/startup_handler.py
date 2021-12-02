@@ -100,6 +100,9 @@ async def set_up_lobbes(bot):
                                                                      raid_id=lobby.get("raid_message_id"),
                                                                      host=await bot.retrieve_user(lobby.get("host_user_id")),
                                                                      delete_time=lobby.get("delete_at")) for lobby in lobbies}
+    for lobby in bot.lobbies:
+
+        await lobby.update_raid_status()
 
 
 GET_TOTAL_COUNT = """
@@ -243,6 +246,7 @@ async def start_applicant_loop(bot):
                 checked_count = 0
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=45)
+                five_minute_autolock_threshold = cur_time - timedelta(minutes=5)
                 for raid_lobby_data in raid_lobby_data_list:
                     lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
                     if not lobby.raid_still_exists or lobby.pending_unlock:
@@ -252,7 +256,7 @@ async def start_applicant_loop(bot):
                         checked_count += 1
                         continue
                     posted_time = raid_lobby_data.get("posted_at")
-                    if not lobby.auto_locked and not lobby.is_full() and (cur_time - posted_time).total_seconds() > 300:
+                    if not lobby.auto_locked and not lobby.is_full() and posted_time < five_minute_autolock_threshold:
                         await lobby.auto_lock()
                         lobby.update_raid_status()
                         continue
