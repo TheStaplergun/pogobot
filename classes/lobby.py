@@ -63,7 +63,7 @@ class Lobby():
         self.has_filled = True if self.is_full() else False
         #await self.update_raid_status()
 
-    async def unlock(self):
+    def unlock(self):
         self.has_filled = False
         self.pending_unlock = False
         self.__bot.applicant_trigger.set()
