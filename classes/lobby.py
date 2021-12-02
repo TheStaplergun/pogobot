@@ -98,7 +98,8 @@ class Lobby():
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value, inline=True)
         new_embed.add_field(name=embed.fields[1].name, value=embed.fields[1].value, inline=True)
         new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value, inline=False)
-        new_embed.add_field(name=embed.fields[3].name, value=self.applicant_count-self.user_count, inline=True)
+        applicant_count = self.applicant_count-self.user_count
+        new_embed.add_field(name=embed.fields[3].name, value=applicant_count if applicant_count >= 0 else 0, inline=True)
         new_embed.add_field(name=embed.fields[4].name, value=f"{self.user_count}/{self.user_limit}", inline=True)
         new_embed.add_field(name="Status", value=status, inline=False)
         await raid_message.edit(embed=new_embed)
