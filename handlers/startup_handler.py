@@ -184,7 +184,6 @@ async def start_lobby_removal_loop(bot):
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby_channel = await bot.retrieve_channel(int(lobby_id))
             lobby = bot.lobbies.get(lobby_id)
-            lobby.starting_phase = False
             #lobby = bot.get_channel(int(lobby_id))
             if not lobby_channel:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
@@ -262,7 +261,7 @@ async def start_applicant_loop(bot):
                             checked_count += 1
                         guild_id = raid_lobby_data.get("guild_id")
                         guild = bot.get_guild(int(guild_id))
-
+                        lobby.remove_starting_phase()
                         await RLH.process_user_list(bot, raid_lobby_data, users, guild)
                 if checked_count == total_lobbies_to_handle:
                     break

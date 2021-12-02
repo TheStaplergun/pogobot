@@ -70,6 +70,9 @@ class Lobby():
         self.__bot.applicant_trigger.set()
         #await self.update_raid_status()
 
+    def remove_starting_phase(self):
+        self.starting_phase = False
+
     async def update_raid_status(self):
         if self.updating_raid_status == True or not self.raid_still_exists:
             return
