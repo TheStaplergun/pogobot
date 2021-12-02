@@ -29,7 +29,7 @@ class Lobby():
 
     async def add_a_user(self, user_id):
         self.user_count+=1
-        self.members.update(user_id)
+        self.members.add(user_id)
         #await self.update_raid_status()
         return self.user_count
 
@@ -41,7 +41,7 @@ class Lobby():
 
     async def add_an_applicant(self, user_id):
         self.applicant_count+=1
-        self.applicants.update(user_id)
+        self.applicants.add(user_id)
         #await self.update_raid_status()
 
     async def remove_an_applicant(self, user_id):
