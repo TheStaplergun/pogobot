@@ -531,7 +531,8 @@ async def handle_application_to_raid(bot, itx, message, channel):
     raid_message_id = message.id
 
     lobby_data = await get_lobby_data_by_raid_id(bot, raid_message_id)
-    lobby = lobby_data.get("lobby_channel_id")
+    lobby_id = lobby_data.get("lobby_channel_id")
+    lobby = bot.lobbies.get(lobby_id)
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
