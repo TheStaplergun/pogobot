@@ -687,6 +687,7 @@ async def unlock_lobby_from_button(interaction, bot):
     if interaction.user.id != lobby.host.id:
         return
     lobby.unlock()
+    await lobby.update_raid_status()
     bot.applicant_trigger.set()
     await bot.delete_ignore_error(interaction.message)
 
