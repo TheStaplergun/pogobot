@@ -320,3 +320,15 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             correction_suggestion = ctx.prefix + "raid " + suggestion
             await ctx.author.send(correction_suggestion)
             print(f'[!][{ctx.guild}][{ctx.author.name}] Raid failed to post due to invalid arguments.')
+
+STATUS_TO_COLOR={
+    "Locked (Full)":0xE74C3C,
+    "Unlocked (Searching for users)":0x2ECC71,
+    "Gathering Applications":0xBCC0C0
+}
+
+async def set_raid_status(bot, message, lobby, users=None, applicants=None, status=None):
+    assert(message)
+    embed = message.embed[0]
+    if users:
+        embed = message.embed[0]

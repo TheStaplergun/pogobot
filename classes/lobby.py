@@ -8,6 +8,7 @@ class Lobby():
         self.__bot = bot
         self.user_limit = user_limit
         self.user_count = user_count
+        self.applicant_count = 0
         self.lobby_id = lobby_id
         self.lobby_channel = None
         self.raid_id = raid_id
@@ -18,14 +19,41 @@ class Lobby():
         self.five_minute_warning = False
         self.delete_time = delete_time
         self.raid_still_exists = True
-        #self.lobby_members = []
+        self.applicants = ()
+        self.members = ()
 
-    def add_a_user(self):
+    def add_a_user(self, user_id):
         self.user_count+=1
+        self.members.update(user_id)
+        self.update_raid_status()
         return self.user_count
 
-    def remove_a_user(self):
+    def remove_a_user(self, user_id):
         self.user_count-=1
+        if user_id in self.members:
+            self.members.remove(user_id)
+        self.update_raid_status()
+
+    def add_an_applicant(self, user_id):
+        self.applicant_count+=1
+        self.applicants.update(user_id)
+        self.update_raid_status()
+
+    def remove_an_applicant(self, user_id):
+        self.applicant_count-=1
+        if user_id in self.applicants:
+            self.applicants.remove(user_id)
+        self.update_raid_status()
+
+    def check_if_user_already_in_lobby(self, user_id):
+        return user_id in self.lobby_members
+
+    def check_if_user_is_already_applied(self, user_id):
+        return user_id in self.applicants
+
+    def add_an_applicant(self, user_id):
+        self.applicant_count+=1
+        self.applicants.update(user_id)
 
     def is_full(self):
         return self.user_count == self.user_limit
