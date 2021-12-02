@@ -99,7 +99,8 @@ async def set_up_lobbes(bot):
                                                                      user_count=lobby.get("user_count"),
                                                                      raid_id=lobby.get("raid_message_id"),
                                                                      host=await bot.retrieve_user(lobby.get("host_user_id")),
-                                                                     delete_time=lobby.get("delete_at")) for lobby in lobbies}
+                                                                     delete_time=lobby.get("delete_at"),
+                                                                     applicants=lobby.get("applied_users")) for lobby in lobbies}
     for _,lobby in bot.lobbies.items():
 
         await lobby.update_raid_status()
