@@ -25,6 +25,7 @@ class Lobby():
         self.raid_still_exists = True
         self.updating_raid_status = False
         self.starting_phase = True
+        self.auto_locked = False
         self.applicants = set()
         self.members = set()
 

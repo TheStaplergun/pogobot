@@ -243,7 +243,6 @@ async def start_applicant_loop(bot):
                 checked_count = 0
                 cur_time = datetime.now()
                 threshold_time = cur_time - timedelta(seconds=45)
-
                 for raid_lobby_data in raid_lobby_data_list:
                     lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
                     if not lobby.raid_still_exists or lobby.pending_unlock:
@@ -253,6 +252,12 @@ async def start_applicant_loop(bot):
                         checked_count += 1
                         continue
                     posted_time = raid_lobby_data.get("posted_at")
+                    if cur_time - posted_time > timedelta(minutes=5) and not lobby.is_full() and not lobby.auto_locked:
+                        lobby.auto_locked = True
+                        lobby.pending_unlock = True
+                        lobby.update_raid_status()
+                        continue
+
                     if posted_time < threshold_time:
                         #raid_host_id = raid_lobby_data.get("host_user_id")
                         raid_message_id = raid_lobby_data.get("raid_message_id")
