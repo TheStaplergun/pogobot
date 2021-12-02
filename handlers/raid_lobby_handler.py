@@ -933,25 +933,25 @@ DECREMENT_NOTIFIED_USERS = """
 #                          decrement_notified_users_by_raid_id(bot, raid_id),
 #                          bot.send_ignore_error(member, " ", embed=new_embed))
 
-async def delete_lobby(bot, lobby, lobby_data):
+async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     members = lobby.members
     guild = lobby.guild
     lobby_member_role = discord.utils.get(guild.roles, name="Lobby Member")
     raid_host_role = discord.utils.get(guild.roles, name="Raid Host")
     new_embed = discord.Embed(title="System Notification", description="This lobby has been flagged for removal or has expired and is in the process of being shut down.")
     try:
-        await lobby.send(embed=new_embed)
+        await lobby_channel.send(embed=new_embed)
     except discord.DiscordException:
         pass
 
     tasks = []
     for member in members:
-        if discord.utils.get(member.roles, name="Lobby Member") and member.id in lobby.members:
+        if discord.utils.get(member.roles, name="Lobby Member") and member.id in lobby_channel.members:
             tasks.append(bot.remove_role_ignore_error(member, lobby_member_role, "End of Raid"))
-        if discord.utils.get(guild.roles, name="Raid Host") and member.id == lobby.host_id:
+        if discord.utils.get(guild.roles, name="Raid Host") and member.id == lobby_channel.host_id:
             tasks.append(bot.remove_role_ignore_error(member, raid_host_role, "End of Raid"))
     #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
-    tasks.append(bot.delete_ignore_error(lobby))
+    tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
     await asyncio.gather(*tasks)
     bot.lobbies.pop(lobby.id)
@@ -960,7 +960,7 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
         lobby_id = ctx.channel.id
     lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
-
+    lobby_channel = await bot.retrieve_channel(lobby_id)
     if lobby_data and lobby_id == ctx.channel.id:
         lobby = ctx.channel
     else:
@@ -985,7 +985,7 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
-    await delete_lobby(bot, lobby, lobby_data)
+    await delete_lobby(bot, lobby, lobby_channel, lobby_data)
     if lobby_data and lobby_id != ctx.channel.id:
         try:
             embed = discord.Embed(title="", description="The requested lobby has been removed.")
