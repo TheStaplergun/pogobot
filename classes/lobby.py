@@ -30,7 +30,7 @@ class Lobby():
         self.auto_locked = False
         self.applicants = set()
         self.members = set()
-        relevant_time = datetime.now() - timedelta(minutes=1)
+        relevant_time = datetime.now() - timedelta(seconds=45)
         if self.posted_at < relevant_time:
             self.starting_phase = False
 

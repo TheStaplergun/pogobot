@@ -103,7 +103,6 @@ async def set_up_lobbes(bot):
                                                                      applicants=lobby.get("applied_users"),
                                                                      posted_at=lobby.get("posted_at")) for lobby in lobbies}
     for _,lobby in bot.lobbies.items():
-
         await lobby.update_raid_status()
 
 
