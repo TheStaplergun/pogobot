@@ -87,12 +87,15 @@ class Lobby():
             status = "Locked (Full)"
         if not self.is_full and not self.pending_unlock:
             status = "Unlocked (Searching for users)"
+        print("Making new embed")
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=STATUS_TO_COLOR.get(status))
         new_embed.add_field(name=embed.fields[0].name, value=embed.fields[0].value)
         new_embed.add_field(name=embed.fields[1].name, value=embed.fields[1].value)
         new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value)
         new_embed.add_field(name=embed.fields[3].name, value=embed.fields[3].value)
         new_embed.add_field(name="Status", value=status)
+        for item in new_embed.fields:
+            print(item)
         await raid_message.edit(embed=new_embed)
         self.updating_raid_status = False
 
