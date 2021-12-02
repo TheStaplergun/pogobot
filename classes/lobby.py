@@ -144,6 +144,6 @@ class Lobby():
 
     async def auto_lock(self):
         self.auto_locked = True
-        self.pending_unlock = True
+        #self.pending_unlock = True
 
         await self.ask_to_unlock()
