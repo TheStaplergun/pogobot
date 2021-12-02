@@ -96,7 +96,7 @@ class Lobby():
         new_embed.add_field(name=embed.fields[1].name, value=embed.fields[1].value, inline=True)
         new_embed.add_field(name=embed.fields[2].name, value=embed.fields[2].value, inline=False)
         new_embed.add_field(name=embed.fields[3].name, value=self.applicant_count, inline=True)
-        new_embed.add_field(name=embed.fields[4].name, value=f"{self.user_count}/{embed.fields[3].value}", inline=True)
+        new_embed.add_field(name=embed.fields[4].name, value=f"{self.user_count}/{embed.fields[4].value}", inline=True)
         new_embed.add_field(name="Status", value=status, inline=False)
         await raid_message.edit(embed=new_embed)
         self.updating_raid_status = False
