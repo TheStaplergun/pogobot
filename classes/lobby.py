@@ -23,6 +23,7 @@ class Lobby():
         self.lock()
         self.five_minute_warning = False
         self.delete_time = delete_time
+        self.posted_at = posted_at
         self.raid_still_exists = True
         self.updating_raid_status = False
         self.starting_phase = True
