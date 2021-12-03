@@ -30,8 +30,8 @@ class Lobby():
         self.auto_locked = False
         self.applicants = set()
         self.members = set()
-        relevant_time = datetime.now() - timedelta(seconds=45)
-        if self.posted_at < relevant_time:
+        relevant_time = self.posted_at + timedelta(seconds=45)
+        if datetime.now() > relevant_time:
             self.starting_phase = False
 
     async def add_a_user(self, user_id):
