@@ -701,6 +701,8 @@ async def lock_lobby_from_button(interaction, bot):
     if interaction.user.id != lobby.host.id:
         return
     await RH.delete_raid(bot, lobby.raid_id)
+    if not lobby:
+        return
     lobby.raid_still_exists = False
     await bot.delete_ignore_error(interaction.message)
 
