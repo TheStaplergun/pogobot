@@ -3,6 +3,7 @@ Bot class that wraps discord client
 """
 import asyncio
 from datetime import datetime
+import traceback
 
 import discord
 from discord.ext import commands
@@ -126,3 +127,9 @@ class Bot(commands.Bot):
             self.error_channel = await self.retrieve_channel(914713447772598282)
 
         return self.error_channel
+
+    async def send_error_alert(self, error):
+        """Sends an alert to the stored channel, which is on the raid bot testing server."""
+        channel = await self.get_error_channel()
+        embed = discord.Embed(title="Traceback", description=traceback.print_exception(error))
+        await self.send_ignore_error(channel, f"<@422429826809331712> An exception occurred: [`{error}``]", embed=embed)
