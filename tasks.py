@@ -32,7 +32,6 @@ async def status_update_loop(bot):
     """Updates status continually every ten minutes."""
     await bot.wait_until_ready()
     try:
-        raise("TEST")
         await SH.start_status_update_loop(bot)
     except Exception as e:
         await bot.send_error_alert(e)
