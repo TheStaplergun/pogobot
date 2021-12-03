@@ -103,6 +103,11 @@ async def set_up_lobbes(bot):
                                                                      applicants=lobby.get("applied_users"),
                                                                      posted_at=lobby.get("posted_at")) for lobby in lobbies}
     for _,lobby in bot.lobbies.items():
+        application_data = await RLH.get_applicants_by_raid_id(bot, lobby.raid_id)
+        if not application_data:
+            continue
+        for applicant in application_data:
+            lobby.applicants.add(applicant.get("user_id"))
         await lobby.update_raid_status()
 
 
