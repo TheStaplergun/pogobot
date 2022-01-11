@@ -537,6 +537,13 @@ async def handle_application_to_raid(bot, itx, message, channel):
         return
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby = bot.lobbies.get(lobby_id)
+    if itx.user.id in lobby.applicants:
+        try:
+            bot.interactions.pop(itx.user.id)
+        except KeyError:
+            pass
+        await remove_application_for_user(bot, member, lobby.raid_id, lobby)
+        return
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")
@@ -674,11 +681,7 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     for user in users:
         if counter > current_needed:
             break
-        print("Members:")
-        print(lobby.members)
-        print("Current user:")
-        print(user)
-        if int(user.get("user_id")) in lobby.members or int(user.get("user_id")) in lobby.applicants:
+        if int(user.get("user_id")) in lobby.members:
             continue
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
