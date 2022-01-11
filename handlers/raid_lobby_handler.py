@@ -674,7 +674,11 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     for user in users:
         if counter > current_needed:
             break
-        if int(user.get("user_id")) in lobby.members:
+        print("Members:")
+        print(lobby.members)
+        print("Current user:")
+        print(user)
+        if int(user.get("user_id")) in lobby.members or int(user.get("user_id")) in lobby.applicants:
             continue
         member = guild.get_member(int(user.get("user_id")))#user["member_object"]
         if not member:
