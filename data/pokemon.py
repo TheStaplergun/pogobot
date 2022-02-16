@@ -388,7 +388,7 @@ NATIONAL_DEX =\
   "383_00":"Groudon",
   "384_00":"Rayquaza",
   "385_00":"Jirachi",
-  #"386_11":"Deoxys",
+  "386_11":"Deoxys",
   "387_00":"Turtwig",
   "388_00":"Grotle",
   "389_00":"Torterra",
