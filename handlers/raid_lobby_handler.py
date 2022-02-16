@@ -537,6 +537,13 @@ async def handle_application_to_raid(bot, itx, message, channel):
         return
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby = bot.lobbies.get(lobby_id)
+    if itx.user.id in lobby.applicants:
+        try:
+            bot.interactions.pop(itx.user.id)
+        except KeyError:
+            pass
+        await remove_application_for_user(bot, member, lobby.raid_id, lobby)
+        return
     if result:
         applied_to_raid_id = result.get("raid_message_id")
         has_been_notified = result.get("has_been_notified")

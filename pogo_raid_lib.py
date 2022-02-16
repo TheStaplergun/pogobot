@@ -229,7 +229,7 @@ def format_invalid_pokemon_message(pokemon_name, tier):
 
     response += "\n"
 
-    if best_ratio > 75:
+    if best_ratio > 60:
         response += "Did you mean " + backtick_and_bracket(suggestion.title()) + "?"
     else:
         response += "Could not find a reliable close match based on given parameter " + backtick_and_bracket(pokemon_name)
