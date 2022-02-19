@@ -87,6 +87,7 @@ form_converter = {
     "ALOLA":"Alolan",
     "GALARIAN":"Galarian",
     "ORIGIN":"Origin",
+    "ATTACK":"Attack",
 }
 
 def format_pokemon_name(name):
