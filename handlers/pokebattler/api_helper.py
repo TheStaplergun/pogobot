@@ -98,8 +98,9 @@ def format_pokemon_name(name):
     form = ""
     if "FORM" in name:
         name.pop(-1)
-        preform = prefix_form_converter.get(name.pop(-1))
-        postform = postfix_form_converter.get(name.pop(-1))
+        form = name.pop(-1)
+        preform = prefix_form_converter.get(form)
+        postform = postfix_form_converter.get(form)
         if preform is not None:
             name.insert(0, preform)
         if postform is not None:
