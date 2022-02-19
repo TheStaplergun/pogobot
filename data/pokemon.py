@@ -1042,4 +1042,5 @@ NAME_TO_POKEBATTLER_ID =\
   "Nidoran-M":"NIDORAN_MALE",
   "Nidoran-F":"NIDORAN_FEMALE",
   "Giratina-Altered":"GIRATINA",
+  "Deoxys-Attack":"DEOXYS_ATTACK_FORM"
 }
