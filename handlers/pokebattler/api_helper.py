@@ -83,21 +83,27 @@ def move_to_readable(bot, movenum, move):
     move_type = bot.get_emoji(int(F.TYPE_TO_EMOJI.get(move_type)))
     return f"{move_type} {move_name}"
 
-form_converter = {
+prefix_form_converter = {
     "ALOLA":"Alolan",
     "GALARIAN":"Galarian",
     "ORIGIN":"Origin",
-    "ATTACK":"Attack",
+    #"ATTACK":"Attack",
 }
 
+postfix_form_converter = {
+    "ATTACK":"Attack"
+}
 def format_pokemon_name(name):
     name = name.split("_")
     form = ""
     if "FORM" in name:
         name.pop(-1)
-        form = form_converter.get(name.pop(-1))
-        if form is not None:
-            name.insert(0, form)
+        preform = prefix_form_converter.get(name.pop(-1))
+        postform = postfix_form_converter.get(name.pop(-1))
+        if preform is not None:
+            name.insert(0, preform)
+        if postform is not None:
+            name.insert(-1, postform)
 
     if "MEGA" in name:
         name.insert(0, name.pop(-1))
