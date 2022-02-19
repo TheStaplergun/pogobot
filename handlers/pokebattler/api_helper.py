@@ -93,6 +93,7 @@ prefix_form_converter = {
 postfix_form_converter = {
     "ATTACK":"Attack"
 }
+
 def format_pokemon_name(name):
     name = name.split("_")
     form = ""
@@ -104,7 +105,7 @@ def format_pokemon_name(name):
         if preform is not None:
             name.insert(0, preform)
         if postform is not None:
-            name.insert(-1, postform)
+            name.insert(len(name), postform)
 
     if "MEGA" in name:
         name.insert(0, name.pop(-1))
