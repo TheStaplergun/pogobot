@@ -24,10 +24,10 @@ async def raid_delete_handle(ctx, bot):
     lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
     await RLH.alter_deletion_time_for_raid_lobby(bot, lobby)
 
-    try:
-        await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-    except discord.DiscordException as error:
-        print("[!] An error occurred [{}]".format(error))
+    # try:
+    #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
+    # except discord.DiscordException as error:
+    #     print("[!] An error occurred [{}]".format(error))
 
 async def request_delete_handle(ctx, bot):
     does_exist, channel_id, message_id, role_id = await REQH.get_request_by_message_id(bot, ctx.message_id)

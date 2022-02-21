@@ -34,10 +34,10 @@ async def handle_reaction_remove_raid_no_lobby(bot, ctx, message):
             await message.delete()
         except discord.DiscordException:
             pass
-        try:
-            await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
-        except discord.DiscordException as error:
-            print("[!] An error occurred [{}]".format(error))
+        # try:
+        #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel_id), int(ctx.guild_id))
+        # except discord.DiscordException as error:
+        #     print("[!] An error occurred [{}]".format(error))
     await ctx.member.send(H.guild_member_dm(bot.get_guild(ctx.guild_id).name, message_to_send))
 
 WATCHED_EMOJIS = (

@@ -42,10 +42,11 @@ async def register_raid_channel_handle(ctx, bot):
     channel_id = ctx.channel.id
     guild_id = ctx.guild.id
     await database_register_raid_channel(bot, ctx, channel_id, guild_id)
-    try:
-        await SH.toggle_raid_sticky(bot, ctx, channel_id, guild_id)
-    except discord.DiscordException as e:
-        print("[!] An error occurred [{}]".format(e))
+    await bot.send_ignore_error(ctx, "The channel was successfully registered!", delete_after=15)
+    # try:
+    #     await SH.toggle_raid_sticky(bot, ctx, channel_id, guild_id)
+    # except discord.DiscordException as e:
+    #     print("[!] An error occurred [{}]".format(e))
 
 ADD_RAID_LOBBY_CATEGORY = """
 INSERT INTO raid_lobby_category (guild_id, category_id, log_channel_id)

@@ -307,10 +307,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 await message.edit(content=edited_message_content)
             print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
 
-            try:
-                await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
-            except discord.DiscordException as error:
-                print(f'[!] Exception occurred during toggle of raid sticky. [{error}]')
+            # try:
+            #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
+            # except discord.DiscordException as error:
+            #     print(f'[!] Exception occurred during toggle of raid sticky. [{error}]')
 
             bot.raid_remove_trigger.set()
         else:
