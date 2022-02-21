@@ -54,11 +54,11 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(FCH.send_trainer_information(ctx, self.__bot, user_id),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command()
-    async def set_level(self, ctx, level):
-        """Sets the trainer's level in the database"""
-        await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
-                             self.__bot.delete_ignore_error(ctx.message))
+    # @commands.command()
+    # async def set_level(self, ctx, level):
+    #     """Sets the trainer's level in the database"""
+    #     await asyncio.gather(FCH.set_trainer_level(ctx, self.__bot, level),
+    #                          self.__bot.delete_ignore_error(ctx.message))
 
     @commands.command()
     async def dex(self, ctx, arg1="None", arg2="None"):
