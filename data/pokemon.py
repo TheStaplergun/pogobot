@@ -1044,3 +1044,10 @@ NAME_TO_POKEBATTLER_ID =\
   "Giratina-Altered":"GIRATINA",
   "Deoxys-Attack":"DEOXYS_ATTACK_FORM"
 }
+
+TEMPORARY_ALLOW =\
+[
+  "UNOWN",
+  "CORSOLA",
+  "HERACROSS"
+]

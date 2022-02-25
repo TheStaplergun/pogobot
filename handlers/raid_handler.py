@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import asyncpg
 import discord
 
+from data.pokemon import TEMPORARY_ALLOW as ta
 import handlers.helpers as H
 #import handlers.raid_lobby_handler as RLH
 import handlers.request_handler as REQH
@@ -270,7 +271,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
             temp = temp.replace("-Altered", "")
             temp = temp.replace("-Origin","")
             temp = temp.replace("-", " ")
-            if temp not in bot.dex.current_raid_bosses():
+            if temp not in bot.dex.current_raid_bosses() or ta:
                 embed = discord.Embed(title="Error", description=f"That pokemon ({temp}) is not currently in rotation. If you believe this is an error, please contact TheStaplergun#6920.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
