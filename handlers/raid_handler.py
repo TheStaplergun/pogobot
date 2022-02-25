@@ -224,7 +224,8 @@ async def check_if_valid_raid_channel(bot, channel_id):
 
 VERIFIED_ONLY_RAIDS = [
     "Mega Steelix",
-    "Deoxys-Defense"
+    "Deoxys-Defense",
+    "Lugia"
 ]
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
