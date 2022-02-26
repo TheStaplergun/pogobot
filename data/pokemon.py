@@ -1045,9 +1045,9 @@ NAME_TO_POKEBATTLER_ID =\
   "Deoxys-Attack":"DEOXYS_ATTACK_FORM"
 }
 
-TEMPORARY_ALLOW =\
-[
-  "UNOWN",
-  "CORSOLA",
-  "HERACROSS"
-]
+# TEMPORARY_ALLOW =\
+# [
+#   "UNOWN",
+#   "CORSOLA",
+#   "HERACROSS"
+# ]
