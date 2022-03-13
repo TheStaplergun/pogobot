@@ -145,22 +145,25 @@ async def start_five_minute_warning_loop(bot):
 
     while True:
         # Outer loop waits on triggers
-        while True:
-            relevant_time = datetime.now() + timedelta(minutes=5)
+        try:
+            while True:
+                relevant_time = datetime.now() + timedelta(minutes=5)
 
-            checked = 0
-            for id, lobby in bot.lobbies.items():
-                if not lobby.five_minute_warning:
-                    if lobby.delete_time < relevant_time:
-                        await lobby.send_five_minute_warning()
-                    else:
-                        continue
-                checked += 1
+                checked = 0
+                for id, lobby in bot.lobbies.items():
+                    if not lobby.five_minute_warning:
+                        if lobby.delete_time < relevant_time:
+                            await lobby.send_five_minute_warning()
+                        else:
+                            continue
+                    checked += 1
 
-            if checked == len(bot.lobbies):
-                break
+                if checked == len(bot.lobbies):
+                    break
 
-            await asyncio.sleep(1)
+                await asyncio.sleep(1)
+        except discord.DiscordException as error:
+            await bot.send_error_alert(error)
 
         await bot.five_minute_trigger.wait()
         bot.five_minute_trigger.clear()
