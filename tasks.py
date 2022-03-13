@@ -23,7 +23,7 @@ async def startup_process(bot):
         await bot.wait_until_ready()
         #bot.pool = await init_pool()
     except Exception as e:
-        await bot.send_error_alert(e)
+        await bot.send_error_alert("bot startup process (has failed)", e)
 
     #if bot.live:
         #await SH.spin_up_message_deletions(bot)
@@ -34,7 +34,7 @@ async def status_update_loop(bot):
     try:
         await SH.start_status_update_loop(bot)
     except Exception as e:
-        await bot.send_error_alert(e)
+        await bot.send_error_alert("status update loop (has crashed)", e)
 
 async def lobby_removal_loop(bot):
     """Removes lobbies as their time expires."""
@@ -42,7 +42,7 @@ async def lobby_removal_loop(bot):
     try:
         await SH.start_lobby_removal_loop(bot)
     except Exception as e:
-        await bot.send_error_alert(e)
+        await bot.send_error_alert("lobby removal loop (has crashed)", e)
 
 async def applicant_loop(bot):
     """Processes raid applicants and adds them to raids."""
@@ -50,11 +50,11 @@ async def applicant_loop(bot):
     try:
         await SH.start_applicant_loop(bot)
     except Exception as e:
-        await bot.send_error_alert(e)
+        await bot.send_error_alert("applicant loop (has crashed)", e)
 
 async def five_minute_warning_loop(bot):
     await bot.wait_until_ready()
     try:
         await SH.start_five_minute_warning_loop(bot)
     except Exception as e:
-        await bot.send_error_alert(e)
+        await bot.send_error_alert("five minute warning loop (has crashed)", e)

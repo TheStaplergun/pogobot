@@ -163,7 +163,7 @@ async def start_five_minute_warning_loop(bot):
 
                 await asyncio.sleep(1)
         except discord.DiscordException as error:
-            await bot.send_error_alert(error)
+            await bot.send_error_alert("five minute loop", error)
 
         await bot.five_minute_trigger.wait()
         bot.five_minute_trigger.clear()
@@ -284,7 +284,7 @@ async def start_applicant_loop(bot):
                     break
                 await asyncio.sleep(1)
             except Exception as e:
-                await bot.send_error_alert(e)
+                await bot.send_error_alert("applicant handler loop", e)
 
 
         await bot.applicant_trigger.wait()

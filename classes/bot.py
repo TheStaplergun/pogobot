@@ -128,8 +128,8 @@ class Bot(commands.Bot):
 
         return self.error_channel
 
-    async def send_error_alert(self, error):
+    async def send_error_alert(self, preface_message, error):
         """Sends an alert to the stored channel, which is on the raid bot testing server."""
         channel = await self.get_error_channel()
         embed = discord.Embed(title="Traceback", description=traceback.format_exc())
-        await self.send_ignore_error(channel, f"<@422429826809331712> An exception occurred: [`{error}`]", embed=embed)
+        await self.send_ignore_error(channel, f"<@422429826809331712> An exception occurred during {preface_message}: [`{error}`]", embed=embed)
