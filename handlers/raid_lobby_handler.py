@@ -939,15 +939,17 @@ async def check_if_log_channel_and_purge_data(bot, channel_id):
 
 SELECT_TRAINERS_IN_CURRENT_LOBBY = """
     SELECT * FROM raid_application_user_map
-    WHERE (lobby_channel_id = $1 and checked_in = true)
+    WHERE (raid_message_id = $1 and checked_in = true)
 """
 async def show_trainer_names(bot, ctx):
-    lobby = await get_lobby_data_by_lobby_id(bot, ctx.channel.id)
-    if not lobby:
+    lobby_data = await get_lobby_data_by_lobby_id(bot, ctx.channel.id)
+    if not lobby_data:
         new_embed = discord.Embed(title="Error", description="This channel is not a lobby.")
         await bot.send_ignore_error(ctx.author, " ", embed=new_embed)
+
+    raid_message_id = lobby_data.get('raid_message_id')
     results = await bot.database.fetch(SELECT_TRAINERS_IN_CURRENT_LOBBY,
-                                       ctx.channel.id)
+                                       raid_message_id)
 
     names = [f"{result.get('name')}," for result in results]
     await bot.send_ignore_error(ctx.channel, names[:math.min(len(names), 5)])
