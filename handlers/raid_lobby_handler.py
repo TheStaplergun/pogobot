@@ -950,11 +950,17 @@ async def show_trainer_names(bot, ctx):
     results = await bot.database.fetch(SELECT_TRAINERS_IN_CURRENT_LOBBY,
                                        raid_message_id)
     print(results)
-    names = [f"{result.get('name')}," for result in results]
-    await bot.send_ignore_error(ctx.channel, names[:min(len(names), 5)])
+    names = []
+    for result in results:
+        name = await FCH.get_trainer_name(bot, result.get("user_id"))
+        names.append(name)
+    first_half = ",".join(names[:min(len(names), 5)])
+    if len(names) > 5:
+        second_half = ",".join(names[5:])
+    await bot.send_ignore_error(ctx.channel, first_half)
     if names > 6:
-        await bot.send_ignore_error(ctx.channel, names[5:])
-    embed = discord.Embed(title="Notification", description="The above two messages can be used to search on your friends list for easier inviting.")
+        await bot.send_ignore_error(ctx.channel, second_half)
+    embed = discord.Embed(title="Notification", description="The above {} can be used to search on your friends list for easier inviting.".format("two messages" if second_half else "message"))
     await bot.send_ignore_error(ctx.channel, " ", embed=embed)
 
 
