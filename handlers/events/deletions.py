@@ -21,7 +21,8 @@ async def raid_delete_handle(ctx, bot):
     user_id = lobby_data.get("host_user_id")
     ctx.user_id = user_id
     raid_id = lobby_data.get("raid_message_id")
-    lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
+    # with bot.lobby_lock:
+    #     lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
     await RLH.alter_deletion_time_for_raid_lobby(bot, lobby)
 
     # try:

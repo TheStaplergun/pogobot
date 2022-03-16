@@ -3,6 +3,7 @@ Bot class that wraps discord client
 """
 import asyncio
 from datetime import datetime
+import threading
 import traceback
 
 import discord
@@ -39,6 +40,7 @@ class Bot(commands.Bot):
         self.request_view = VH.RequestView
         self.unlock_lobby_view = VH.UnlockLobbyView
         self.extend_lobby_view = VH.ExtendLobbyView
+        self.lobby_lock = threading.Lock()
         #self.check_in_view = VH.CheckInView
 
         self.interactions = {}

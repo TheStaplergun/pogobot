@@ -134,7 +134,8 @@ async def add_lobby_to_table(bot, lobby_channel, host_user_id, raid_id, guild_id
     cur_time = datetime.now()
     lobby = await bot.get_lobby(lobby_channel.id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host, delete_time=delete_at)
     lobby.lobby_channel = lobby_channel
-    bot.lobbies.update({lobby_channel.id:lobby})
+    with bot.lobby_lock:
+        bot.lobbies.update({lobby_channel.id:lobby})
     await bot.database.execute(NEW_LOBBY_INSERT,
                                int(lobby_channel.id),
                                int(host_user_id),
@@ -203,7 +204,9 @@ async def create_raid_lobby(ctx, bot, raid_message_id, raid_host_member, time_to
     new_embed = discord.Embed(title="Start of Lobby", description="Welcome to your raid lobby. As players apply they will check in and be added here.\n\nAs the host it is your job to ensure you either add everyone, or everyone adds you. Once you have everyone in your friends list, then it is up to you to invite the players who join this lobby into your raid in game.")
 
     friend_code, has_code = await FCH.get_friend_code(bot, raid_host_member.id, host=True)
-    header_message_body = f"{friend_code}\n{raid_host_member.mention}\n"
+    trainer_name, has_name = await FCH.get_trainer_name(bot, raid_host_member.id, host=True)
+    header_message_body = f"{friend_code} <- **Host friend code. Add this.**\n{raid_host_member.mention}"
+    header_message_body = f"{header_message_body}\n{trainer_name} **<- Trainer Name**\n"
 
     try:
         header_message_body = header_message_body + "Ping the role {} for managing all members of this lobby at once.".format(lobby_member_role.mention)
@@ -339,7 +342,8 @@ REDUCE_USER_COUNT_BY_RAID_ID = """
 """
 async def decrement_user_count_for_lobby(bot, raid_id, user_id, lobby_data=None):
     if lobby_data:
-        lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
+        with bot.lobby_lock:
+            lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
         await lobby.remove_a_user(user_id)
     await bot.database.execute(REDUCE_USER_COUNT_BY_RAID_ID, raid_id)
     bot.applicant_trigger.set()
@@ -348,7 +352,8 @@ async def user_remove_self_from_lobby(bot, ctx, member, lobby_data):
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
     await bot.remove_role_ignore_error(member, lobby_member_role, "Removed from lobby.")
     await ctx.channel.set_permissions(member, read_messages=False)
-    lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_data.get("lobby_channel_id"))
     await remove_application_for_user(bot, member, lobby_data.get("raid_message_id"), lobby, should_notify=False)
     await decrement_user_count_for_lobby(bot, lobby_data.get("raid_message_id"), member.id, lobby_data=lobby_data)
     tasks = []
@@ -366,7 +371,8 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
     channel = ctx.channel
 
     lobby_data = await get_lobby_data_by_lobby_id(bot, channel.id)
-    lobby = bot.lobbies.get(channel.id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(channel.id)
     if not lobby_data:
         embed = discord.Embed(title="Error", description="This channel is not a valid lobby.")
         await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
@@ -531,13 +537,24 @@ async def handle_application_to_raid(bot, itx, message, channel):
         #await bot.send_ignore_error(member, " ", embed=embed)
         return
 
+    _, friend_code_set = await FCH.has_friend_code_set(bot, itx.user.id)
+    if not trainer_name_set:
+        embed = discord.Embed(title="Error", description="You cannot join a raid without your friend code set. Use `-setname 1234 5678 9012` to set your friend code.")
+        await bot.send_ignore_error(itx.user, " ", embed=embed)
+        return
+    _, trainer_name_set = await FCH.has_trainer_name_set(bot, itx.user.id)
+    if not trainer_name_set:
+        embed = discord.Embed(title="Error", description="You cannot join a raid without your in game trainer name set. Use `-setname USERNAME` to set your trainer name.")
+        await bot.send_ignore_error(itx.user, " ", embed=embed)
+        return
     raid_message_id = message.id
 
     lobby_data = await get_lobby_data_by_raid_id(bot, raid_message_id)
     if not lobby_data:
         return
     lobby_id = lobby_data.get("lobby_channel_id")
-    lobby = bot.lobbies.get(lobby_id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_id)
     if itx.user.id in lobby.applicants:
         try:
             bot.interactions.pop(itx.user.id)
@@ -643,7 +660,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
         return
 
     counter = 1
-    lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
     current_count = lobby.user_count
     user_limit = lobby.user_limit
     #notified_count = raid_lobby_data.get("notified_users")
@@ -694,7 +712,8 @@ async def process_user_list(bot, raid_lobby_data, users, guild):
     await check_if_lobby_full(bot, lobby_channel.id)
 
 async def unlock_lobby_from_button(interaction, bot):
-    lobby = bot.lobbies.get(interaction.channel.id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(interaction.channel.id)
 
     if interaction.user.id != lobby.host.id:
         return
@@ -704,7 +723,8 @@ async def unlock_lobby_from_button(interaction, bot):
     await bot.delete_ignore_error(interaction.message)
 
 async def lock_lobby_from_button(interaction, bot):
-    lobby = bot.lobbies.get(interaction.channel.id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(interaction.channel.id)
 
     if interaction.user.id != lobby.host.id:
         return
@@ -761,7 +781,8 @@ async def set_recent_participation(bot, user_id):
         await c.execute(UDPATE_RECENT_PARTICIPATION, int(user_id), datetime.now())
 
 async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remove=datetime.now(), lobby_id=0):
-    lobby = bot.lobbies.get(lobby_id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_id)
     if lobby:
         lobby.delete_time = time_to_remove
         lobby.five_minute_warning = False
@@ -772,7 +793,8 @@ async def update_raid_removal_and_lobby_removal_times(bot, raid_id, time_to_remo
 
 async def check_if_lobby_full(bot, lobby_id):
     #lobby_data = await bot.database.fetchrow(GET_LOBBY_BY_LOBBY_ID, int(lobby_id))
-    lobby = bot.lobbies.get(lobby_id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_id)
     #if lobby_data.get("user_count") == lobby_data.get("user_limit"):
 
     if lobby.is_full():
@@ -790,12 +812,15 @@ async def process_and_add_user_to_lobby(bot, member, lobby_channel, guild, messa
     bot.interactions.update({member.id:[item for item in bot.interactions.get(member.id) if item["raid_id"] != raid_id]})
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
+    trainer_name = await FCH.get_trainer_name(bot, member.id)
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"), member.id)
-    lobby = bot.lobbies.get(lobby_channel.id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_channel.id)
     if has_code:
         message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
+        message_to_send = f"{message_to_send}\n{trainer_name} **<- Trainer name**"
         message_to_send = f"{message_to_send}\n**Copy this message directly into the game.**"
     else:
         message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined."
@@ -833,7 +858,8 @@ async def handle_check_in_from_button(itx, bot):
         return
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby_channel = bot.get_channel(int(lobby_id))
-    lobby = bot.lobbies.get(lobby_id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_id)
     guild = lobby_channel.guild
     #user_id = itx.user.id
     #member = guild.get_member(int(user_id))
@@ -860,7 +886,8 @@ async def handle_activity_check_reaction(ctx, bot, message):
         return
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby_channel = bot.get_channel(int(lobby_id))
-    lobby = bot.lobbies.get(lobby_id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_id)
     guild = lobby_channel.guild
     user_id = ctx.user_id
     member = guild.get_member(int(user_id))
@@ -972,7 +999,8 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
     await asyncio.gather(*tasks)
-    bot.lobbies.pop(lobby_channel.id)
+    with bot.lobby_lock:
+        bot.lobbies.pop(lobby_channel.id)
 
 async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
@@ -1004,7 +1032,8 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
-    lobby = bot.lobbies.get(lobby_channel.id)
+    with bot.lobby_lock:
+        lobby = bot.lobbies.get(lobby_channel.id)
     await delete_lobby(bot, lobby, lobby_channel, lobby_data)
     if lobby_data and lobby_id != ctx.channel.id:
         try:

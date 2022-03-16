@@ -94,21 +94,22 @@ GET_ALL_LOBBIES = """
 """
 async def set_up_lobbes(bot):
     lobbies = await bot.database.fetch(GET_ALL_LOBBIES)
-    bot.lobbies = {lobby.get("lobby_channel_id"):await bot.get_lobby(lobby.get("lobby_channel_id"),
-                                                                     user_limit=lobby.get("user_limit"),
-                                                                     user_count=lobby.get("user_count"),
-                                                                     raid_id=lobby.get("raid_message_id"),
-                                                                     host=await bot.retrieve_user(lobby.get("host_user_id")),
-                                                                     delete_time=lobby.get("delete_at"),
-                                                                     applicants=lobby.get("applied_users"),
-                                                                     posted_at=lobby.get("posted_at")) for lobby in lobbies}
-    for _,lobby in bot.lobbies.items():
-        application_data = await RLH.get_applicants_by_raid_id(bot, lobby.raid_id)
-        if not application_data:
-            continue
-        for applicant in application_data:
-            lobby.applicants.add(applicant.get("user_id"))
-        await lobby.update_raid_status()
+    with bot.lobby_lock:
+        bot.lobbies = {lobby.get("lobby_channel_id"):await bot.get_lobby(lobby.get("lobby_channel_id"),
+                                                                         user_limit=lobby.get("user_limit"),
+                                                                         user_count=lobby.get("user_count"),
+                                                                         raid_id=lobby.get("raid_message_id"),
+                                                                         host=await bot.retrieve_user(lobby.get("host_user_id")),
+                                                                         delete_time=lobby.get("delete_at"),
+                                                                         applicants=lobby.get("applied_users"),
+                                                                         posted_at=lobby.get("posted_at")) for lobby in lobbies}
+        for _,lobby in bot.lobbies.items():
+            application_data = await RLH.get_applicants_by_raid_id(bot, lobby.raid_id)
+            if not application_data:
+                continue
+            for applicant in application_data:
+                lobby.applicants.add(applicant.get("user_id"))
+            await lobby.update_raid_status()
 
 
 GET_TOTAL_COUNT = """
@@ -150,16 +151,17 @@ async def start_five_minute_warning_loop(bot):
                 relevant_time = datetime.now() + timedelta(minutes=5)
 
                 checked = 0
-                for id, lobby in bot.lobbies.items():
-                    if not lobby.five_minute_warning:
-                        if lobby.delete_time < relevant_time:
-                            await lobby.send_five_minute_warning()
-                        else:
-                            continue
-                    checked += 1
+                with bot.lobby_lock:
+                    for id, lobby in bot.lobbies.items():
+                        if not lobby.five_minute_warning:
+                            if lobby.delete_time < relevant_time:
+                                await lobby.send_five_minute_warning()
+                            else:
+                                continue
+                        checked += 1
 
-                if checked == len(bot.lobbies):
-                    break
+                    if checked == len(bot.lobbies):
+                        break
 
                 await asyncio.sleep(1)
         except discord.DiscordException as error:
@@ -195,7 +197,8 @@ async def start_lobby_removal_loop(bot):
 
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby_channel = await bot.retrieve_channel(int(lobby_id))
-            lobby = bot.lobbies.get(lobby_id)
+            with bot.lobby_lock:
+                lobby = bot.lobbies.get(lobby_id)
             #lobby = bot.get_channel(int(lobby_id))
             if not lobby_channel:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
@@ -257,7 +260,8 @@ async def start_applicant_loop(bot):
                 threshold_time = cur_time - timedelta(seconds=45)
                 five_minute_autolock_threshold = cur_time - timedelta(minutes=5)
                 for raid_lobby_data in raid_lobby_data_list:
-                    lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
+                    with bot.lobby_lock:
+                        lobby = bot.lobbies.get(raid_lobby_data.get("lobby_channel_id"))
                     if not lobby or not lobby.raid_still_exists or lobby.pending_unlock:
                         continue
                     if lobby.has_filled:

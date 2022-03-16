@@ -230,7 +230,7 @@ VERIFIED_ONLY_RAIDS = [
 ]
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
-    from handlers.friend_code_handler import has_friend_code_set
+    from handlers.friend_code_handler import has_friend_code_set, has_trainer_name_set
 
     try:
         await ctx.message.delete()
@@ -277,6 +277,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 return
             if not await has_friend_code_set(bot, ctx.author.id):
                 embed = discord.Embed(title="Error", description="You cannot host a raid without your friend code set. Use `-setfc 1234 5678 9012` to set your code.")
+                await bot.send_ignore_error(ctx.author, " ", embed=embed)
+                return
+            if not await has_trainer_name_set(bot, ctx.author.id):
+                embed = discord.Embed(title="Error", description="You cannot host a raid without your in game trainer name set. Use `-setname USERNAME` to set your trainer name.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
             remove_after_seconds = 900

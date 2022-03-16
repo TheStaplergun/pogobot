@@ -72,7 +72,10 @@ async def get_friend_code(bot, user_id, host=False):
                             datetime.now(),
                             int(user_id),
                             1 if host else 0)
-    return result.get("friend_code") if result and result.get("friend_code") else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if result and result.get("friend_code") else False
+    friend_code = result.get("friend_code") if result else None
+    if friend_code:
+        friend_code = " ".join([friend_code[0:5], friend_code[5:9], friend_code[9:]])
+    return friend_code if friend_code else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if friend_code else False
 
 async def has_friend_code_set(bot, user_id):
     friend_code, has_code = await get_friend_code(bot, user_id)
@@ -84,7 +87,7 @@ async def has_friend_code_set(bot, user_id):
 
     if not has_code:
         return False
-    
+
     return True
 
 async def send_friend_code(ctx, bot):
@@ -245,6 +248,31 @@ async def add_trainer_name_to_table(bot, user_id, trainer_name):
                         datetime.now())
 
     return UPDATED if result else INSERTED
+
+async def get_trainer_name(bot, user_id, host=False):
+    async with bot.database.connect() as c:
+        result = await c.fetchrow(GET_TRAINER_DATA_BY_USER_ID,
+                                  int(user_id))
+        if result:
+            # This is a bit strange, but it's a step I can perform a combined query all together.
+            await c.execute(UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT if host else UPDATE_LAST_RECALLED_TIME,
+                            datetime.now(),
+                            int(user_id))
+        else:
+            await c.execute(INSERT_BLANK_RECORD,
+                            datetime.now(),
+                            int(user_id),
+                            1 if host else 0)
+    trainer_name = result.get("name") if result else None
+    return trainer_name if trainer_name else "To set your trainer name, type `-setname USERNAME` in any lobby or appropriate channel.", True if trainer_name else False
+
+async def has_trainer_name_set(bot, user_id):
+    _, has_name = await get_trainer_name(bot, user_id)
+
+    if not has_name:
+        return False
+
+    return True
 
 SPECIAL_CHARACTERS = "!@#$%^&*()[]{};:,./<>?\|`~-=_+\"\'"
 
