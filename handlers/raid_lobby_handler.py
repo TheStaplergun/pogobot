@@ -802,17 +802,18 @@ async def process_and_add_user_to_lobby(bot, member, lobby_channel, guild, messa
     bot.interactions.update({member.id:[item for item in bot.interactions.get(member.id) if item["raid_id"] != raid_id]})
     role = discord.utils.get(guild.roles, name="Lobby Member")
     friend_code, has_code = await FCH.get_friend_code(bot, member.id)
-    trainer_name = await FCH.get_trainer_name(bot, member.id)
+    trainer_name, has_name = await FCH.get_trainer_name(bot, member.id)
     #users = lobby_data.get("user_count")
     limit = lobby_data.get("user_limit")
     count = await increment_user_count_for_raid_lobby(bot, lobby_data.get("lobby_channel_id"), member.id)
     lobby = bot.lobbies.get(lobby_channel.id)
-    if has_code:
-        message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
-        message_to_send = f"{message_to_send}\n{trainer_name} **<- Trainer name**"
-        message_to_send = f"{message_to_send}\n**Copy this message directly into the game.**"
-    else:
-        message_to_send = f"{friend_code}\n{member.mention} **{count}/{limit}** joined."
+
+    #if has_code:
+    message_to_send = f"{friend_code} **<-Friend Code**\n{member.mention} **{count}/{limit}** joined."
+    #if has_name:
+    message_to_send = f"{message_to_send}\n{trainer_name} **<- Trainer name**"
+    message_to_send = f"{message_to_send}\n**Copy this message directly into the game.**"
+
     message_to_send += "\nCheck the 📌pinned📌 message for host information.\n-----"
     if not lobby_channel:
         return

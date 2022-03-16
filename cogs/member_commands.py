@@ -45,6 +45,12 @@ class MemberCommands(commands.Cog):
         await asyncio.gather(RLH.remove_lobby_member_by_command(self.__bot, ctx, ctx.author, is_self=True),
                              self.__bot.delete_ignore_error(ctx.message))
 
+    @commands.command()
+    @commands.guild_only()
+    async def names(self, ctx):
+        """Shows all trainer names for lobby members in a nice format."""
+        await asyncio.gather(RLH.get_lobby_member_names(self.__bot, ctx),
+                             self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):
     """Default setup function for file"""
