@@ -49,7 +49,7 @@ class MemberCommands(commands.Cog):
     @commands.guild_only()
     async def names(self, ctx):
         """Shows all trainer names for lobby members in a nice format."""
-        await asyncio.gather(RLH.get_lobby_member_names(self.__bot, ctx),
+        await asyncio.gather(RLH.show_trainer_names(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):

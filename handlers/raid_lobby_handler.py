@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timedelta
+import math
 import pytz
 import traceback
 
@@ -935,6 +936,26 @@ REMOVE_LOG_CHANNEL_BY_ID = """
 """
 async def check_if_log_channel_and_purge_data(bot, channel_id):
     await bot.database.execute(REMOVE_LOG_CHANNEL_BY_ID, int(channel_id))
+
+SELECT_TRAINERS_IN_CURRENT_LOBBY = """
+    SELECT * FROM raid_application_user_map
+    WHERE (lobby_channel_id = $1 and checked_in = true)
+"""
+async def show_trainer_names(bot, ctx):
+    lobby = await get_lobby_data_by_lobby_id(bot, ctx.channel.id)
+    if not lobby:
+        new_embed = discord.Embed(title="Error", description="This channel is not a lobby.")
+        await bot.send_ignore_error(ctx.author, " ", embed=new_embed)
+    results = await bot.database.fetch(SELECT_TRAINERS_IN_CURRENT_LOBBY,
+                                       ctx.channel.id)
+
+    names = [f"{result.get('name')}," for result in results]
+    await bot.send_ignore_error(ctx.channel, names[:math.min(len(names), 5)])
+    if names > 6:
+        await bot.send_ignore_error(ctx.channel, names[5:])
+    embed = discord.Embed(title="Notification", description="The above two messages can be used to search on your friends list for easier inviting.")
+    await bot.send_ignore_error(ctx.channel, " ", embed=embed)
+
 
 DECREMENT_NOTIFIED_USERS = """
     UPDATE raid_lobby_user_map
