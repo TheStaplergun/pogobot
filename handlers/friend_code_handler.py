@@ -74,7 +74,7 @@ async def get_friend_code(bot, user_id, host=False):
                             1 if host else 0)
     friend_code = result.get("friend_code") if result else None
     if friend_code:
-        friend_code = " ".join([friend_code[0:5], friend_code[5:9], friend_code[9:]])
+        friend_code = " ".join([friend_code[0:4], friend_code[4:8], friend_code[8:]])
     return friend_code if friend_code else "To set your friend code, type `-setfc 1234 5678 9012` in any lobby or appropriate channel.", True if friend_code else False
 
 async def has_friend_code_set(bot, user_id):
