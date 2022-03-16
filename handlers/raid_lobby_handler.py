@@ -537,12 +537,12 @@ async def handle_application_to_raid(bot, itx, message, channel):
         #await bot.send_ignore_error(member, " ", embed=embed)
         return
 
-    _, friend_code_set = await FCH.has_friend_code_set(bot, itx.user.id)
+    friend_code_set = await FCH.has_friend_code_set(bot, itx.user.id)
     if not trainer_name_set:
         embed = discord.Embed(title="Error", description="You cannot join a raid without your friend code set. Use `-setname 1234 5678 9012` to set your friend code.")
         await bot.send_ignore_error(itx.user, " ", embed=embed)
         return
-    _, trainer_name_set = await FCH.has_trainer_name_set(bot, itx.user.id)
+    trainer_name_set = await FCH.has_trainer_name_set(bot, itx.user.id)
     if not trainer_name_set:
         embed = discord.Embed(title="Error", description="You cannot join a raid without your in game trainer name set. Use `-setname USERNAME` to set your trainer name.")
         await bot.send_ignore_error(itx.user, " ", embed=embed)
