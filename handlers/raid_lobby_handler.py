@@ -949,7 +949,7 @@ async def show_trainer_names(bot, ctx):
     raid_message_id = lobby_data.get('raid_message_id')
     results = await bot.database.fetch(SELECT_TRAINERS_IN_CURRENT_LOBBY,
                                        raid_message_id)
-
+    print(results)
     names = [f"{result.get('name')}," for result in results]
     await bot.send_ignore_error(ctx.channel, names[:min(len(names), 5)])
     if names > 6:
