@@ -952,7 +952,7 @@ async def show_trainer_names(bot, ctx):
     print(results)
     names = []
     for result in results:
-        name = await FCH.get_trainer_name(bot, result.get("user_id"))
+        name, has_name = await FCH.get_trainer_name(bot, result.get("user_id"))
         names.append(name)
     first_half = ",".join(list(names[:min(len(names), 5)]))
     if len(names) > 5:
