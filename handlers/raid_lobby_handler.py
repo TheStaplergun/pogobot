@@ -958,7 +958,7 @@ async def show_trainer_names(bot, ctx):
     if len(names) > 5:
         second_half = ",".join(list(names[5:]))
     await bot.send_ignore_error(ctx.channel, first_half)
-    if names > 6:
+    if len(names) > 5:
         await bot.send_ignore_error(ctx.channel, second_half)
     embed = discord.Embed(title="Notification", description="The above {} can be used to search on your friends list for easier inviting.".format("two messages" if second_half else "message"))
     await bot.send_ignore_error(ctx.channel, " ", embed=embed)
