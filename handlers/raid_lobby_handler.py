@@ -134,7 +134,7 @@ async def add_lobby_to_table(bot, lobby_channel, host_user_id, raid_id, guild_id
     cur_time = datetime.now()
     lobby = await bot.get_lobby(lobby_channel.id, user_limit=int(invite_slots), raid_id=int(raid_id), host=host, delete_time=delete_at)
     lobby.lobby_channel = lobby_channel
-bot.lobbies.update({lobby_channel.id:lobby})
+    bot.lobbies.update({lobby_channel.id:lobby})
     await bot.database.execute(NEW_LOBBY_INSERT,
                                int(lobby_channel.id),
                                int(host_user_id),
