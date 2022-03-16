@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timedelta
-import math
 import pytz
 import traceback
 
@@ -952,7 +951,7 @@ async def show_trainer_names(bot, ctx):
                                        raid_message_id)
 
     names = [f"{result.get('name')}," for result in results]
-    await bot.send_ignore_error(ctx.channel, names[:math.min(len(names), 5)])
+    await bot.send_ignore_error(ctx.channel, names[:min(len(names), 5)])
     if names > 6:
         await bot.send_ignore_error(ctx.channel, names[5:])
     embed = discord.Embed(title="Notification", description="The above two messages can be used to search on your friends list for easier inviting.")
