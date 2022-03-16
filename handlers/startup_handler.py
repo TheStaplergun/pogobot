@@ -150,8 +150,7 @@ async def start_five_minute_warning_loop(bot):
                 relevant_time = datetime.now() + timedelta(minutes=5)
 
                 checked = 0
-                copy_of_lobbies = {lobby:data for lobby, data in bot.lobbies.items()}
-                for id, lobby in copy_of_lobbies:
+                for id, lobby in bot.lobbies.items():
                     if not lobby.five_minute_warning:
                         if lobby.delete_time < relevant_time:
                             await lobby.send_five_minute_warning()
