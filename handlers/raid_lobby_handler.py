@@ -954,9 +954,9 @@ async def show_trainer_names(bot, ctx):
     for result in results:
         name = await FCH.get_trainer_name(bot, result.get("user_id"))
         names.append(name)
-    first_half = ",".join(names[:min(len(names), 5)])
+    first_half = ",".join(list(names[:min(len(names), 5)]))
     if len(names) > 5:
-        second_half = ",".join(names[5:])
+        second_half = ",".join(list(names[5:]))
     await bot.send_ignore_error(ctx.channel, first_half)
     if names > 6:
         await bot.send_ignore_error(ctx.channel, second_half)
