@@ -110,8 +110,8 @@ GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
 async def get_latest_lobby_data_by_timestamp(bot):
     return await bot.database.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
 
-async def send_log_message(bot, message, lobby_channel, lobby_data):
-    author = message.author
+async def send_log_message(bot, message, lobby_channel, lobby_data, author=None):
+    author = author if author else message.author
     category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
     log_channel_id = category_data.get("log_channel_id")
     log_channel = bot.get_channel(int(log_channel_id))
