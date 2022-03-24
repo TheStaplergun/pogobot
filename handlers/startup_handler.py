@@ -202,10 +202,12 @@ async def start_lobby_removal_loop(bot):
             lobby = bot.lobbies.get(lobby_id)
             if lobby.frozen:
                 continue
+            print("Lobby is not frozen")
             #lobby = bot.get_channel(int(lobby_id))
             if not lobby_channel:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
                 continue
+            print("deleting lobby")
             await RLH.delete_lobby(bot, lobby, lobby_channel, lobby_data)
 
 
@@ -213,6 +215,7 @@ async def start_lobby_removal_loop(bot):
             #message.author = await bot.retrieve_user(lobby_data.get("host_user_id"))
             author = await bot.retrieve_user(lobby_data.get("host_user_id"))
             guild = bot.get_guild(lobby_data.get("guild_id"))
+            print("sending log")
             await RLH.send_log_message(bot, message, lobby.lobby_channel, lobby_data, author=author, guild=guild)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
