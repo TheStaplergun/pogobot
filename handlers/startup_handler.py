@@ -187,7 +187,7 @@ async def start_lobby_removal_loop(bot):
             if not lobby:
                 break
 
-            lobby_data = await RLH.get_lobby_data_by_lobby_id(lobby.lobby_id)
+            lobby_data = await RLH.get_lobby_data_by_lobby_id(bot, lobby.lobby_id)
             print("next lobby is:")
             print(lobby_data)
 
