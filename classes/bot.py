@@ -57,7 +57,7 @@ class Bot(commands.Bot):
         lobby = self.lobbies.get(lobby_id)
         if not lobby:
             lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host, delete_time, applicants, posted_at, frozen)
-        print(lobby)
+        print(lobby.frozen)
         return lobby
 
     async def retrieve_channel(self, *args, **kwargs):
