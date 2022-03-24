@@ -108,7 +108,9 @@ async def extend_duration_of_lobby(bot, ctx):
     await lobby.send(embed=new_embed, view=view)
     message = "Host has extended the lobby timer."
     #message.author = await bot.retrieve_user(user_id)
-    await RLH.send_log_message(bot, message, lobby, lobby_data, author=await bot.retrieve_user(user_id), guild=await bot.get_guild(lobby_data.get("guild_id")))
+    author = await bot.retrieve_user(user_id)
+    guild = await bot.get_guild(lobby_data.get("guild_id"))
+    await RLH.send_log_message(bot, message, lobby, lobby_data, author=author, guild=guild)
 
 async def host_manual_remove_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, ctx.user_id)
