@@ -1101,7 +1101,7 @@ async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
 
     await set_frozen_flag(bot, lobby_id)
     try:
-        embed = discord.Embed(title="Notification", description="This lobby has been frozen by an administrator. Members may leave if they would like.")
+        embed = discord.Embed(title="Notification", description="This lobby has been frozen by an administrator. Members may leave if they would like. The close and extend commands will no longer function. An administrator must close this lobby.")
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
