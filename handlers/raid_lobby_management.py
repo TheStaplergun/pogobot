@@ -47,7 +47,7 @@ async def extend_duration_of_lobby(bot, ctx):
         return
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
-    lobby = bot.lobbies.get(lobby_id)
+    lobby = await bot.lobbies.get(lobby_id)
     if lobby.frozen:
         embed = discord.Embed(title="Error", description="This lobby is frozen and the time cannot be extended.")
         #message = await ctx.send(embed=embed)
