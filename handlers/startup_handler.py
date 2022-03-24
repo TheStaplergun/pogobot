@@ -209,7 +209,7 @@ async def start_lobby_removal_loop(bot):
             message = "The lobby internal timer expired and the lobby was removed."
             #message.author = await bot.retrieve_user(lobby_data.get("host_user_id"))
             author = await bot.retrieve_user(lobby_data.get("host_user_id"))
-            guild = await bot.get_guild(lobby_data.get())
+            guild = bot.get_guild(lobby_data.get())
             await RLH.send_log_message(bot, message, lobby.lobby_channel, lobby_data, author=author, guild=guild)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
