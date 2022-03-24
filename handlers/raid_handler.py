@@ -35,6 +35,8 @@ WHERE (guild_id = $1);
 """
 async def increment_raid_counter(ctx, bot, guild_id):
     """Increments raid counter for a server for statistics tracking."""
+    print("Printing guild raid counters:")
+    print(bot.guild_raid_counters)
     bot.guild_raid_counters[guild_id] += 1
     await bot.database.execute(INCREMENT_RAID_UPDATE_STATEMENT, guild_id, bot.guild_raid_counters[guild_id])
 
