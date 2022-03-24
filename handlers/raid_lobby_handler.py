@@ -295,7 +295,6 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     SELECT * FROM raid_lobby_user_map
     ORDER BY delete_at
-    WHERE (frozen = false)
     LIMIT 1;
 """
 #
