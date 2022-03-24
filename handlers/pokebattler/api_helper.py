@@ -112,9 +112,10 @@ def format_pokemon_name(name):
         if postform is not None:
             name.insert(len(name), postform)
 
-    print(name)
     if "MEGA" in name:
-
+        if "CHARIZARD" in name:
+            if "Y" in name or "X" in name:
+                name.insert(1, name.pop(-1))
         name.insert(0, name.pop(-1))
 
     if not name or len(name) < 1:
