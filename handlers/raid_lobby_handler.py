@@ -293,10 +293,12 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
         pass
 
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
-    SELECT * FROM raid_lobby_user_map WHERE (frozen = false)
+    SELECT * FROM raid_lobby_user_map
     ORDER BY delete_at
+    WHERE (frozen = false)
     LIMIT 1;
 """
+#
 async def get_next_lobby_to_remove(bot):
     return await bot.database.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
 
