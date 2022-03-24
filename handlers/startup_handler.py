@@ -204,7 +204,7 @@ async def start_lobby_removal_loop(bot):
 
             lobby_id = lobby_data.get("lobby_channel_id")
             lobby_channel = await bot.retrieve_channel(int(lobby_id))
-            lobby = await bot.get_lobby(lobby_id)
+            #lobby = await bot.get_lobby(lobby_id)
             print("before lobby frozen check")
             if lobby.frozen:
                 continue
