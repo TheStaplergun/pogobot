@@ -301,7 +301,7 @@ GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
 """
 #
 async def get_next_lobby_to_remove(bot):
-    sorted_lobbies = sorted(bot.lobbies.values(), key=operator.attrgetter('delete_time'))
+    sorted_lobbies = sorted(bot.lobbies.values(), key=operator.attrgetter('delete_time'), reverse=True)
     for lobby in sorted_lobbies:
         if not lobby.frozen:
             return lobby

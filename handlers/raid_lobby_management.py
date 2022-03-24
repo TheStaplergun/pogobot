@@ -129,12 +129,10 @@ async def host_manual_remove_lobby(bot, ctx):
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
     lobby = await bot.get_lobby(lobby_id)
-    print("Before frozen check")
     if lobby.frozen:
         embed = discord.Embed(title="Error", description="This lobby is frozen and can only be closed by an administrator.")
         await bot.send_ignore_error(lobby_channel, "", embed=embed)
         return
-    print("After frozen check")
     # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
     #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
