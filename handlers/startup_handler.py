@@ -185,14 +185,11 @@ async def start_lobby_removal_loop(bot):
             lobby = await RLH.get_next_lobby_to_remove(bot)
             if not lobby:
                 break
-            print("Got a lobby")
             lobby_data = await RLH.get_lobby_data_by_lobby_id(bot, lobby.lobby_id)
-            print("Got the data")
             cur_time = datetime.now()
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
-                print("Current time is below deletion time. Waiting.")
                 if deletion_time_dif.total_seconds() > 1:
                     await asyncio.sleep(1)
                     continue
@@ -200,19 +197,15 @@ async def start_lobby_removal_loop(bot):
                 if deletion_time_dif.total_seconds() > 0:
                     await asyncio.sleep(deletion_time_dif.total_seconds())
 
-            print("After deletion time")
             lobby_id = lobby.lobby_id
             lobby_channel = lobby.lobby_channel
             #lobby = await bot.get_lobby(lobby_id)
-            print("before lobby frozen check")
             if lobby.frozen:
                 continue
-            print("Lobby is not frozen")
             #lobby = bot.get_channel(int(lobby_id))
             if not lobby_channel:
                 await RLH.remove_lobby_by_lobby_id(bot, lobby_data)
                 continue
-            print("deleting lobby")
             await RLH.delete_lobby(bot, lobby, lobby_channel, lobby_data)
 
 
@@ -220,7 +213,6 @@ async def start_lobby_removal_loop(bot):
             #message.author = await bot.retrieve_user(lobby_data.get("host_user_id"))
             author = await bot.retrieve_user(lobby_data.get("host_user_id"))
             guild = bot.get_guild(lobby_data.get("guild_id"))
-            print("sending log")
             await RLH.send_log_message(bot, message, lobby.lobby_channel, lobby_data, author=author, guild=guild)
         await bot.lobby_remove_trigger.wait()
         bot.lobby_remove_trigger.clear()
