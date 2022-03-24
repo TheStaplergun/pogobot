@@ -183,10 +183,11 @@ async def start_lobby_removal_loop(bot):
         # Process lobbies until no lobbies remain before going to outer loop.
         while True:
             print("Checking for next lobby")
-            lobby_data = await RLH.get_next_lobby_to_remove(bot)
-            if not lobby_data:
+            lobby = await RLH.get_next_lobby_to_remove(bot)
+            if not lobby:
                 break
 
+            lobby_data = await RLH.get_lobby_data_by_lobby_id(lobby.lobby_id)
             print("next lobby is:")
             print(lobby_data)
 

@@ -294,13 +294,18 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
 
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     SELECT * FROM raid_lobby_user_map
-    WHERE (frozen != true and frozen IS NOT NULL)
+    WHERE (frozen IS NOT NULL)
     ORDER BY delete_at
     LIMIT 1;
 """
 #
 async def get_next_lobby_to_remove(bot):
-    return await bot.database.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
+    sorted_lobbies = sorted(bot.lobbies.items(), key=lambda x: (bot.lobbies[x]["delete_at"]))
+    for lobby in sorted_lobbies:
+        if not lobby.frozen:
+            return
+
+    #return await bot.database.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
 
 UPDATE_APPLICATION_DATA_FOR_USER = """
     UPDATE raid_application_user_map
