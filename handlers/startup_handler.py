@@ -104,7 +104,8 @@ async def set_up_lobbes(bot):
                                                                      host=await bot.retrieve_user(lobby.get("host_user_id")),
                                                                      delete_time=lobby.get("delete_at"),
                                                                      applicants=lobby.get("applied_users"),
-                                                                     posted_at=lobby.get("posted_at")) for lobby in lobbies}
+                                                                     posted_at=lobby.get("posted_at"),
+                                                                     frozen=lobby.get("frozen")) for lobby in lobbies}
     for _,lobby in bot.lobbies.items():
         application_data = await RLH.get_applicants_by_raid_id(bot, lobby.raid_id)
         if not application_data:

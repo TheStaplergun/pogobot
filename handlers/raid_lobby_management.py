@@ -74,7 +74,6 @@ async def extend_duration_of_lobby(bot, ctx):
         await RLH.remove_lobby_by_lobby_id(bot, lobby_data.get("lobby_channel_id"))
         return
 
-
     max_remaining_extendable_time = 2700 - old_total_duration.total_seconds()
     max_remaining_extendable_time_type = "minute"
     #new_time_extension = 0
@@ -131,9 +130,7 @@ async def host_manual_remove_lobby(bot, ctx):
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
     lobby = bot.lobbies.get(lobby_id)
     if lobby.frozen:
-
         embed = discord.Embed(title="Error", description="This lobby is frozen and can only be closed by an administrator.")
-        #message = await ctx.send(embed=embed)
         await bot.send_ignore_error(lobby_channel, "", embed=embed)
         return
     # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)

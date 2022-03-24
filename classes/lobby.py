@@ -9,7 +9,7 @@ class Lobby():
     """
     A class containing various pieces of cached data about a lobbym
     """
-    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications, posted_at):
+    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications, posted_at, frozen):
         self.__bot = bot
         self.user_limit = user_limit
         self.user_count = user_count
@@ -28,7 +28,7 @@ class Lobby():
         self.updating_raid_status = False
         self.starting_phase = True
         self.auto_locked = False
-        self.frozen = False
+        self.frozen = frozen
         self.applicants = set()
         self.members = set()
         relevant_time = self.posted_at + timedelta(seconds=45)
