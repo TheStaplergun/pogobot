@@ -1105,3 +1105,4 @@ async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
+    await send_log_message(bot, message, lobby_channel, lobby_data)
