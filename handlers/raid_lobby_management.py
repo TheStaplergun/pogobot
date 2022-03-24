@@ -108,7 +108,7 @@ async def extend_duration_of_lobby(bot, ctx):
     await lobby.send(embed=new_embed, view=view)
     message = "Host has extended the lobby timer."
     #message.author = await bot.retrieve_user(user_id)
-    await RLH.send_log_message(bot, message, lobby, lobby_data, author=await bot.retrieve_user(user_id))
+    await RLH.send_log_message(bot, message, lobby, lobby_data, author=await bot.retrieve_user(user_id), guild=await bot.get_guild(lobby_data.get("guild_id")))
 
 async def host_manual_remove_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, ctx.user_id)
@@ -131,7 +131,7 @@ async def host_manual_remove_lobby(bot, ctx):
     await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     message = "Host has closed the lobby."
     #message.author = ctx.author
-    await RLH.send_log_message(bot, message, lobby, lobby_data, author=ctx.author)
+    await RLH.send_log_message(bot, message, lobby, lobby_data, author=ctx.author, guild=ctx.guild)
     #await RLH.delete_lobby(bot, lobby, lobby_data)
 
 INSERT_MANAGEMENT_DATA = """

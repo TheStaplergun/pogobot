@@ -110,13 +110,17 @@ GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
 async def get_latest_lobby_data_by_timestamp(bot):
     return await bot.database.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
 
-async def send_log_message(bot, message, lobby_channel, lobby_data, author=None):
+async def send_log_message(bot, message, lobby_channel, lobby_data, author=None, guild=None):
+    is_system_log = True if author else False
     author = author if author else message.author
-    category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
+    guild = guild if guild else message.guild
+    category_data = await get_raid_lobby_category_by_guild_id(bot, guild.id)
     log_channel_id = category_data.get("log_channel_id")
     log_channel = bot.get_channel(int(log_channel_id))
-
-    new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
+    if is_system_log:
+        new_embed = discord.Embed(title="System Log", description=message)
+    else:
+        new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
     url = author.guild_avatar.url if author.guild_avatar and author.guild_avatar.url else author.avatar.url if author.avatar and author.avatar.url else None
     new_embed.set_author(name=author.name, icon_url=url)
     new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
