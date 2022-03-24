@@ -1062,3 +1062,35 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
             await message.edit(embed=embed)
         except discord.DiscordException:
             pass
+
+async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
+    if lobby_id == "":
+        lobby_id = ctx.channel.id
+    lobby_data = await get_lobby_data_by_lobby_id(bot, lobby_id)
+    #lobby_channel = await bot.retrieve_channel(lobby_id)
+    if lobby_data and lobby_id == ctx.channel.id:
+        lobby_channel = ctx.channel
+    else:
+        lobby_channel = await bot.retrieve_channel(lobby_id)
+
+    if lobby_channel and not lobby_channel.permissions_for(ctx.author).manage_channels:
+        embed = discord.Embed(title="", description="You do not have permission to manage that lobby.")
+        await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
+        return False
+
+    if lobby_data and lobby_data.get("lobby_channel_id") != lobby_id:
+        await bot.send_ignore_error(ctx, "The given channel id is not a valid lobby.", delete_after=15)
+        return False
+
+    if not lobby_channel:
+        try:
+            await ctx.send("The given channel id is not a valid lobby.")
+        except discord.DiscordException:
+            return
+
+    try:
+        embed = discord.Embed(title="", description="This lobby has been frozen by an administrator. Members may leave if they would like.")
+        message = await ctx.send(embed=embed)
+    except discord.DiscordException:
+        pass
+    lobby = bot.lobbies.get(lobby_channel.id)

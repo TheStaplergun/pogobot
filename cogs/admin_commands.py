@@ -59,6 +59,13 @@ class AdminCommands(commands.Cog):
     # @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
     # async def show_interaction_list(self, ctx):
     #     await ctx.send(self.__bot.interactions)
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_channels=True)
+    async def freeze_lobby(self, ctx, channel_id=""):
+        """Mod Only - Sets lobby internal timer to one year from now to 'Freeze' the lobby for inspection. Also disables the user from closing their own lobby."""
+        await asyncio.gather(RLH.handle_admin_freeze_lobby(ctx, self.__bot, channel_id),
+                             self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):
     """Default setup function for file"""
