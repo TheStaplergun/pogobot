@@ -53,10 +53,10 @@ class Bot(commands.Bot):
         self.add_view(VH.UnlockLobbyView(self))
         self.add_view(VH.ExtendLobbyView(self))
 
-    async def get_lobby(self, lobby_id, user_limit=None, user_count=0, raid_id=None, host=None, delete_time=None, applicants=0, posted_at=datetime.now()):
+    async def get_lobby(self, lobby_id, user_limit=None, user_count=0, raid_id=None, host=None, delete_time=None, applicants=0, posted_at=datetime.now(), frozen=False):
         lobby = self.lobbies.get(lobby_id)
         if not lobby:
-            lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host, delete_time, applicants, posted_at)
+            lobby = Lobby(self, user_limit, user_count, lobby_id, raid_id, host, delete_time, applicants, posted_at, frozen)
 
         return lobby
 
