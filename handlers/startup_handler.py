@@ -191,7 +191,7 @@ async def start_lobby_removal_loop(bot):
             cur_time = datetime.now()
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
-            if cur_time < deletion_time:
+            if cur_time > deletion_time:
                 print("Current time is below deletion time. Waiting.")
                 if deletion_time_dif.total_seconds() > 1:
                     await asyncio.sleep(1)
