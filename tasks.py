@@ -19,6 +19,7 @@ async def startup_process(bot):
         bot.database = database.Database(pool)
         #await bot.add_view(VH.PersistentView(bot))
         await SH.set_up_lobbes(bot)
+        print("Setting up guild raid counters")
         await SH.set_up_guild_raid_counters(bot)
         await bot.wait_until_ready()
         #bot.pool = await init_pool()
