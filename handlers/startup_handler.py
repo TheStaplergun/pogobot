@@ -192,6 +192,7 @@ async def start_lobby_removal_loop(bot):
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
             if cur_time < deletion_time:
+                print("Current time is below deletion time. Waiting.")
                 if deletion_time_dif.total_seconds() > 1:
                     await asyncio.sleep(1)
                     continue
@@ -199,8 +200,9 @@ async def start_lobby_removal_loop(bot):
                 if deletion_time_dif.total_seconds() > 0:
                     await asyncio.sleep(deletion_time_dif.total_seconds())
 
-            lobby_id = lobby_data.get("lobby_channel_id")
-            lobby_channel = await bot.retrieve_channel(int(lobby_id))
+            print("After deletion time")
+            lobby_id = lobby.lobby_id
+            lobby_channel = lobby.lobby_channel
             #lobby = await bot.get_lobby(lobby_id)
             print("before lobby frozen check")
             if lobby.frozen:
