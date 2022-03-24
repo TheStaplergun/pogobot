@@ -137,10 +137,9 @@ async def host_manual_remove_lobby(bot, ctx):
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
     #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
     #     return
-
-
+    await RLH.delete_lobby(bot, lobby, lobby_channel, lobby_data)
     #lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
-    await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
+    #await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     message = "Host has closed the lobby."
     #message.author = ctx.author
     await RLH.send_log_message(bot, message, lobby_channel, lobby_data, author=ctx.author, guild=ctx.guild)

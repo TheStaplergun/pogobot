@@ -186,6 +186,10 @@ async def start_lobby_removal_loop(bot):
             if not lobby:
                 break
             lobby_data = await RLH.get_lobby_data_by_lobby_id(bot, lobby.lobby_id)
+            if not lobby_data:
+                bot.lobbies.pop(lobby.lobby_id)
+                continue
+
             cur_time = datetime.now()
             deletion_time = lobby_data.get("delete_at")
             deletion_time_dif = deletion_time - cur_time
