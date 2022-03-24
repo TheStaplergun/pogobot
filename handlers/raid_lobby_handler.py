@@ -303,7 +303,7 @@ async def get_next_lobby_to_remove(bot):
     sorted_lobbies = sorted(bot.lobbies.items(), key=lambda x: (bot.lobbies[x]["delete_at"]))
     for lobby in sorted_lobbies:
         if not lobby.frozen:
-            return
+            return lobby
 
     #return await bot.database.fetchrow(GET_NEXT_LOBBY_TO_REMOVE_QUERY)
 
