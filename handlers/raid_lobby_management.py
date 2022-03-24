@@ -45,7 +45,12 @@ async def extend_duration_of_lobby(bot, ctx):
     lobby_data = await RLH.get_lobby_data_by_user_id(bot, user_id)
     if not lobby_data:
         return
-
+    lobby_id = lobby_data.get("lobby_channel_id")
+    lobby_channel = await bot.retrieve_channel(int(lobby_id))
+    lobby = bot.lobbies.get(lobby_id)
+    if lobby.frozen:
+        await bot.send_ignore_error(lobby_channel, "This lobby is frozen and the time cannot be extended.")
+        return
     raid_data = await RH.check_if_in_raid(None, bot, user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
     #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
@@ -119,10 +124,13 @@ async def host_manual_remove_lobby(bot, ctx):
             new_embed = discord.Embed(title="Error", description="You are not hosting a lobby.")
             await bot.send_ignore_error(ctx.author, "", embed=new_embed)
         return
-    try:
-        lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
-    except discord.DiscordException:
-        pass
+
+    lobby_id = lobby_data.get("lobby_channel_id")
+    lobby_channel = await bot.retrieve_channel(int(lobby_id))
+    lobby = bot.lobbies.get(lobby_id)
+    if lobby.frozen:
+        await bot.send_ignore_error(lobby_channel, "This lobby is frozen and can only be closed by an administrator.")
+        return
     # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
     #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
@@ -133,7 +141,7 @@ async def host_manual_remove_lobby(bot, ctx):
     await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     message = "Host has closed the lobby."
     #message.author = ctx.author
-    await RLH.send_log_message(bot, message, lobby, lobby_data, author=ctx.author, guild=ctx.guild)
+    await RLH.send_log_message(bot, message, lobby_channel, lobby_data, author=ctx.author, guild=ctx.guild)
     #await RLH.delete_lobby(bot, lobby, lobby_data)
 
 INSERT_MANAGEMENT_DATA = """

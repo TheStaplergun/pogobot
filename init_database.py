@@ -103,6 +103,11 @@ ALTER TABLE raid_application_user_map
 DROP CONSTRAINT raid_application_user_map_pkey,
 ADD COLUMN id bigserial PRIMARY KEY;
 """
+
+ADD_FROZEN_FLAG_TO_TABLE = """
+ALTER TABLE raid_lobby_user_map
+ADD COLUMN frozen boolean;
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
@@ -112,6 +117,6 @@ async def main():
 
   #await conn.execute(friend_code_table_update)
   #await conn.execute(UPDATE_WEIGHT_COLUMN)
-  await conn.execute(ADD_ID_COLUMN_TO_APPS_TABLE)
+  await conn.execute(ADD_FROZEN_FLAG_TO_TABLE)
 
 asyncio.get_event_loop().run_until_complete(main())

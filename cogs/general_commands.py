@@ -85,13 +85,6 @@ class GeneralCommands(commands.Cog):
         await asyncio.gather(RLM.extend_duration_of_lobby(self.__bot, ctx),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    @commands.command(aliases=["ln"])
-    async def list_names(self, ctx):
-        """Shows all trainer names in a copy/paste format for searching in game."""
-        ctx.user_id = ctx.author.id
-        await asyncio.gather(RLH.show_raider_names(self.__bot, ctx),
-                             self.__bot.delete_ignore_error(ctx.message))
-
     @commands.command(aliases=["raids", "bosses"])
     async def raid_bosses(self, ctx):
         """Gives a list of all raid bosses as per the Pokebattler API"""

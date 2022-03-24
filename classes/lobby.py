@@ -28,6 +28,7 @@ class Lobby():
         self.updating_raid_status = False
         self.starting_phase = True
         self.auto_locked = False
+        self.frozen = False
         self.applicants = set()
         self.members = set()
         relevant_time = self.posted_at + timedelta(seconds=45)

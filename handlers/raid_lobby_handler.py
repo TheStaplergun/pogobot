@@ -291,6 +291,7 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
 
 GET_NEXT_LOBBY_TO_REMOVE_QUERY = """
     SELECT * FROM raid_lobby_user_map
+    WHERE (frozen = false)
     ORDER BY delete_at
     LIMIT 1;
 """
@@ -1063,6 +1064,14 @@ async def handle_admin_close_lobby(ctx, bot, lobby_id):
         except discord.DiscordException:
             pass
 
+SET_FROZEN_FLAG_QUERY = """
+    UPDATE raid_lobby_user_map
+    SET frozen = true
+    WHERE (lobby_channel_id = $1)
+"""
+async def set_frozen_flag(bot, lobby_id):
+    await bot.database.execute(SET_FROZEN_FLAG_QUERY, lobby_id)
+
 async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
         lobby_id = ctx.channel.id
@@ -1072,6 +1081,8 @@ async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
         lobby_channel = ctx.channel
     else:
         lobby_channel = await bot.retrieve_channel(lobby_id)
+    lobby = bot.lobbies.get(lobby_channel.id)
+    lobby.frozen = True
 
     if lobby_channel and not lobby_channel.permissions_for(ctx.author).manage_channels:
         embed = discord.Embed(title="", description="You do not have permission to manage that lobby.")
@@ -1088,9 +1099,9 @@ async def handle_admin_freeze_lobby(ctx, bot, lobby_id):
         except discord.DiscordException:
             return
 
+    await set_frozen_flag(bot, lobby_id)
     try:
         embed = discord.Embed(title="", description="This lobby has been frozen by an administrator. Members may leave if they would like.")
         message = await ctx.send(embed=embed)
     except discord.DiscordException:
         pass
-    lobby = bot.lobbies.get(lobby_channel.id)
