@@ -87,7 +87,10 @@ GET_GUILD_COUNTS = """
 """
 async def set_up_guild_raid_counters(bot):
     guild_counts = await bot.database.fetch(GET_GUILD_COUNTS)
+    print(guild_counts)
     bot.guild_raid_counters = {record.get("guild_id"):record.get("raid_counter") for record in guild_counts}
+    print(bot.guild_raid_counters)
+
 
 GET_ALL_LOBBIES = """
   SELECT * FROM raid_lobby_user_map;
