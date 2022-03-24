@@ -117,7 +117,6 @@ def format_pokemon_name(name):
             if "Y" in name or "X" in name:
                 name.insert(1, name.pop(-1))
         name.insert(0, name.pop(-1))
-    print(name)
 
     if not name or len(name) < 1:
         return ""
