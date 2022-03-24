@@ -102,6 +102,9 @@ async def extend_duration_of_lobby(bot, ctx):
     print("Sending updated time")
     await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"), time_to_remove=new_delete_time, lobby_id=lobby.id)
 
+    message = "Host has extended the lobby timer."
+    await RLH.send_log_message(bot, message, lobby, lobby_data)
+
     view = bot.extend_lobby_view(bot) if max_remaining_extendable_time > 1 else None
 #    await RLH.update_delete_time_with_given_time(bot, new_delete_time, lobby_data.get("raid_message_id"))
     await lobby.send(embed=new_embed, view=view)
@@ -113,11 +116,16 @@ async def host_manual_remove_lobby(bot, ctx):
             new_embed = discord.Embed(title="Error", description="You are not hosting a lobby.")
             await bot.send_ignore_error(ctx.author, "", embed=new_embed)
         return
-
+    try:
+        lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
+    except discord.DiscordException:
+        pass
     # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
     #     await notify_user_cannot_alter_lobby_while_in_raid(bot, ctx.user_id)
     #     return
+    message = "Host has closed the lobby."
+    await RLH.send_log_message(bot, message, lobby, lobby_data)
 
     #lobby = await bot.retrieve_channel(lobby_data.get("lobby_channel_id"))
     await RLH.update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))

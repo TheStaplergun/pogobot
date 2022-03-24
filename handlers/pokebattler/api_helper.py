@@ -95,6 +95,8 @@ postfix_form_converter = {
     "DEFENSE":"Defense",
     "SPEED":"Speed",
     "THERIAN":"Therian",
+    "Y":"Y",
+    "X":"X"
 }
 
 def format_pokemon_name(name):

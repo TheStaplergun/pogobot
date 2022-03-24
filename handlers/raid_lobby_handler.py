@@ -110,7 +110,7 @@ GET_RELEVANT_LOBBY_BY_TIME_AND_USERS = """
 async def get_latest_lobby_data_by_timestamp(bot):
     return await bot.database.fetch(GET_RELEVANT_LOBBY_BY_TIME_AND_USERS)
 
-async def log_message_in_raid_lobby_channel(bot, message, lobby_channel, lobby_data):
+async def send_log_message(bot, message, lobby_channel, lobby_data):
     author = message.author
     category_data = await get_raid_lobby_category_by_guild_id(bot, message.guild.id)
     log_channel_id = category_data.get("log_channel_id")
@@ -418,13 +418,15 @@ async def remove_lobby_member_by_command(bot, ctx, user, is_self=False):
         return
 
     if host_id != ctx.author.id:
-        embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
-        await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
-
         if channel and not channel.permissions_for(ctx.author).manage_channels:
             embed = discord.Embed(title="", description="You do not have permission to manage this lobby.")
             await bot.send_ignore_error(ctx, "", embed=embed, delete_after=15)
             return
+        # else:
+        #     embed = discord.Embed(title="Error", description="You are not the host of this lobby.")
+        #     await bot.send_ignore_error(ctx, " ", embed=embed, delete_after=15)
+
+
 
     lobby_member_role = discord.utils.get(ctx.guild.roles, name="Lobby Member")
 
