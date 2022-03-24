@@ -49,7 +49,9 @@ async def extend_duration_of_lobby(bot, ctx):
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
     lobby = bot.lobbies.get(lobby_id)
     if lobby.frozen:
-        await bot.send_ignore_error(lobby_channel, "This lobby is frozen and the time cannot be extended.")
+        embed = discord.Embed(title="Error", description="This lobby is frozen and the time cannot be extended.")
+        #message = await ctx.send(embed=embed)
+        await bot.send_ignore_error(lobby_channel, "", embed=embed)
         return
     raid_data = await RH.check_if_in_raid(None, bot, user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
@@ -129,7 +131,10 @@ async def host_manual_remove_lobby(bot, ctx):
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
     lobby = bot.lobbies.get(lobby_id)
     if lobby.frozen:
-        await bot.send_ignore_error(lobby_channel, "This lobby is frozen and can only be closed by an administrator.")
+
+        embed = discord.Embed(title="Error", description="This lobby is frozen and can only be closed by an administrator.")
+        #message = await ctx.send(embed=embed)
+        await bot.send_ignore_error(lobby_channel, "", embed=embed)
         return
     # raid_data = await RH.check_if_in_raid(None, bot, ctx.user_id)
     # if raid_data and raid_data.get("message_id") == lobby_data.get("raid_message_id"):
