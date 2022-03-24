@@ -112,7 +112,9 @@ def format_pokemon_name(name):
         if postform is not None:
             name.insert(len(name), postform)
 
+    print(name)
     if "MEGA" in name:
+
         name.insert(0, name.pop(-1))
 
     if not name or len(name) < 1:
