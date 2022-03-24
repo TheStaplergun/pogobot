@@ -128,7 +128,7 @@ async def host_manual_remove_lobby(bot, ctx):
 
     lobby_id = lobby_data.get("lobby_channel_id")
     lobby_channel = await bot.retrieve_channel(int(lobby_id))
-    lobby = bot.get_lobby(lobby_id)
+    lobby = await bot.get_lobby(lobby_id)
     print("Before frozen check")
     if lobby.frozen:
         embed = discord.Embed(title="Error", description="This lobby is frozen and can only be closed by an administrator.")
