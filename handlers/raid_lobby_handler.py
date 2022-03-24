@@ -123,7 +123,10 @@ async def send_log_message(bot, message, lobby_channel, lobby_data, author=None,
     else:
         new_embed = discord.Embed(title="Logged Message", url=message.jump_url, description=message.content)
         url = author.guild_avatar.url if author.guild_avatar and author.guild_avatar.url else author.avatar.url if author.avatar and author.avatar.url else None
-    new_embed.set_author(name=author.name, icon_url=url)
+    if url:
+        new_embed.set_author(name=author.name, icon_url=url)
+    else:
+        new_embed.set_author(name=author.name)
     new_embed.set_footer(text=f"User ID: {author.id} | Time: {datetime.utcnow()} UTC")
     host_user_id = lobby_data.get("host_user_id")
     guild = lobby_channel.guild
