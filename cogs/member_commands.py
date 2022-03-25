@@ -49,8 +49,11 @@ class MemberCommands(commands.Cog):
     @commands.guild_only()
     async def names(self, ctx):
         """Shows all trainer names for lobby members in a nice format."""
-        await asyncio.gather(RLH.show_trainer_names(self.__bot, ctx),
-                             self.__bot.delete_ignore_error(ctx.message))
+        try:
+            await asyncio.gather(RLH.show_trainer_names(self.__bot, ctx),
+                                 self.__bot.delete_ignore_error(ctx.message))
+        except Exception as e:
+            await self.__bot.send_error_alert("Error during names command.", e)
 
 def setup(bot):
     """Default setup function for file"""
