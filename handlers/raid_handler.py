@@ -277,11 +277,11 @@ async def handle_admin_set_slowmode_timer(ctx, bot, time):
     async with bot.database.connect() as c:
         result = await c.fetchrow(GET_SLOWMODE_DATA_FOR_GUILD_QUERY, ctx.guild.id)
         if result:
-            await c.execute(UPDATE_SLOWMODE_TIME_FOR_GUILD, time, ctx.guild.id)
+            await c.execute(UPDATE_SLOWMODE_TIME_FOR_GUILD, time_in_minutes, ctx.guild.id)
         elif time_in_minutes < 1:
             await c.execute(REMOVE_SLOWMODE_TIME_FOR_GUILD, ctx.guild.id)
         elif not result:
-            await c.execute(NEW_SLOWMODE_INSERT, time, ctx.guild.id)
+            await c.execute(NEW_SLOWMODE_INSERT, time_in_minutes, ctx.guild.id)
 
     embed=discord.Embed(title="Notification", description=f"The slowmode time was set to {time_in_minutes} minutes")
 
