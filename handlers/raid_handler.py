@@ -284,6 +284,7 @@ async def handle_admin_set_slowmode_timer(ctx, bot, time):
             await c.execute(NEW_SLOWMODE_INSERT, time_in_minutes, ctx.guild.id)
 
     embed=discord.Embed(title="Notification", description=f"The slowmode time was set to {time_in_minutes} minutes")
+    await bot.send_ignore_error(ctx, " ", embed=embed)
 
 
 
