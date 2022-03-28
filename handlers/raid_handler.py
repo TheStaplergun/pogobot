@@ -239,7 +239,7 @@ async def guild_has_slowmode(bot, guild):
 
 GET_RECENT_HOST_TIME_QUERY = """
     SELECT * FROM recent_raid_host_time
-    WHERE (member_id = $1)
+    WHERE (user_id = $1)
     LIMIT 1;
 """
 async def get_recent_raid_time(bot, author):
@@ -248,7 +248,7 @@ async def get_recent_raid_time(bot, author):
 UPDATE_RECENT_RAID_TIME_QUERY = """
     UPDATE recent_raid_host_time
     SET recent_time = $1
-    WHERE (member_id = $2);
+    WHERE (user_id = $2);
 """
 async def update_recent_raid_time(bot, time, author):
     await bot.database.execute(UPDATE_RECENT_RAID_TIME_QUERY, time, int(author.id))
