@@ -340,10 +340,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 time_block = ""
                 if remaining_time_in_minutes > 0:
                     minutes = "minute" if remaining_time_in_minutes == 1 else "minutes"
-                    time_block.append(f"{remaining_time_in_minutes} {minutes}")
+                    time_block += f"{remaining_time_in_minutes} {minutes}"
                 if remaining_time_extra_seconds > 0:
                     seconds = "second" if remaining_time_extra_seconds == 1 else "seconds"
-                    time_block.append(f"{remaining_time_extra_seconds} {seconds}")
+                    time_block += f"{remaining_time_extra_seconds} {seconds}"
                 embed = discord.Embed(title="Error", description=f"This guild has slowmode for hosting on. **You have {time_block} left until you can host your next raid.**\n\nThis is to prevent spam of raids through opening and closing lobbys quickly.")
                 await bot.send_ignore_error(ctx.author, " ", embed=embed)
                 return
