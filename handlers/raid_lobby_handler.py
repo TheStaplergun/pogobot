@@ -286,7 +286,7 @@ async def alter_deletion_time_for_raid_lobby(bot, lobby):
             if users < limit:
                 new_embed = discord.Embed(title=f"{users}/{limit}", description="Use -extend to add time as needed.\n\nNo new members will be added to this lobby.\n\nIf there are not enough players to complete this raid, please don’t waste any time or passes attempting unless you are confident you can complete the raid with a smaller group.")
             else:
-                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full.\n\nIf someone needs to be removed, you can use the command `-remove` and any of their name, their ID, their nickname, or just `-remove @user`.")
+                new_embed = discord.Embed(title=f"{users}/{limit} FULL", description="Use -extend to add time as needed.\n\nThe lobby is now full.\n\nAvailable_commands:\n -remove @user(This drops a user from the lobby. The bot will ask you to refill their slot)\n -names (Shows all the in game names of players in the lobby in order)\n -close (Closes the lobby)")
                 #await RH.set_raid_status_full(lobby.raid_id)
             new_embed.set_footer(text="If you have any feedback or questions about this bot, reach out to TheStaplergun#6920")
             await lobby_channel.send(" ", embed=new_embed)
