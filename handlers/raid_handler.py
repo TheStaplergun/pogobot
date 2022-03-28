@@ -245,13 +245,22 @@ GET_RECENT_HOST_TIME_QUERY = """
 async def get_recent_raid_time(bot, author):
     return await bot.database.fetchrow(GET_RECENT_HOST_TIME_QUERY, int(author.id))
 
+
 UPDATE_RECENT_RAID_TIME_QUERY = """
     UPDATE recent_raid_host_time
-    SET recent_time = $1
+    SET last_host_time = $1
     WHERE (user_id = $2);
 """
-async def update_recent_raid_time(bot, time, author):
-    await bot.database.execute(UPDATE_RECENT_RAID_TIME_QUERY, time, int(author.id))
+SET_RECENT_HOST_TIME_QUERY = """
+    INSERT INTO recent_raid_host_time(user_id, last_host_time)
+    VALUES($1, $2)
+"""
+async def update_recent_raid_time(bot, time, author, had_recent_raid_time):
+    async with bot.database.connect() as c:
+        if had_recent_raid_time:
+            return await c.execute(UPDATE_RECENT_RAID_TIME_QUERY, time, int(author.id))
+        else:
+            return await c.execute(SET_RECENT_HOST_TIME_QUERY, author.id, time)
 
 UPDATE_SLOWMODE_TIME_FOR_GUILD = """
     UPDATE slowmode_guilds
@@ -312,9 +321,10 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
         return
 
     cur_time = datetime.utcnow()
+    had_recent_raid_time = False
     slowmode_time, has_slowmode = await guild_has_slowmode(bot, ctx.guild)
     if has_slowmode:
-        result = await get_recent_raid_time(bot, ctx.author)
+        result, had_recent_raid_time = await get_recent_raid_time(bot, ctx.author)
         if result:
             time_difference = cur_time - result.get("recent_host_time")
             total_time_in_seconds = time_difference.total_seconds()
@@ -407,7 +417,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 await message.edit(content=edited_message_content)
             print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
 
-            await update_recent_raid_time(bot, cur_time, ctx.author)
+            await update_recent_raid_time(bot, cur_time, ctx.author, had_recent_raid_time)
 
             # try:
             #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
