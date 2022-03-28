@@ -262,7 +262,7 @@ REMOVE_SLOWMODE_TIME_FOR_GUILD = """
     DELETE FROM slowmode_guilds WHERE (guild_id = $1)
 """
 NEW_SLOWMODE_INSERT = """
-INSERT INTO raids(slowmode_time, guild_id)
+INSERT INTO slowmode_guilds(slowmode_time, guild_id)
 VALUES($1, $2)
 """
 async def handle_admin_set_slowmode_timer(ctx, bot, time):
