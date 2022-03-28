@@ -156,7 +156,7 @@ async def start_five_minute_warning_loop(bot):
                 checked = 0
                 for id, lobby in bot.lobbies.items():
                     if not lobby.five_minute_warning:
-                        if lobby.delete_time < relevant_time:
+                        if lobby.delete_time < relevant_time and not lobby.frozen:
                             await lobby.send_five_minute_warning()
                         else:
                             continue

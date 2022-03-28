@@ -1,5 +1,6 @@
 """Raid SQL statements and database interaction functions"""
 from datetime import datetime, timedelta
+import math
 
 import asyncpg
 import discord
@@ -15,9 +16,8 @@ NEW_RAID_INSERT = """
 INSERT INTO raids(message_id, time_registered, guild_id, channel_id, user_id, time_to_remove)
 VALUES($1, $2, $3, $4, $5, $6)
 """
-async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove):
+async def add_raid_to_table(ctx, bot, message_id, guild_id, channel_id, user_id, time_to_remove, cur_time):
     """Add a raid to the database with all the given data points."""
-    cur_time = datetime.now()
 
     await bot.database.execute(NEW_RAID_INSERT,
                                  int(message_id),
@@ -225,6 +225,68 @@ async def check_if_valid_raid_channel(bot, channel_id):
         return False
     return True
 
+GET_SLOWMODE_DATA_FOR_GUILD_QUERY = """
+    SELECT * FROM slowmode_guilds
+    WHERE (guild_id = $1)
+    LIMIT 1;
+"""
+async def guild_has_slowmode(bot, guild):
+    result = await bot.database.fetchrow(GET_SLOWMODE_DATA_FOR_GUILD_QUERY, int(guild.id))
+    if not result:
+        return 0, False
+    else:
+        return result.get("slowmode_time"), True
+
+GET_RECENT_HOST_TIME_QUERY = """
+    SELECT * FROM recent_raid_host_time
+    WHERE (member_id = $1)
+    LIMIT 1;
+"""
+async def get_recent_raid_time(bot, author):
+    return await bot.database.fetchrow(GET_RECENT_HOST_TIME_QUERY, int(author.id))
+
+UPDATE_RECENT_RAID_TIME_QUERY = """
+    UPDATE recent_raid_host_time
+    SET recent_time = $1
+    WHERE (member_id = $2);
+"""
+async def update_recent_raid_time(bot, time, author):
+    await bot.database.execute(UPDATE_RECENT_RAID_TIME_QUERY, time, int(author.id))
+
+UPDATE_SLOWMODE_TIME_FOR_GUILD = """
+    UPDATE slowmode_guilds
+    SET slowmode_time = $1
+    WHERE (guild_id = $2)
+"""
+REMOVE_SLOWMODE_TIME_FOR_GUILD = """
+    DELETE FROM slowmode_guilds WHERE (guild_id = $1)
+"""
+NEW_SLOWMODE_INSERT = """
+INSERT INTO raids(slowmode_time, guild_id)
+VALUES($1, $2)
+"""
+async def handle_admin_set_slowmode_timer(ctx, bot, time):
+    try:
+        time_in_minutes = int(time)
+    except TypeError as e:
+        embed = discord.Embed(title="Error", description="Time given was not a number")
+        await bot.send_ignore_error(ctx, " ", embed=embed)
+        return
+
+    result = None
+    async with bot.database.connect() as c:
+        result = await c.fetchrow(GET_SLOWMODE_DATA_FOR_GUILD_QUERY, ctx.guild.id)
+        if result:
+            await c.execute(UPDATE_SLOWMODE_TIME_FOR_GUILD, time, ctx.guild.id)
+        elif time_in_minutes < 1:
+            await c.execute(REMOVE_SLOWMODE_TIME_FOR_GUILD, ctx.guild.id)
+        elif not result:
+            await c.execute(NEW_SLOWMODE_INSERT, time, ctx.guild.id)
+
+    embed=discord.Embed(title="Notification", description=f"The slowmode time was set to {time_in_minutes} minutes")
+
+
+
 VERIFIED_ONLY_RAIDS = [
     "Mega Steelix",
     "Deoxys-Defense",
@@ -247,6 +309,30 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     if await get_lobby_data_by_user_id(bot, ctx.author.id):
         await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
         return
+
+    slowmode_time, has_slowmode = await guild_has_slowmode(bot, ctx.guild)
+    if has_slowmode:
+        result = await get_recent_raid_time(bot, ctx.author)
+        if result:
+            cur_time = datetime.utcnow()
+            time_difference = cur_time - result.get("recent_host_time")
+            total_time_in_seconds = time_difference.total_seconds()
+            remaining_time = (slowmode_time * 60) - total_time_in_seconds
+
+            if remaining_time > 0:
+                remaining_time_in_minutes = math.floor(remaining_time / 60)
+                remaining_time_extra_seconds = (remaining_time_in_minutes*60) - remaining_time
+                time_block = ""
+                if remaining_time_in_minutes > 0:
+                    minutes = "minute" if remaining_time_in_minutes == 1 else "minutes"
+                    time_block.append(f"{remaining_time_in_minutes} {minutes}")
+                if remaining_time_extra_seconds > 0:
+                    seconds = "second" if remaining_time_extra_seconds == 1 else "seconds"
+                    time_block.append(f"{remaining_time_extra_seconds} {seconds}")
+                embed = discord.Embed(title="Error", description=f"This guild has slowmode for hosting on. **You have {time_block} left until you can host your next raid.**\n\nThis is to prevent spam of raids through opening and closing lobbys quickly.")
+                await bot.send_ignore_error(ctx.author, " ", embed=embed)
+                return
+
     is_verified = discord.utils.get(ctx.author.roles, name="Verified Raid Host")
     try:
         invite_slots = int(invite_slots)
@@ -308,7 +394,7 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 print(f'[*][{ctx.guild.name}][{ctx.author}] An error occurred listing a raid. [{error}]')
                 return
             time_to_delete = datetime.now() + timedelta(seconds=remove_after_seconds)
-            await add_raid_to_table(ctx, bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete)
+            await add_raid_to_table(ctx, bot, message.id, ctx.guild.id, message.channel.id, ctx.author.id, time_to_delete, cur_time)
 
             lobby = None
             if raid_lobby_category:
@@ -319,6 +405,8 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 edited_message_content = f"{message.content}\n{lobby.mention} **<-lobby**"
                 await message.edit(content=edited_message_content)
             print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
+
+            await update_recent_raid_time(bot, cur_time, ctx.author)
 
             # try:
             #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))

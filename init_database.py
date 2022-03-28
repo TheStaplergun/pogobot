@@ -108,6 +108,24 @@ ADD_FROZEN_FLAG_TO_TABLE = """
 ALTER TABLE raid_lobby_user_map
 ADD COLUMN frozen boolean;
 """
+CREATE_AUTOCASTING_TABLE = """
+CREATE TABLE IF NOT EXISTS autocasting_guilds(
+  id BIGSERIAL PRIMARY KEY,
+  guild_id BIGINT NOT NULL);
+"""
+
+ADD_SLOWMODE_TABLE = """
+  CREATE TABLE IF NOT EXISTS slowmode_guilds(
+    guild_id BIGINT PRIMARY KEY,
+    slowmode_time INT NOT NULL
+  )
+"""
+RECENT_PARTICIPATION_TABLE = """
+CREATE TABLE IF NOT EXISTS recent_raid_host_time(
+  user_id BIGINT PRIMARY KEY,
+  last_host_time TIMESTAMP NOT NULL
+);
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
@@ -117,6 +135,7 @@ async def main():
 
   #await conn.execute(friend_code_table_update)
   #await conn.execute(UPDATE_WEIGHT_COLUMN)
-  await conn.execute(ADD_FROZEN_FLAG_TO_TABLE)
+  await conn.execute(ADD_SLOWMODE_TABLE)
+  await conn.execute(RECENT_PARTICIPATION_TABLE)
 
 asyncio.get_event_loop().run_until_complete(main())

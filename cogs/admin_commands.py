@@ -38,14 +38,6 @@ class AdminCommands(commands.Cog):
         await asyncio.gather(RLH.handle_manual_clear_application(ctx, user_id, self.__bot),
                              self.__bot.delete_ignore_error(ctx.message))
 
-    # @commands.command()
-    # @commands.guild_only()
-    # @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
-    # async def clear_lobby(self, ctx, user_id):
-    #     """Mod Only - Clears an application for a specific user by ID"""
-    #     await asyncio.gather(RLH.handle_admin_clear_lobby(ctx, user_id, self.__bot),
-    #                          self.__bot.delete_ignore_error(ctx.message))
-
     @commands.command()
     @commands.guild_only()
     @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
@@ -59,12 +51,20 @@ class AdminCommands(commands.Cog):
     # @commands.has_guild_permissions(manage_messages=True, manage_roles=True, manage_channels=True)
     # async def show_interaction_list(self, ctx):
     #     await ctx.send(self.__bot.interactions)
+
     @commands.command()
     @commands.guild_only()
     @commands.has_guild_permissions(manage_channels=True)
     async def freeze_lobby(self, ctx, channel_id=""):
-        """Mod Only - Sets lobby internal timer to one year from now to 'Freeze' the lobby for inspection. Also disables the user from closing their own lobby."""
+        """Mod Only - Sets flag to 'Freeze' the lobby for inspection, causing it to permanently remain open until being closed. Also disables the user from closing their own lobby, an administrator or mod has to close it."""
         await asyncio.gather(RLH.handle_admin_freeze_lobby(ctx, self.__bot, channel_id),
+                             self.__bot.delete_ignore_error(ctx.message))
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_guild_permissions(manage_channels=True, manage_roles=True)
+    async def slowmode_time(self, ctx, time):
+        await asyncio.gather(RH.handle_admin_set_slowmode_timer(ctx, self.__bot, time),
                              self.__bot.delete_ignore_error(ctx.message))
 
 def setup(bot):

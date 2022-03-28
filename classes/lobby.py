@@ -9,7 +9,7 @@ class Lobby():
     """
     A class containing various pieces of cached data about a lobbym
     """
-    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications, posted_at, frozen):
+    def __init__(self, bot, user_limit, user_count, lobby_id, raid_id, host, delete_time, applications, posted_at, frozen, pokemon_name=None):
         self.__bot = bot
         self.user_limit = user_limit
         self.user_count = user_count
@@ -20,6 +20,7 @@ class Lobby():
         self.host = host
         self.has_filled = self.is_full()
         self.pending_unlock = False
+        self.pokemon_name = pokemon_name
         self.lock()
         self.five_minute_warning = False
         self.delete_time = delete_time

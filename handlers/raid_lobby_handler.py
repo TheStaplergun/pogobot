@@ -496,7 +496,7 @@ async def calculate_speed_bonus(message, listing_duration):
     time_difference = (discord.utils.utcnow() - creation_time)
     return 100 - (time_difference.total_seconds() / listing_duration * 100) # Calculated by quickness of application over total life of raid listing.
 
-async def handle_new_application(ctx, bot, member, message, lobby):
+async def handle_new_application(ctx, bot, member, message, lobby):#, is_casting=False):
     raid_data = await RH.retrieve_raid_data_by_message_id(ctx, bot, message.id)
     if not raid_data:
         return False
@@ -509,16 +509,17 @@ async def handle_new_application(ctx, bot, member, message, lobby):
             await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
             #await member.send(" ", embed=new_embed)
             return False
-        else:
-            new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected based on a weighted system.\n\n\nYou will know within 60 seconds if you are selected.\n\nIt is possible to be pulled into the lobby if someone is removed later on.")
-            await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
-            #await member.send(" ", embed=new_embed)
+        # elif not is_casting:
+        #     new_embed = discord.Embed(title="System Notification", description="You have applied for the selected raid.\nApplicants will be selected based on a weighted system.\n\n\nYou will know within 60 seconds if you are selected.\n\nIt is possible to be pulled into the lobby if someone is removed later on.")
+        #     await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
+        #     #await member.send(" ", embed=new_embed)
     except discord.Forbidden:
         # Prevents users from applying without ability to send a DM.
         new_embed = discord.Embed(title="Communication Error", description="{}, I cannot DM you. You will not be able to apply for raids until I can.".format(member.mention))
         await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
         #await channel.send(" ", embed=new_embed, delete_after=15)
         return False
+
     role = discord.utils.get(member.roles, name=pokemon_name)
     time_to_end = raid_data.get("time_to_remove")
     time_to_end = pytz.utc.localize(time_to_end)
@@ -526,10 +527,42 @@ async def handle_new_application(ctx, bot, member, message, lobby):
     speed_bonus = await calculate_speed_bonus(message, listing_duration.total_seconds())
     app_weight = await calculate_weight(bot, True if role else False, speed_bonus, member.id)
     await lobby.add_an_applicant(member.id)
+    guild = ctx.guild
+    # if await guild_is_autocasting(bot, guild) and not is_casting:
+    #     await cast_application_to_similar_raids(bot, ctx, member, guild, pokemon_name)
+    #     embed = discord.Embed(title="Notification", description="Your application was cast to all similar raids with the same Pokemon Name.\n\nYou will be selected based on a weighted system.")
+    #     await ctx.response.send_message(" ", embed=embed, ephemeral=True)
     await lobby.update_raid_status()
     #await lobby.update_raid_status()
     await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), app_weight)
     bot.applicant_trigger.set()
+
+async def cast_application_to_similar_raids(bot, itx, member, guild, pokemon_name):
+    for lobby in [lobby for lobby in bot.lobbies.values() if lobby.guild == guild]:
+        if not lobby.pokemon_name:
+            raid_id = lobby.raid_id
+            raid_channel = itx.channel
+            if not raid_channel:
+                await bot.retrieve_channel(itx.channel_id)
+            message = await raid_channel.fetch_message(raid_id)
+
+            _, this_pokemon_name = H.get_pokemon_name_from_raid(message)
+            if this_pokemon_name == pokemon_name:
+                await handle_new_application(itx, bot, member, message, lobby, is_casting=True)
+        elif lobby.pokemon_name and lobby.pokemon_name == pokemon_name:
+            if this_pokemon_name == pokemon_name:
+                await handle_new_application(itx, bot, member, message, lobby, is_casting=True)
+
+    pass
+
+GUILD_IS_AUTOCASTING_QUERY = """
+SELECT * FROM autocasting_guilds
+WHERE (guild_id = $1)
+LIMIT 1;
+"""
+async def guild_is_autocasting(bot, guild):
+    result = await bot.database.fetchrow(GUILD_IS_AUTOCASTING_QUERY, guild.id)
+    return True if result else False
 
 QUERY_APPLICATION_DATA_FOR_USER = """
     SELECT * FROM raid_application_user_map WHERE (user_id = $1);
@@ -547,12 +580,13 @@ async def handle_application_to_raid(bot, itx, message, channel):
     #     interacted_message = await itx.original_message()
     # except discord.DiscordException:
     #     pass
-    result = await get_applicant_data_for_user(bot, itx.user.id)
     if discord.utils.get(member.roles, name="Muted"):
         embed = discord.Embed(title="Error", description="You are currently muted and your application has been dropped. Try again when you are no longer muted.")
         await itx.response.send_message(" ", embed=embed, ephemeral=True)
         #await bot.send_ignore_error(member, " ", embed=embed)
         return
+
+    result = await get_applicant_data_for_user(bot, itx.user.id)
 
     friend_code_set = await FCH.has_friend_code_set(bot, itx.user.id)
     if not friend_code_set:
@@ -970,18 +1004,23 @@ async def show_trainer_names(bot, ctx):
     raid_message_id = lobby_data.get('raid_message_id')
     results = await bot.database.fetch(SELECT_TRAINERS_IN_CURRENT_LOBBY,
                                        raid_message_id)
-    print(results)
+
     names = []
     for result in results:
-        name, has_name = await FCH.get_trainer_name(bot, result.get("user_id"))
+        name, _ = await FCH.get_trainer_name(bot, result.get("user_id"))
         names.append(name)
-    first_half = ",".join(list(names[:min(len(names), 5)]))
+
+    if names <= 5:
+        first_half = ",".join(list(names))
+    else:
+        first_half = ",".join(list(names[:5]))
+    await bot.send_ignore_error(ctx.channel, first_half)
+
     second_half = None
     if len(names) > 5:
         second_half = ",".join(list(names[5:]))
-    await bot.send_ignore_error(ctx.channel, first_half)
-    if len(names) > 5:
         await bot.send_ignore_error(ctx.channel, second_half)
+
     embed = discord.Embed(title="Notification", description="The above {} can be used to search on your friends list for easier inviting.".format("two messages" if second_half else "message"))
     await bot.send_ignore_error(ctx.channel, " ", embed=embed)
 
