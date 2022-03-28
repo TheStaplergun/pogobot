@@ -311,11 +311,11 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
         await ctx.author.send(H.guild_member_dm(ctx.guild.name, "You currently have a lobby open. Please close your old lobby and retry."))
         return
 
+    cur_time = datetime.utcnow()
     slowmode_time, has_slowmode = await guild_has_slowmode(bot, ctx.guild)
     if has_slowmode:
         result = await get_recent_raid_time(bot, ctx.author)
         if result:
-            cur_time = datetime.utcnow()
             time_difference = cur_time - result.get("recent_host_time")
             total_time_in_seconds = time_difference.total_seconds()
             remaining_time = (slowmode_time * 60) - total_time_in_seconds
