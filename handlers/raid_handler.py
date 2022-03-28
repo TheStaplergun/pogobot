@@ -243,7 +243,11 @@ GET_RECENT_HOST_TIME_QUERY = """
     LIMIT 1;
 """
 async def get_recent_raid_time(bot, author):
-    return await bot.database.fetchrow(GET_RECENT_HOST_TIME_QUERY, int(author.id))
+    result = await bot.database.fetchrow(GET_RECENT_HOST_TIME_QUERY, int(author.id))
+    if result:
+        return result, True
+    else:
+        return None, False
 
 
 UPDATE_RECENT_RAID_TIME_QUERY = """
