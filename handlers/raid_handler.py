@@ -327,8 +327,8 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     cur_time = datetime.utcnow()
     had_recent_raid_time = False
     slowmode_time, has_slowmode = await guild_has_slowmode(bot, ctx.guild)
-    result, had_recent_raid_time = await get_recent_raid_time(bot, ctx.author)
     if has_slowmode:
+        result, had_recent_raid_time = await get_recent_raid_time(bot, ctx.author)
         if had_recent_raid_time:
             time_difference = cur_time - result.get("last_host_time")
             total_time_in_seconds = time_difference.total_seconds()
@@ -420,8 +420,8 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
                 edited_message_content = f"{message.content}\n{lobby.mention} **<-lobby**"
                 await message.edit(content=edited_message_content)
             print(f'[*][{ctx.guild}][{ctx.author.name}] Raid successfuly posted.')
-
-            await update_recent_raid_time(bot, cur_time, ctx.author, had_recent_raid_time)
+            if has_slowmode:
+                await update_recent_raid_time(bot, cur_time, ctx.author, had_recent_raid_time)
 
             # try:
             #     await SH.toggle_raid_sticky(bot, ctx, int(ctx.channel.id), int(ctx.guild.id))
