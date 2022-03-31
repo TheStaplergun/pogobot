@@ -1073,7 +1073,8 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
     await asyncio.gather(*tasks)
-    bot.lobbies.pop(lobby_channel.id)
+    if bot.lobbies.get(lobby_channel.id):
+        bot.lobbies.pop(lobby_channel.id)
 
 async def handle_admin_close_lobby(ctx, bot, lobby_id):
     if lobby_id == "":
