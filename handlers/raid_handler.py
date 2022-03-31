@@ -327,8 +327,8 @@ async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     cur_time = datetime.utcnow()
     had_recent_raid_time = False
     slowmode_time, has_slowmode = await guild_has_slowmode(bot, ctx.guild)
+    result, had_recent_raid_time = await get_recent_raid_time(bot, ctx.author)
     if has_slowmode:
-        result, had_recent_raid_time = await get_recent_raid_time(bot, ctx.author)
         if had_recent_raid_time:
             time_difference = cur_time - result.get("last_host_time")
             total_time_in_seconds = time_difference.total_seconds()
