@@ -50,8 +50,7 @@ UPDATE_LAST_RECALLED_TIME = """
 """
 UPDATE_LAST_RECALLED_AND_INCREMENT_HOST_COUNT = """
     UPDATE trainer_data
-    SET last_time_recalled = $1,
-        raids_hosted = raids_hosted + 1
+    SET last_time_recalled = $1
     WHERE (user_id = $2);
 """
 INSERT_BLANK_RECORD = """
