@@ -266,6 +266,14 @@ async def update_recent_raid_time(bot, time, author, had_recent_raid_time):
         else:
             return await c.execute(SET_RECENT_HOST_TIME_QUERY, author.id, time)
 
+INCREMENT_RAID_COUNT_FOR_HOST_BY_ID = """
+    UPDATE trainer_data
+    SET raids_hosted = raids_hosted + 1
+    WHERE (user_id = $1);
+"""
+async def increment_raid_count_for_user(bot, host_id):
+    await bot.database.execute(INCREMENT_RAID_COUNT_FOR_HOST_BY_ID, host_id)
+
 UPDATE_SLOWMODE_TIME_FOR_GUILD = """
     UPDATE slowmode_guilds
     SET slowmode_time = $1

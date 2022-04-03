@@ -1072,7 +1072,10 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
+    if len(lobby.members) > 0:
+        tasks.append(RH.increment_raid_count_for_user(bot, lobby.host_id))
     await asyncio.gather(*tasks)
+
     if bot.lobbies.get(lobby_channel.id):
         bot.lobbies.pop(lobby_channel.id)
 
