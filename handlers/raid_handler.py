@@ -255,7 +255,7 @@ UPDATE_RECENT_RAID_TIME_QUERY = """
     SET last_host_time = $1
     WHERE (user_id = $2);
 """
-SET_RECENT_HOST_TIME_QUERY = """
+INSERT_RECENT_HOST_TIME_QUERY = """
     INSERT INTO recent_raid_host_time(user_id, last_host_time)
     VALUES($1, $2)
 """
@@ -264,7 +264,7 @@ async def update_recent_raid_time(bot, time, author, had_recent_raid_time):
         if had_recent_raid_time:
             return await c.execute(UPDATE_RECENT_RAID_TIME_QUERY, time, int(author.id))
         else:
-            return await c.execute(SET_RECENT_HOST_TIME_QUERY, author.id, time)
+            return await c.execute(INSERT_RECENT_HOST_TIME_QUERY, author.id, time)
 
 INCREMENT_RAID_COUNT_FOR_HOST_BY_ID = """
     UPDATE trainer_data
