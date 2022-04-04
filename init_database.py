@@ -98,6 +98,16 @@ CREATE TABLE IF NOT EXISTS raid_placeholder_stickies(
   guild_id BIGINT NOT NULL
 )
 """
+
+MOD_ACTION_EVADERS = """
+CREATE TABLE IF NOT EXISTS mod_action_evaders(
+  action_id BIGINT PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  mod_id BIGINT NOT NULL,
+  note_date TIMESTAMP NOT NULL,
+  note VARCHAR(500)
+)
+"""
 async def main():
   conn = await asyncpg.connect(database='pogo_raid_bot',
                                port=5432,
