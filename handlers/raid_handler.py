@@ -272,7 +272,6 @@ INCREMENT_RAID_COUNT_FOR_HOST_BY_ID = """
     WHERE (user_id = $1);
 """
 async def increment_raid_count_for_user(bot, host_id):
-    print("Adding to the raid count")
     await bot.database.execute(INCREMENT_RAID_COUNT_FOR_HOST_BY_ID, host_id)
 
 UPDATE_SLOWMODE_TIME_FOR_GUILD = """
