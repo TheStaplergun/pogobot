@@ -128,10 +128,11 @@ class Lobby():
 
         embed = discord.Embed(title="Unlock?", description="The lobby is not full. Would you like to gather more users?")
         await self.get_channel()
-        try:
-            await self.lobby_channel.send(f"<@{self.host.id}>", embed=embed, view=self.__bot.unlock_lobby_view(self.__bot))
-        except discord.DiscordException:
-            pass
+        if self.lobby_channel:
+            try:
+                await self.lobby_channel.send(f"<@{self.host.id}>", embed=embed, view=self.__bot.unlock_lobby_view(self.__bot))
+            except Exception:
+                pass
 
         self.pending_unlock = True
 
