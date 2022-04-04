@@ -1,5 +1,7 @@
 """Request handler system."""
 import re
+from datetime import date
+
 import discord
 import asyncpg
 import handlers.helpers as H
@@ -275,6 +277,43 @@ async def delete_request_role_and_post(ctx, bot, guild, message, role):
         await bot.database.execute(DELETE_REQUEST_FROM_TABLE, role_id)
     except asyncpg.PostgresError as error:
         print("[!] An exception occurred attempting to remove a role listing from the database. [{}]".format(error))
+
+INSERT_MOD_ACTION_EVADER = """
+  INSERT INTO mod_action_evaders(user_id, mod_id, note_date, note) values($1, $2, $3, $4)
+"""
+async def insert_mod_action(ctx, bot, user_id, note):
+
+    try:
+        await bot.database.execute(INSERT_MOD_ACTION_EVADER, user_id, ctx.message.author.id, date.today(), note)
+    except asyncpg.PostgresError as error:
+        print("[!] An error occurred inserting the new role data. [{}]".format(error))
+
+GET_MOD_ACTION_EVADER = """
+  SELECT * FROM mod_action_evaders where user_id = $1
+"""
+async def get_mod_actions_by_user_id(bot, user_id):
+    query_results = await bot.database.fetch(GET_MOD_ACTION_EVADER, user_id)
+    if not query_results:
+        return False
+    else:
+        return query_results
+
+GET_SINGLE_MOD_ACTION_EVADER = """
+  SELECT * FROM mod_action_evaders where action_id = $1
+"""
+async def get_mod_action_by_id(bot, action_id):
+    result = await bot.database.fetchrow(GET_SINGLE_MOD_ACTION_EVADER, action_id)
+    if not result:
+        return False
+    else:
+        return action_id, result.get("mod_id"), result.get("note_date"), result.get("note")
+
+DELETE_MOD_ACTION_EVADER = """
+  DELETE FROM mod_action_evaders where action_id = $1
+"""
+async def delete_mod_action(bot, action_id):
+    async with bot.database.connect() as c:
+        await c.execute(DELETE_ALL_ROLE_DATA_FOR_GUILD, int(action_id))
 
 async def check_if_user_already_assigned_role(member, role_id):
     if discord.utils.get(member.roles, id=role_id):
