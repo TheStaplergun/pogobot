@@ -530,6 +530,8 @@ async def handle_new_application(ctx, bot, member, message, lobby):#, is_casting
     #     embed = discord.Embed(title="Notification", description="Your application was cast to all similar raids with the same Pokemon Name.\n\nYou will be selected based on a weighted system.")
     #     await ctx.response.send_message(" ", embed=embed, ephemeral=True)
     await lobby.update_raid_status()
+    new_embed = discord.Embed(title="Notification", description="You have applied to the raid. You will be selected based on a weighted system.".format(member.mention))
+    await ctx.response.send_message(" ", embed=new_embed, ephemeral=True)
     #await lobby.update_raid_status()
     await insert_new_application(bot, member.id, message.id, message.guild.id, (True if role else False), app_weight)
     bot.applicant_trigger.set()
@@ -1072,7 +1074,7 @@ async def delete_lobby(bot, lobby, lobby_channel, lobby_data):
     #await update_raid_removal_and_lobby_removal_times(bot, lobby_data.get("raid_message_id"))
     tasks.append(bot.delete_ignore_error(lobby_channel))
     tasks.append(RH.delete_raid(bot, lobby_data.get("raid_message_id")))
-    if len(lobby.members) > 0:
+    if len(members) > 0:
         tasks.append(RH.increment_raid_count_for_user(bot, lobby.host.id))
     await asyncio.gather(*tasks)
 
