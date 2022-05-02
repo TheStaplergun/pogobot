@@ -312,7 +312,8 @@ async def handle_admin_set_slowmode_timer(ctx, bot, time):
 VERIFIED_ONLY_RAIDS = [
     "Mega Steelix",
     "Deoxys-Defense",
-    "Lugia"
+    "Lugia",
+    "Mega Latias"
 ]
 async def process_raid(ctx, bot, tier, pokemon_name, weather, invite_slots):
     from handlers.raid_lobby_handler import create_raid_lobby, get_lobby_data_by_user_id, get_raid_lobby_category_by_guild_id
