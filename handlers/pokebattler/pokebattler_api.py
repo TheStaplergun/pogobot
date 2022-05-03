@@ -37,7 +37,8 @@ valid_tiers = [
     "RAID_LEVEL_4_5",
     "RAID_LEVEL_5",
     "RAID_LEVEL_6",
-    "RAID_LEVEL_MEGA"
+    "RAID_LEVEL_MEGA",
+    "RAID_LEVEL_MEGA_5"
 ]
 def current_tier_valid(tier):
     return tier in valid_tiers
@@ -48,7 +49,7 @@ def add_tier_to_raid_data(raid, tier):
 
 def filter_current_raids(raids):
     return {AH.format_pokemon_name(raid.get("pokemon")):add_tier_to_raid_data(raid, tier.get("tier"))
-                for tier in raids.get("tiers") 
+                for tier in raids.get("tiers")
                     if current_tier_valid(tier.get("tier"))
                         for raid in tier.get("raids")}
 
