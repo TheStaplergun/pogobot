@@ -187,7 +187,10 @@ async def start_lobby_removal_loop(bot):
                 break
             lobby_data = await RLH.get_lobby_data_by_lobby_id(bot, lobby.lobby_id)
             if not lobby_data:
-                bot.lobbies.pop(lobby.lobby_id)
+                try:
+                    bot.lobbies.pop(lobby.lobby_id)
+                except KeyError:
+                    pass
                 continue
 
             cur_time = datetime.now()
