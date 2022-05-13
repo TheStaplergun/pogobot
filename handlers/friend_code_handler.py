@@ -294,7 +294,7 @@ async def set_trainer_name(ctx, bot, name):
                 pass
             return
 
-        if len(name) < 4 or len(name) > 15:
+        if len(name) < 3 or len(name) > 15:
             new_embed = discord.Embed(title="Error", description="The length of that name is invalid. It must be between 4 and 15 characters.")
             try:
                 await target.send(embed=new_embed, delete_after=15)
